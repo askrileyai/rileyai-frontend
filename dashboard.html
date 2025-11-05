@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - RileyAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, sans-serif;
+            background-color: #121418;
+            color: #F3F5F7;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: #1E232B;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(0, 180, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00B4FF;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #A8B0BC;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #00B4FF;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            color: #F3F5F7;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            color: #EF4444;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #EF4444;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .welcome {
+            margin-bottom: 40px;
+        }
+
+        .welcome h1 {
+            font-size: 32px;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: #A8B0BC;
+            font-size: 16px;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Cards */
+        .card {
+            background: #1E232B;
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(0, 180, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+        }
+
+        /* Plan Card */
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00B4FF 0%, #8B5CF6 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            color: #A8B0BC;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-features li:before {
+            content: "✓";
+            color: #00B4FF;
+            font-weight: 700;
+        }
+
+        /* Usage Card */
+        .usage-bar {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 40px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .usage-fill {
+            background: linear-gradient(90deg, #00B4FF 0%, #8B5CF6 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .usage-info {
+            display: flex;
+            justify-content: space-between;
+            color: #A8B0BC;
+            font-size: 14px;
+        }
+
+        /* Billing Card */
+        .billing-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(168, 176, 188, 0.1);
+        }
+
+        .billing-item:last-child {
+            border-bottom: none;
+        }
+
+        .billing-label {
+            color: #A8B0BC;
+        }
+
+        .billing-value {
+            color: #F3F5F7;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00B4FF 0%, #8B5CF6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 180, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #00B4FF;
+            color: #00B4FF;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 180, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: transparent;
+            border: 2px solid #EF4444;
+            color: #EF4444;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Account Settings */
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-section h3 {
+            color: #FFFFFF;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #F3F5F7;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(168, 176, 188, 0.2);
+            border-radius: 8px;
+            color: #F3F5F7;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00B4FF;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(0, 180, 255, 0.2);
+            border-top-color: #00B4FF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Messages */
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22C55E;
+        }
+
+        .message-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #EF4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-menu {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">RileyAI</div>
+            <div class="user-menu">
+                <span class="user-name" id="userName">Loading...</span>
+                <button class="btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading State -->
+    <div class="loading" id="loadingState">
+        <div class="spinner"></div>
+        <p style="color: #A8B0BC;">Loading your dashboard...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="mainContent" style="display: none;">
+        <div class="welcome">
+            <h1>Welcome back, <span id="welcomeName">User</span>!</h1>
+            <p>Manage your account, track your usage, and upgrade your plan.</p>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Current Plan Card -->
+            <div class="card">
+                <h2><span class="card-icon">📊</span> Current Plan</h2>
+                <div class="plan-badge" id="planBadge">FREE PLAN</div>
+                <ul class="plan-features" id="planFeatures">
+                    <li>Loading features...</li>
+                </ul>
+                <button class="btn btn-primary btn-full" onclick="window.location.href='/pricing.html'">
+                    Upgrade Plan
+                </button>
+            </div>
+
+            <!-- Usage Card -->
+            <div class="card">
+                <h2><span class="card-icon">⏱️</span> Monthly Usage</h2>
+                <div class="usage-bar">
+                    <div class="usage-fill" id="usageFill" style="width: 0%;">
+                        0%
+                    </div>
+                </div>
+                <div class="usage-info">
+                    <span id="hoursUsed">0 hours used</span>
+                    <span id="hoursLimit">/ 0 hours</span>
+                </div>
+                <p style="color: #A8B0BC; font-size: 13px; margin-top: 15px;">
+                    Hours reset on the 1st of each month
+                </p>
+            </div>
+
+            <!-- Billing Card -->
+            <div class="card">
+                <h2><span class="card-icon">💳</span> Billing</h2>
+                <div class="billing-item">
+                    <span class="billing-label">Status:</span>
+                    <span class="billing-value" id="billingStatus">Active</span>
+                </div>
+                <div class="billing-item">
+                    <span class="billing-label">Amount:</span>
+                    <span class="billing-value" id="billingAmount">$0/month</span>
+                </div>
+                <div class="billing-item">
+                    <span class="billing-label">Next Billing:</span>
+                    <span class="billing-value" id="nextBilling">-</span>
+                </div>
+                <button class="btn btn-danger btn-full" onclick="handleCancelSubscription()" id="cancelBtn" style="display: none;">
+                    Cancel Subscription
+                </button>
+            </div>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="card">
+            <h2><span class="card-icon">⚙️</span> Account Settings</h2>
+            
+            <div id="settingsMessage"></div>
+
+            <div class="settings-section">
+                <h3>Profile Information</h3>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="settingsName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="settingsEmail" disabled>
+                </div>
+                <button class="btn btn-primary" onclick="handleUpdateProfile()">
+                    Update Profile
+                </button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Change Password</h3>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" placeholder="Confirm new password">
+                </div>
+                <button class="btn btn-secondary" onclick="handleChangePassword()">
+                    Change Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURATION
+        // ========================================
+        const API_BASE_URL = 'https://rileyai-backend-production.up.railway.app/api';
+        const TOKEN_KEY = 'rileyai_token';
+        const USER_KEY = 'rileyai_user';
+
+        // Plan details
+        const PLAN_INFO = {
+            FREE: {
+                name: 'Free Plan',
+                badge: 'FREE PLAN',
+                hours: 3,
+                features: ['3 hours/month', 'AI Chat Coaching', 'Live Sessions', '7 Days History']
+            },
+            BASIC: {
+                name: 'Basic Plan',
+                badge: 'BASIC PLAN',
+                hours: 30,
+                features: ['30 hours/month', 'Multi-Timeframe Analysis', 'Chart Snapshots', '30 Days History']
+            },
+            PRO: {
+                name: 'Pro Plan',
+                badge: 'PRO PLAN',
+                hours: 100,
+                features: ['100 hours/month', 'Advanced Analytics', 'Priority Support', '90 Days History']
+            },
+            UNLIMITED: {
+                name: 'Unlimited Plan',
+                badge: 'UNLIMITED PLAN',
+                hours: 999999,
+                features: ['Unlimited hours', 'Forever History', 'Dedicated Account Manager', 'Priority Support']
+            }
+        };
+
+        // ========================================
+        // LOAD USER DATA
+        // ========================================
+        async function loadUserData() {
+            const token = localStorage.getItem(TOKEN_KEY);
+
+            if (!token) {
+                // Not logged in - redirect to auth
+                window.location.href = '/auth.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/user/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.user) {
+                    // Display user data
+                    displayUserData(data.user);
+
+                    // Hide loading, show content
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                } else {
+                    // Token invalid - redirect to auth
+                    localStorage.removeItem(TOKEN_KEY);
+                    localStorage.removeItem(USER_KEY);
+                    window.location.href = '/auth.html';
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                // On error, redirect to auth
+                window.location.href = '/auth.html';
+            }
+        }
+
+        // ========================================
+        // DISPLAY USER DATA
+        // ========================================
+        function displayUserData(user) {
+            // User name
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('welcomeName').textContent = user.name;
+
+            // Plan info
+            const planType = user.plan_type || 'FREE';
+            const planInfo = PLAN_INFO[planType];
+            
+            document.getElementById('planBadge').textContent = planInfo.badge;
+            
+            const featuresList = document.getElementById('planFeatures');
+            featuresList.innerHTML = planInfo.features.map(f => `<li>${f}</li>`).join('');
+
+            // Usage
+            const hoursUsed = user.hours_used || 0;
+            const hoursLimit = planInfo.hours;
+            const usagePercent = Math.min((hoursUsed / hoursLimit) * 100, 100);
+            
+            document.getElementById('usageFill').style.width = `${usagePercent}%`;
+            document.getElementById('usageFill').textContent = `${Math.round(usagePercent)}%`;
+            document.getElementById('hoursUsed').textContent = `${hoursUsed} hours used`;
+            document.getElementById('hoursLimit').textContent = planType === 'UNLIMITED' ? '/ unlimited' : `/ ${hoursLimit} hours`;
+
+            // Billing
+            const prices = { FREE: 0, BASIC: 39, PRO: 89, UNLIMITED: 199 };
+            document.getElementById('billingStatus').textContent = user.plan_status === 'active' ? 'Active' : 'Inactive';
+            document.getElementById('billingAmount').textContent = planType === 'FREE' ? 'Free' : `$${prices[planType]}/month`;
+            
+            if (user.next_billing_date) {
+                const date = new Date(user.next_billing_date);
+                document.getElementById('nextBilling').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            } else {
+                document.getElementById('nextBilling').textContent = '-';
+            }
+
+            // Show cancel button for paid plans
+            if (planType !== 'FREE') {
+                document.getElementById('cancelBtn').style.display = 'block';
+            }
+
+            // Settings
+            document.getElementById('settingsName').value = user.name;
+            document.getElementById('settingsEmail').value = user.email;
+        }
+
+        // ========================================
+        // UPDATE PROFILE
+        // ========================================
+        async function handleUpdateProfile() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const name = document.getElementById('settingsName').value.trim();
+
+            if (!name) {
+                showMessage('Please enter your name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/user/update-profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Profile updated successfully!', 'success');
+                    // Update displayed name
+                    document.getElementById('userName').textContent = name;
+                    document.getElementById('welcomeName').textContent = name;
+                } else {
+                    showMessage(data.message || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                console.error('Update profile error:', error);
+                showMessage('Connection failed. Please try again.', 'error');
+            }
+        }
+
+        // ========================================
+        // CHANGE PASSWORD
+        // ========================================
+        async function handleChangePassword() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showMessage('Please fill in all password fields', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showMessage('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showMessage('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Password changed successfully!', 'success');
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmNewPassword').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                console.error('Change password error:', error);
+                showMessage('Connection failed. Please try again.', 'error');
+            }
+        }
+
+        // ========================================
+        // CANCEL SUBSCRIPTION
+        // ========================================
+        async function handleCancelSubscription() {
+            if (!confirm('Are you sure you want to cancel your subscription? This will take effect at the end of your current billing period.')) {
+                return;
+            }
+
+            const token = localStorage.getItem(TOKEN_KEY);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/billing/cancel-subscription`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Subscription canceled. You will retain access until ' + data.effective_date);
+                    // Reload data
+                    loadUserData();
+                } else {
+                    alert(data.message || 'Failed to cancel subscription');
+                }
+            } catch (error) {
+                console.error('Cancel subscription error:', error);
+                alert('Connection failed. Please try again.');
+            }
+        }
+
+        // ========================================
+        // LOGOUT
+        // ========================================
+        function handleLogout() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            window.location.href = '/';
+        }
+
+        // ========================================
+        // SHOW MESSAGE
+        // ========================================
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('settingsMessage');
+            messageEl.className = `message message-${type}`;
+            messageEl.textContent = text;
+            
+            setTimeout(() => {
+                messageEl.textContent = '';
+                messageEl.className = '';
+            }, 5000);
+        }
+
+        // ========================================
+        // INIT
+        // ========================================
+        window.addEventListener('DOMContentLoaded', loadUserData);
+    </script>
+</body>
+</html>

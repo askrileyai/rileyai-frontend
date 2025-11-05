@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - RileyAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, sans-serif;
+            background: linear-gradient(135deg, #121418 0%, #1a1f2e 100%);
+            color: #F3F5F7;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .success-container {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .success-card {
+            background: #1E232B;
+            border-radius: 20px;
+            padding: 60px 50px;
+            text-align: center;
+            border: 2px solid #00B4FF;
+            box-shadow: 0 0 60px rgba(0, 180, 255, 0.3);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00B4FF 0%, #8B5CF6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 40px;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #FFFFFF;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00B4FF 0%, #8B5CF6 100%);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #A8B0BC;
+            margin-bottom: 40px;
+        }
+
+        /* Account Created Box */
+        .account-created-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .account-created-box h3 {
+            color: #22C55E;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .account-created-box p {
+            color: #F3F5F7;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .email-highlight {
+            background: rgba(0, 180, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #00B4FF;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .warning-text {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #A8B0BC;
+        }
+
+        /* Subscription Details */
+        .info-box {
+            background: rgba(0, 180, 255, 0.05);
+            border: 1px solid rgba(0, 180, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: #00B4FF;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(168, 176, 188, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #A8B0BC;
+            font-size: 0.95rem;
+        }
+
+        .info-value {
+            color: #F3F5F7;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Next Steps */
+        .next-steps {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .next-steps h3 {
+            color: #8B5CF6;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .next-steps ol {
+            padding-left: 0;
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .next-steps li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #A8B0BC;
+            counter-increment: step-counter;
+            display: flex;
+            gap: 15px;
+        }
+
+        .next-steps li:before {
+            content: counter(step-counter);
+            background: #8B5CF6;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .next-steps li strong {
+            color: #F3F5F7;
+        }
+
+        /* Buttons */
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00B4FF 0%, #8B5CF6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 180, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #00B4FF;
+            border: 2px solid #00B4FF;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 180, 255, 0.1);
+        }
+
+        /* Support */
+        .support-link {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #6B7280;
+        }
+
+        .support-link a {
+            color: #00B4FF;
+            text-decoration: none;
+        }
+
+        .support-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(0, 180, 255, 0.2);
+            border-top-color: #00B4FF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .success-card {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .next-steps li {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <!-- Loading state -->
+            <div class="loading" id="loadingState" style="display: none;">
+                <div class="spinner"></div>
+                <p style="color: #A8B0BC;">Verifying your purchase...</p>
+            </div>
+
+            <!-- Main content -->
+            <div id="mainContent">
+                <div class="success-icon">🎉</div>
+                
+                <h1>Welcome to RileyAI!</h1>
+                <div class="plan-badge" id="planBadge">SUBSCRIPTION ACTIVE</div>
+                <p class="subtitle">Your payment was successful and your subscription is now active.</p>
+
+                <!-- Account Created Confirmation -->
+                <div class="account-created-box">
+                    <h3>✅ Your Account Has Been Created!</h3>
+                    <p>
+                        We've automatically created your RileyAI account and sent your login credentials to:
+                    </p>
+                    <div class="email-highlight" id="userEmail">
+                        📧 Check your email inbox
+                    </div>
+                    <p class="warning-text">
+                        ⚠️ Please check your spam/junk folder if you don't see the email within a few minutes.
+                    </p>
+                </div>
+
+                <!-- Subscription Details -->
+                <div class="info-box">
+                    <h3>📋 Subscription Details</h3>
+                    <div class="info-item">
+                        <span class="info-label">Plan:</span>
+                        <span class="info-value" id="planName">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Monthly Hours:</span>
+                        <span class="info-value" id="planHours">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Amount:</span>
+                        <span class="info-value" id="amount">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Next Billing:</span>
+                        <span class="info-value" id="nextBilling">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <h3>🚀 What's Next?</h3>
+                    <ol>
+                        <li>
+                            <span><strong>Check your email</strong> - Your login credentials have been sent to the email address you provided during checkout</span>
+                        </li>
+                        <li>
+                            <span><strong>Download the Chrome extension</strong> - Click the button below to get the RileyAI extension</span>
+                        </li>
+                        <li>
+                            <span><strong>Install the extension</strong> - Follow the installation instructions in Chrome</span>
+                        </li>
+                        <li>
+                            <span><strong>Login to the extension</strong> - Use the credentials from your email</span>
+                        </li>
+                        <li>
+                            <span><strong>Open TradingView</strong> - Start analyzing charts with AI-powered insights!</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="cta-buttons">
+                    <a href="https://askrileyai.com/extension" class="btn btn-primary">
+                        📥 Download Chrome Extension
+                    </a>
+                    <a href="https://www.tradingview.com/chart/" target="_blank" class="btn btn-secondary">
+                        📈 Open TradingView
+                    </a>
+                </div>
+
+                <div class="support-link">
+                    Need help? Contact us at <a href="mailto:info@askrileyai.com">info@askrileyai.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ✅ YOUR EXISTING PLAN DETAILS - KEPT INTACT
+        const PLAN_DETAILS = {
+            basic: {
+                name: 'Basic',
+                hours: '30 hours',
+                price: '$39.00',
+                badge: 'BASIC PLAN'
+            },
+            pro: {
+                name: 'Pro',
+                hours: '100 hours',
+                price: '$89.00',
+                badge: 'PRO PLAN'
+            },
+            unlimited: {
+                name: 'Unlimited',
+                hours: 'Unlimited',
+                price: '$199.00',
+                badge: 'UNLIMITED PLAN'
+            }
+        };
+
+        // ✅ YOUR EXISTING URL PARAMETER LOGIC - KEPT INTACT
+        const urlParams = new URLSearchParams(window.location.search);
+        const planParam = urlParams.get('plan') || 'pro';
+        const emailParam = urlParams.get('email');
+
+        // Update plan details
+        const details = PLAN_DETAILS[planParam] || PLAN_DETAILS.pro;
+        document.getElementById('planBadge').textContent = details.badge;
+        document.getElementById('planName').textContent = details.name;
+        document.getElementById('planHours').textContent = details.hours;
+        document.getElementById('amount').textContent = `${details.price}/month`;
+
+        // Show user's email if available
+        if (emailParam) {
+            document.getElementById('userEmail').textContent = `📧 ${emailParam}`;
+        }
+
+        // ✅ YOUR EXISTING NEXT BILLING CALCULATION - KEPT INTACT
+        const nextBilling = new Date();
+        nextBilling.setMonth(nextBilling.getMonth() + 1);
+        document.getElementById('nextBilling').textContent = nextBilling.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        // Enhanced: Prevent back button navigation to Stripe checkout
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
+        // Enhanced: Track page view (you can connect to your analytics)
+        console.log('Success page viewed:', {
+            plan: planParam,
+            email: emailParam,
+            timestamp: new Date().toISOString()
+        });
+
+        // Enhanced: Auto-hide loading if it was showing
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+    </script>
+</body>
+</html>
