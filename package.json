@@ -21,6 +21,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.14.5",
     "@tanstack/react-query-devtools": "^5.90.2",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
