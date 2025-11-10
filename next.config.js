@@ -3,8 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
-  // Use App Router only, ignore src/pages directory component files
-  pageExtensions: ['page.tsx', 'page.ts', 'page.jsx', 'page.js', 'layout.tsx', 'layout.ts'],
 
   // Environment variables available to the browser
   env: {

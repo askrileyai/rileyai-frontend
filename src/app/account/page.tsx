@@ -1,5 +1,5 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Account from '@/pages/Account';
+import Account from '@/components/pages/Account';
 
 export default function Page() {
   return (

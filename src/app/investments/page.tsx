@@ -1,7 +1,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import FeatureGate from '@/components/FeatureGate';
 import { Feature } from '@/utils/plans';
-import Investments from '@/pages/Investments';
+import Investments from '@/components/pages/Investments';
 
 export default function Page() {
   return (

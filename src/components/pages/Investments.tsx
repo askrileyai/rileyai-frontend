@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePortfolio, useCreatePlaidLinkToken, useExchangePlaidToken, useRefreshInvestments } from '@/hooks/useInvestments';
-import { Card, StatsCard, Button, EmptyState, Badge, LoadingSkeleton } from '../design-system';
-import { colors, spacing, typography } from '../design-system/tokens';
+import { Card, StatsCard, Button, EmptyState, Badge, LoadingSkeleton } from '@/design-system';
+import { colors, spacing, typography } from '@/design-system/tokens';
 import { hasFeatureAccess, Feature } from '@/utils/plans';
 
 export const Investments = () => {

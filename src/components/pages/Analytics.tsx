@@ -4,8 +4,8 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUsageStats } from '@/hooks/useUser';
 import { useSessions } from '@/hooks/useSessions';
-import { Card, ProgressBar, Badge, LoadingSkeleton } from '../design-system';
-import { colors, spacing, typography } from '../design-system/tokens';
+import { Card, ProgressBar, Badge, LoadingSkeleton } from '@/design-system';
+import { colors, spacing, typography } from '@/design-system/tokens';
 import { formatHours } from '@/utils/plans';
 
 export const Analytics = () => {

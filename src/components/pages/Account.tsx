@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscriptionStatus, useCreatePortalSession } from '@/hooks/useStripe';
 import { usePortfolio } from '@/hooks/useInvestments';
-import { Card, Button, Badge, Modal, LoadingSkeleton } from '../design-system';
-import { colors, spacing, typography } from '../design-system/tokens';
+import { Card, Button, Badge, Modal, LoadingSkeleton } from '@/design-system';
+import { colors, spacing, typography } from '@/design-system/tokens';
 import { hasFeatureAccess, Feature } from '@/utils/plans';
 
 export const Account = () => {

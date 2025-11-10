@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateCheckoutSession } from '@/hooks/useStripe';
-import { Card, Button, Badge } from '../design-system';
-import { colors, spacing, typography, gradients } from '../design-system/tokens';
+import { Card, Button, Badge } from '@/design-system';
+import { colors, spacing, typography, gradients } from '@/design-system/tokens';
 
 const Header = () => {
   const { user } = useAuth();

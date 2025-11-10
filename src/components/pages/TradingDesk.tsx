@@ -3,8 +3,8 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useStrategies, useActiveSignals } from '@/hooks/useStrategies';
-import { Card, Button, Badge, UpgradePrompt, LoadingSkeleton, EmptyState } from '../design-system';
-import { colors, spacing, typography } from '../design-system/tokens';
+import { Card, Button, Badge, UpgradePrompt, LoadingSkeleton, EmptyState } from '@/design-system';
+import { colors, spacing, typography } from '@/design-system/tokens';
 import { hasFeatureAccess, Feature } from '@/utils/plans';
 
 export const TradingDesk = () => {

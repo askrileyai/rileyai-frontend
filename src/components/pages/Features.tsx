@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Button, Badge } from '../design-system';
-import { colors, spacing, typography, gradients } from '../design-system/tokens';
+import { Card, Button, Badge } from '@/design-system';
+import { colors, spacing, typography, gradients } from '@/design-system/tokens';
 
 const Header = () => (
   <header style={{ position: 'sticky', top: 0, zIndex: 1100, background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${colors.neutral[200]}` }}>

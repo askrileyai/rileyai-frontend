@@ -1,6 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Button, Card, Badge } from '../design-system';
-import { colors, spacing, typography, gradients } from '../design-system/tokens';
+import { Button, Card, Badge } from '@/design-system';
+import { colors, spacing, typography, gradients } from '@/design-system/tokens';
 
 const Header = () => {
   return (
