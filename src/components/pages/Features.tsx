@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card, Button, Badge } from '@/design-system';
 import { colors, spacing, typography, gradients } from '@/design-system/tokens';
