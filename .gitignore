@@ -1,0 +1,11 @@
+# Exclude extracted folder (duplicates of root files)
+extracted/
+
+# Exclude original zip file
+*.zip
+
+# Exclude files with double extensions (originals)
+*.png.png
+
+# Exclude phonto (temp file)
+phonto.PNG

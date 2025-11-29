@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 14 Feedback — RileyAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050508;
+            --bg-card: #0f0f18;
+            --text-primary: #ffffff;
+            --text-secondary: #7a7a8c;
+            --text-muted: #4a4a5a;
+            --accent: #2962ff;
+            --accent-light: #4d7fff;
+            --accent-glow: rgba(41, 98, 255, 0.35);
+            --gold: #d4af37;
+            --gold-soft: rgba(212, 175, 55, 0.12);
+            --border: rgba(255, 255, 255, 0.04);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --green: #00c853;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .ambient-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse 600px 400px at 30% 30%, rgba(41, 98, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 500px 300px at 70% 70%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .survey-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 48px 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 14px;
+            background: var(--gold-soft);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1.25;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 32px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%237a7a8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 18px;
+            padding-right: 48px;
+        }
+
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .radio-option input {
+            display: none;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 16px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .radio-option input:checked + label {
+            border-color: var(--accent);
+            background: rgba(41, 98, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .radio-option label:hover {
+            border-color: var(--border-light);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .nps-group {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 8px;
+        }
+
+        .nps-option {
+            position: relative;
+        }
+
+        .nps-option input {
+            display: none;
+        }
+
+        .nps-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nps-option input:checked + label {
+            border-color: var(--accent);
+            background: rgba(41, 98, 255, 0.15);
+            color: var(--text-primary);
+        }
+
+        .nps-option label:hover {
+            border-color: var(--border-light);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .nps-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 24px;
+            padding-top: 16px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 40px 0;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px 32px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #1e4fd6;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px var(--accent-glow);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gold-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-icon svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--gold);
+        }
+
+        .success-message h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 12px;
+        }
+
+        .success-message p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        .reward-box {
+            background: var(--gold-soft);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .reward-box p {
+            margin: 0;
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        .back-link {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 40px 16px;
+            }
+
+            .survey-card {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+            }
+
+            .radio-option {
+                min-width: 100%;
+            }
+
+            .nps-group {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .nps-option:nth-child(n+7) {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .nps-group {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <div class="container">
+        <div class="logo">
+            <a href="https://askrileyai.com" class="logo-text">RileyAI</a>
+        </div>
+
+        <div class="survey-card">
+            <form id="surveyForm">
+                <div class="badge">Day 14 — Halfway Check-In</div>
+                <h1>Two weeks of trading with Riley</h1>
+                <p class="subtitle">By now you've had real experience with RileyAI in actual trading conditions. This feedback shapes what we build next.</p>
+
+                <!-- Section 1: Impact -->
+                <p class="section-title">Impact on Your Trading</p>
+
+                <div class="form-group">
+                    <label class="form-label">Has Riley improved your trading decisions?</label>
+                    <p class="form-hint">Better entries, clearer analysis, avoided bad trades?</p>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="impact_yes" name="trading_impact" value="yes" required>
+                            <label for="impact_yes">Yes, significantly</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="impact_somewhat" name="trading_impact" value="somewhat">
+                            <label for="impact_somewhat">Somewhat</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="impact_no" name="trading_impact" value="no">
+                            <label for="impact_no">Not really</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Can you share a specific example?</label>
+                    <p class="form-hint">A trade Riley helped with, or a situation where it fell short</p>
+                    <textarea class="form-textarea" name="impact_example" placeholder="Tell us about a specific moment..."></textarea>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Section 2: Product -->
+                <p class="section-title">Product Feedback</p>
+
+                <div class="form-group">
+                    <label class="form-label">What's the #1 feature we should build next?</label>
+                    <p class="form-hint">Dream big — this directly influences our roadmap</p>
+                    <textarea class="form-textarea" name="feature_request" placeholder="What would make RileyAI even better for you?" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Any bugs or frustrations?</label>
+                    <p class="form-hint">Even small annoyances — we want to fix everything</p>
+                    <textarea class="form-textarea" name="bugs" placeholder="Anything that didn't work right or annoyed you..."></textarea>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Section 3: Value -->
+                <p class="section-title">Value & Future</p>
+
+                <div class="form-group">
+                    <label class="form-label">What would make you pay for RileyAI?</label>
+                    <p class="form-hint">Be honest — what's the value threshold for you?</p>
+                    <textarea class="form-textarea" name="payment_driver" placeholder="What features or improvements would justify a subscription?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Which plan seems most appealing to you?</label>
+                    <select class="form-select" name="preferred_plan">
+                        <option value="" disabled selected>Select a plan</option>
+                        <option value="free">Free (3 hours/month) — I'd stick with free</option>
+                        <option value="basic">Basic ($39/month) — Core features are enough</option>
+                        <option value="pro">Pro ($89/month) — I want all the strategies</option>
+                        <option value="unlimited">Unlimited ($199/month) — I need maximum access</option>
+                        <option value="unsure">Not sure yet</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How likely are you to recommend RileyAI?</label>
+                    <p class="form-hint">0 = Not at all likely, 10 = Extremely likely</p>
+                    <div class="nps-group">
+                        <div class="nps-option">
+                            <input type="radio" id="nps_0" name="nps" value="0" required>
+                            <label for="nps_0">0</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_1" name="nps" value="1">
+                            <label for="nps_1">1</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_2" name="nps" value="2">
+                            <label for="nps_2">2</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_3" name="nps" value="3">
+                            <label for="nps_3">3</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_4" name="nps" value="4">
+                            <label for="nps_4">4</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_5" name="nps" value="5">
+                            <label for="nps_5">5</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_6" name="nps" value="6">
+                            <label for="nps_6">6</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_7" name="nps" value="7">
+                            <label for="nps_7">7</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_8" name="nps" value="8">
+                            <label for="nps_8">8</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_9" name="nps" value="9">
+                            <label for="nps_9">9</label>
+                        </div>
+                        <div class="nps-option">
+                            <input type="radio" id="nps_10" name="nps" value="10">
+                            <label for="nps_10">10</label>
+                        </div>
+                    </div>
+                    <div class="nps-labels">
+                        <span>Not likely</span>
+                        <span>Extremely likely</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Anything else on your mind?</label>
+                    <p class="form-hint">Final thoughts, suggestions, or questions</p>
+                    <textarea class="form-textarea" name="additional_feedback" placeholder="Optional — but we read everything..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit Feedback</button>
+            </form>
+
+            <div class="success-message" id="successMessage">
+                <div class="success-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </div>
+                <h2>Thank you!</h2>
+                <p>Your detailed feedback is invaluable. We're building RileyAI for traders like you.</p>
+                <div class="reward-box">
+                    <p>🎁 Remember: You'll get 50% off your first 3 months when the beta ends January 1st!</p>
+                </div>
+                <a href="https://askrileyai.com" class="back-link">← Back to RileyAI</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 RileyAI · <a href="https://askrileyai.com">askrileyai.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Backend API URL
+        const API_URL = 'https://rileyai-backend-production.up.railway.app/api';
+
+        // Get email from URL params
+        function getEmailFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('email') || '';
+        }
+
+        document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            const email = getEmailFromURL();
+
+            if (!email) {
+                alert('Email not found. Please use the link from your email.');
+                return;
+            }
+
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch(`${API_URL}/beta/survey/day14`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        improved_trading: data.trading_impact,
+                        feature_request: data.feature_request,
+                        bugs: data.bugs,
+                        what_would_pay: data.payment_driver,
+                        plan_preference: data.preferred_plan,
+                        nps_score: parseInt(data.nps) || null,
+                        anything_else: data.additional_feedback
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('surveyForm').style.display = 'none';
+                    document.getElementById('successMessage').classList.add('show');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Try Again';
+                    alert(result.error || 'Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                console.error('Survey submission error:', error);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Try Again';
+                alert('Unable to submit. Please check your connection and try again.');
+            }
+        });
+    </script>
+</body>
+</html>
