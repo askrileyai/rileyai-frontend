@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>RileyAI Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050508;
+            --bg-secondary: #0a0a10;
+            --bg-card: #0f0f18;
+            --bg-elevated: #141420;
+            --text-primary: #ffffff;
+            --text-secondary: #7a7a8c;
+            --text-muted: #4a4a5a;
+            --accent: #2962ff;
+            --accent-light: #4d7fff;
+            --gold: #d4af37;
+            --gold-soft: rgba(212, 175, 55, 0.12);
+            --border: rgba(255, 255, 255, 0.04);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --green: #00c853;
+            --red: #ff5252;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Auth Modal */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-box h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auth-box p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .auth-btn:hover {
+            background: var(--accent-light);
+        }
+
+        .auth-error {
+            color: var(--red);
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard.visible {
+            display: block;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--bg-elevated);
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .stat-value.gold {
+            color: var(--gold);
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        .stat-sub {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Panels Grid */
+        .panels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title span {
+            font-size: 18px;
+        }
+
+        /* Plan Distribution */
+        .plan-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .plan-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plan-label {
+            width: 60px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .plan-bar-bg {
+            flex: 1;
+            height: 24px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .plan-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .plan-bar.free { background: var(--text-muted); }
+        .plan-bar.beta { background: var(--gold); }
+        .plan-bar.basic { background: var(--accent); }
+        .plan-bar.pro { background: var(--accent-light); }
+        .plan-bar.elite { background: var(--green); }
+
+        .plan-count {
+            width: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Top Users */
+        .top-users {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .top-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+        }
+
+        .top-user-rank {
+            width: 24px;
+            height: 24px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .top-user-email {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .top-user-hours {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        /* Beta Stats */
+        .beta-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .beta-stat {
+            background: var(--bg-elevated);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .beta-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .beta-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Users Table */
+        .users-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .users-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .users-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .search-input {
+            padding: 10px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th {
+            text-align: left;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .users-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .users-table tr:hover {
+            background: var(--bg-elevated);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.free { background: var(--bg-elevated); color: var(--text-secondary); }
+        .badge.beta { background: var(--gold-soft); color: var(--gold); }
+        .badge.basic { background: rgba(41, 98, 255, 0.15); color: var(--accent); }
+        .badge.pro { background: rgba(77, 127, 255, 0.15); color: var(--accent-light); }
+        .badge.elite { background: rgba(0, 200, 83, 0.15); color: var(--green); }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-dot.active { background: var(--green); }
+        .status-dot.inactive { background: var(--red); }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .panels-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            .users-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-box">
+            <h1>RileyAI Admin</h1>
+            <p>Enter admin password to continue</p>
+            <input type="password" class="auth-input" id="passwordInput" placeholder="Password" autocomplete="off">
+            <button class="auth-btn" id="loginBtn">Login</button>
+            <p class="auth-error" id="authError">Invalid password</p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="header">
+            <h1>RileyAI Admin Dashboard</h1>
+            <div class="header-right">
+                <span class="last-updated" id="lastUpdated">Loading...</span>
+                <button class="refresh-btn" id="refreshBtn">Refresh</button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="totalUsers">-</div>
+                <div class="stat-sub" id="newUsers7d">- new this week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Beta Users</div>
+                <div class="stat-value gold" id="betaUsers">-</div>
+                <div class="stat-sub">Active beta access</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Sessions</div>
+                <div class="stat-value" id="totalSessions">-</div>
+                <div class="stat-sub" id="activeSessions">- active now</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Hours Used</div>
+                <div class="stat-value green" id="totalHours">-</div>
+                <div class="stat-sub">All time</div>
+            </div>
+        </div>
+
+        <!-- Panels Grid -->
+        <div class="panels-grid">
+            <!-- Plan Distribution -->
+            <div class="panel">
+                <div class="panel-title"><span>📊</span> Plan Distribution</div>
+                <div class="plan-bars" id="planBars">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Top Users -->
+            <div class="panel">
+                <div class="panel-title"><span>🏆</span> Top Users by Hours</div>
+                <div class="top-users" id="topUsers">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Beta Program -->
+            <div class="panel">
+                <div class="panel-title"><span>🧪</span> Beta Program</div>
+                <div class="beta-stats" id="betaStats">
+                    <div class="beta-stat">
+                        <div class="beta-stat-value" id="waitlistSignups">-</div>
+                        <div class="beta-stat-label">Waitlist Signups</div>
+                    </div>
+                    <div class="beta-stat">
+                        <div class="beta-stat-value" id="emailsSent">-</div>
+                        <div class="beta-stat-label">Emails Sent</div>
+                    </div>
+                    <div class="beta-stat">
+                        <div class="beta-stat-value" id="conversions">-</div>
+                        <div class="beta-stat-label">Conversions</div>
+                    </div>
+                    <div class="beta-stat">
+                        <div class="beta-stat-value" id="surveyResponses">-</div>
+                        <div class="beta-stat-label">Survey Responses</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-section">
+            <div class="users-header">
+                <h2 class="users-title">All Users</h2>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by email...">
+            </div>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Hours Used</th>
+                        <th>Sessions</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="6" class="loading"><div class="spinner"></div>Loading users...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://rileyai-backend-production.up.railway.app/api';
+        const ADMIN_KEY = 'riley-admin-2024';
+
+        let dashboardData = null;
+        let allUsers = [];
+
+        // Check if already authenticated
+        if (localStorage.getItem('rileyAdminAuth') === ADMIN_KEY) {
+            showDashboard();
+        }
+
+        // Login handler
+        document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        function attemptLogin() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_KEY) {
+                localStorage.setItem('rileyAdminAuth', ADMIN_KEY);
+                showDashboard();
+            } else {
+                document.getElementById('authError').style.display = 'block';
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('dashboard').classList.add('visible');
+            loadDashboardData();
+        }
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+
+        // Search handler
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            renderUsersTable(allUsers.filter(u => u.email.toLowerCase().includes(query)));
+        });
+
+        async function loadDashboardData() {
+            try {
+                document.getElementById('lastUpdated').textContent = 'Loading...';
+
+                const response = await fetch(`${API_URL}/admin/dashboard`, {
+                    headers: {
+                        'X-Admin-Key': ADMIN_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                dashboardData = await response.json();
+                allUsers = dashboardData.users || [];
+
+                renderStats();
+                renderPlanDistribution();
+                renderTopUsers();
+                renderBetaStats();
+                renderUsersTable(allUsers);
+
+                document.getElementById('lastUpdated').textContent =
+                    `Updated ${new Date().toLocaleTimeString()}`;
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('lastUpdated').textContent = 'Error loading data';
+            }
+        }
+
+        function renderStats() {
+            const { platform } = dashboardData;
+
+            document.getElementById('totalUsers').textContent = platform.users.total_users || 0;
+            document.getElementById('newUsers7d').textContent = `${platform.users.new_users_7d || 0} new this week`;
+            document.getElementById('betaUsers').textContent = platform.users.beta_users || 0;
+            document.getElementById('totalSessions').textContent = platform.sessions.total_sessions || 0;
+            document.getElementById('activeSessions').textContent = `${platform.sessions.active_sessions || 0} active now`;
+            document.getElementById('totalHours').textContent = platform.usage.totalHoursUsed || '0.00';
+        }
+
+        function renderPlanDistribution() {
+            const { platform } = dashboardData;
+            const users = platform.users;
+            const total = parseInt(users.total_users) || 1;
+
+            const plans = [
+                { name: 'FREE', count: parseInt(users.free_users) || 0, class: 'free' },
+                { name: 'BETA', count: parseInt(users.beta_users) || 0, class: 'beta' },
+                { name: 'BASIC', count: parseInt(users.basic_users) || 0, class: 'basic' },
+                { name: 'PRO', count: parseInt(users.pro_users) || 0, class: 'pro' },
+                { name: 'ELITE', count: parseInt(users.elite_users) || 0, class: 'elite' }
+            ];
+
+            const html = plans.map(plan => `
+                <div class="plan-row">
+                    <span class="plan-label">${plan.name}</span>
+                    <div class="plan-bar-bg">
+                        <div class="plan-bar ${plan.class}" style="width: ${(plan.count / total * 100)}%"></div>
+                    </div>
+                    <span class="plan-count">${plan.count}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('planBars').innerHTML = html;
+        }
+
+        function renderTopUsers() {
+            const topUsers = dashboardData.topUsers || [];
+
+            if (topUsers.length === 0) {
+                document.getElementById('topUsers').innerHTML = '<p style="color: var(--text-muted)">No users yet</p>';
+                return;
+            }
+
+            const html = topUsers.slice(0, 5).map((user, i) => `
+                <div class="top-user">
+                    <span class="top-user-rank">${i + 1}</span>
+                    <span class="top-user-email">${user.email}</span>
+                    <span class="top-user-hours">${parseFloat(user.monthly_hours_used || 0).toFixed(2)}h</span>
+                </div>
+            `).join('');
+
+            document.getElementById('topUsers').innerHTML = html;
+        }
+
+        function renderBetaStats() {
+            const { beta } = dashboardData;
+
+            document.getElementById('waitlistSignups').textContent = beta.waitlist.total_signups || 0;
+            document.getElementById('emailsSent').textContent = beta.waitlist.welcome_emails_sent || 0;
+            document.getElementById('conversions').textContent = beta.waitlist.converted_users || 0;
+
+            const totalSurveys = beta.surveys.reduce((sum, s) => sum + parseInt(s.count || 0), 0);
+            document.getElementById('surveyResponses').textContent = totalSurveys;
+        }
+
+        function renderUsersTable(users) {
+            if (users.length === 0) {
+                document.getElementById('usersTableBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; color: var(--text-muted)">No users found</td></tr>';
+                return;
+            }
+
+            const html = users.map(user => {
+                const isBeta = user.is_beta_user && new Date(user.beta_expires_at) > new Date();
+                const planClass = isBeta ? 'beta' : user.plan_tier.toLowerCase();
+                const planLabel = isBeta ? 'BETA' : user.plan_tier;
+
+                return `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td><span class="badge ${planClass}">${planLabel}</span></td>
+                        <td>${parseFloat(user.monthly_hours_used || 0).toFixed(2)}</td>
+                        <td>${user.session_count || 0}</td>
+                        <td>
+                            <span class="status-dot ${user.is_active ? 'active' : 'inactive'}"></span>
+                            ${user.is_active ? 'Active' : 'Inactive'}
+                        </td>
+                        <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('usersTableBody').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
