@@ -723,17 +723,13 @@
                 return;
             }
 
-            const html = topUsers.slice(0, 5).map((user, i) => {
-                const isBeta = user.is_beta_user && new Date(user.beta_expires_at) > new Date();
-                const isUnlimited = isBeta || user.plan_tier === 'ELITE' || user.plan_tier === 'UNLIMITED';
-                const hoursDisplay = isUnlimited ? '∞' : `${parseFloat(user.monthly_hours_used || 0).toFixed(2)}h`;
-                return `
+            const html = topUsers.slice(0, 5).map((user, i) => `
                 <div class="top-user">
                     <span class="top-user-rank">${i + 1}</span>
                     <span class="top-user-email">${user.email}</span>
-                    <span class="top-user-hours">${hoursDisplay}</span>
+                    <span class="top-user-hours">${parseFloat(user.monthly_hours_used || 0).toFixed(2)}h</span>
                 </div>
-            `}).join('');
+            `).join('');
 
             document.getElementById('topUsers').innerHTML = html;
         }
@@ -760,14 +756,12 @@
                 const isBeta = user.is_beta_user && new Date(user.beta_expires_at) > new Date();
                 const planClass = isBeta ? 'beta' : user.plan_tier.toLowerCase();
                 const planLabel = isBeta ? 'BETA' : user.plan_tier;
-                const isUnlimited = isBeta || user.plan_tier === 'ELITE' || user.plan_tier === 'UNLIMITED';
-                const hoursDisplay = isUnlimited ? '∞' : parseFloat(user.monthly_hours_used || 0).toFixed(2);
 
                 return `
                     <tr>
                         <td>${user.email}</td>
                         <td><span class="badge ${planClass}">${planLabel}</span></td>
-                        <td>${hoursDisplay}</td>
+                        <td>${parseFloat(user.monthly_hours_used || 0).toFixed(2)}</td>
                         <td>${user.session_count || 0}</td>
                         <td>
                             <span class="status-dot ${user.is_active ? 'active' : 'inactive'}"></span>
