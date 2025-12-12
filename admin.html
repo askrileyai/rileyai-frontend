@@ -439,6 +439,171 @@
         .status-dot.active { background: var(--green); }
         .status-dot.inactive { background: var(--red); }
 
+        /* Revenue Panel */
+        .revenue-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .revenue-stat {
+            background: var(--bg-elevated);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .revenue-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .revenue-stat-value.gold { color: var(--gold); }
+
+        .revenue-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Engagement Panel */
+        .engagement-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .engagement-stat {
+            background: var(--bg-elevated);
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .engagement-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        .engagement-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Symbol Analytics Panel */
+        .symbol-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .symbol-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+        }
+
+        .symbol-rank {
+            width: 22px;
+            height: 22px;
+            background: var(--bg-card);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .symbol-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .symbol-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* API Usage Panel */
+        .api-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .api-provider {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+        }
+
+        .api-provider-name {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .api-provider-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .api-provider-stats .success { color: var(--green); }
+        .api-provider-stats .cost { color: var(--gold); }
+
+        .api-totals {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .api-total {
+            text-align: center;
+        }
+
+        .api-total-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .api-total-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Two column panel grid */
+        .panels-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .panels-grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .engagement-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         /* Loading */
         .loading {
             text-align: center;
@@ -577,6 +742,82 @@
             </div>
         </div>
 
+        <!-- New Metrics Row 1: Revenue + Engagement -->
+        <div class="panels-grid-2">
+            <!-- Revenue -->
+            <div class="panel">
+                <div class="panel-title"><span>💰</span> Revenue</div>
+                <div class="revenue-stats" id="revenueStats">
+                    <div class="revenue-stat">
+                        <div class="revenue-stat-value" id="mrr">$0</div>
+                        <div class="revenue-stat-label">Monthly Revenue</div>
+                    </div>
+                    <div class="revenue-stat">
+                        <div class="revenue-stat-value gold" id="arr">$0</div>
+                        <div class="revenue-stat-label">Annual Run Rate</div>
+                    </div>
+                    <div class="revenue-stat">
+                        <div class="revenue-stat-value" id="totalSubscribers">0</div>
+                        <div class="revenue-stat-label">Paid Subscribers</div>
+                    </div>
+                    <div class="revenue-stat">
+                        <div class="revenue-stat-value gold" id="conversionRate">0%</div>
+                        <div class="revenue-stat-label">Conversion Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engagement -->
+            <div class="panel">
+                <div class="panel-title"><span>📈</span> Engagement</div>
+                <div class="engagement-stats" id="engagementStats">
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="dau">0</div>
+                        <div class="engagement-stat-label">DAU</div>
+                    </div>
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="wau">0</div>
+                        <div class="engagement-stat-label">WAU</div>
+                    </div>
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="mau">0</div>
+                        <div class="engagement-stat-label">MAU</div>
+                    </div>
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="avgSessionsPerUser">0</div>
+                        <div class="engagement-stat-label">Avg Sessions/User</div>
+                    </div>
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="avgSessionDuration">0m</div>
+                        <div class="engagement-stat-label">Avg Duration</div>
+                    </div>
+                    <div class="engagement-stat">
+                        <div class="engagement-stat-value" id="retentionRate">0%</div>
+                        <div class="engagement-stat-label">7-Day Retention</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Metrics Row 2: Symbols + API -->
+        <div class="panels-grid-2">
+            <!-- Top Symbols -->
+            <div class="panel">
+                <div class="panel-title"><span>📊</span> Top Symbols</div>
+                <div class="symbol-list" id="topSymbols">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- API Usage -->
+            <div class="panel">
+                <div class="panel-title"><span>⚡</span> API Usage (30 days)</div>
+                <div class="api-stats" id="apiStats">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Users Table -->
         <div class="users-section">
             <div class="users-header">
@@ -667,6 +908,10 @@
                 renderPlanDistribution();
                 renderTopUsers();
                 renderBetaStats();
+                renderRevenue();
+                renderEngagement();
+                renderTopSymbols();
+                renderApiUsage();
                 renderUsersTable(allUsers);
 
                 document.getElementById('lastUpdated').textContent =
@@ -727,7 +972,7 @@
                 <div class="top-user">
                     <span class="top-user-rank">${i + 1}</span>
                     <span class="top-user-email">${user.email}</span>
-                    <span class="top-user-hours">${parseFloat(user.monthly_hours_used || 0).toFixed(2)}h</span>
+                    <span class="top-user-hours">${parseFloat(user.actual_hours_from_sessions || user.monthly_hours_used || 0).toFixed(2)}h</span>
                 </div>
             `).join('');
 
@@ -737,12 +982,91 @@
         function renderBetaStats() {
             const { beta } = dashboardData;
 
-            document.getElementById('waitlistSignups').textContent = beta.waitlist.total_signups || 0;
-            document.getElementById('emailsSent').textContent = beta.waitlist.welcome_emails_sent || 0;
-            document.getElementById('conversions').textContent = beta.waitlist.converted_users || 0;
+            document.getElementById('waitlistSignups').textContent = beta?.waitlist?.total_signups || 0;
+            document.getElementById('emailsSent').textContent = beta?.waitlist?.welcome_emails_sent || 0;
+            document.getElementById('conversions').textContent = beta?.waitlist?.converted_users || 0;
 
-            const totalSurveys = beta.surveys.reduce((sum, s) => sum + parseInt(s.count || 0), 0);
+            const totalSurveys = (beta?.surveys || []).reduce((sum, s) => sum + parseInt(s.count || 0), 0);
             document.getElementById('surveyResponses').textContent = totalSurveys;
+        }
+
+        function renderRevenue() {
+            const { revenue } = dashboardData;
+            if (!revenue) return;
+
+            document.getElementById('mrr').textContent = `$${revenue.mrr || '0.00'}`;
+            document.getElementById('arr').textContent = `$${revenue.arr || '0.00'}`;
+            document.getElementById('totalSubscribers').textContent = revenue.totalSubscribers || 0;
+            document.getElementById('conversionRate').textContent = `${revenue.conversionRate || 0}%`;
+        }
+
+        function renderEngagement() {
+            const { engagement } = dashboardData;
+            if (!engagement) return;
+
+            document.getElementById('dau').textContent = engagement.dau || 0;
+            document.getElementById('wau').textContent = engagement.wau || 0;
+            document.getElementById('mau').textContent = engagement.mau || 0;
+            document.getElementById('avgSessionsPerUser').textContent = engagement.avgSessionsPerUser || 0;
+            document.getElementById('avgSessionDuration').textContent = `${engagement.avgSessionDurationMins || 0}m`;
+            document.getElementById('retentionRate').textContent = `${engagement.retentionRate7d || 0}%`;
+        }
+
+        function renderTopSymbols() {
+            const { symbols } = dashboardData;
+            if (!symbols || !symbols.topSymbols || symbols.topSymbols.length === 0) {
+                document.getElementById('topSymbols').innerHTML = '<p style="color: var(--text-muted)">No data yet</p>';
+                return;
+            }
+
+            const html = symbols.topSymbols.slice(0, 5).map((s, i) => `
+                <div class="symbol-item">
+                    <span class="symbol-rank">${i + 1}</span>
+                    <span class="symbol-name">${s.symbol}</span>
+                    <span class="symbol-count">${s.count} sessions</span>
+                </div>
+            `).join('');
+
+            document.getElementById('topSymbols').innerHTML = html;
+        }
+
+        function renderApiUsage() {
+            const { apiUsage } = dashboardData;
+            if (!apiUsage || !apiUsage.providers || apiUsage.providers.length === 0) {
+                document.getElementById('apiStats').innerHTML = '<p style="color: var(--text-muted)">No API data yet</p>';
+                return;
+            }
+
+            const providersHtml = apiUsage.providers.map(p => `
+                <div class="api-provider">
+                    <span class="api-provider-name">${p.provider || 'Unknown'}</span>
+                    <div class="api-provider-stats">
+                        <span>${p.totalCalls.toLocaleString()} calls</span>
+                        <span class="success">${p.successRate}% success</span>
+                        <span>${p.avgResponseTime}ms avg</span>
+                        <span class="cost">$${p.estimatedCost}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const totalsHtml = `
+                <div class="api-totals">
+                    <div class="api-total">
+                        <div class="api-total-value">${apiUsage.totals.totalCalls.toLocaleString()}</div>
+                        <div class="api-total-label">Total Calls</div>
+                    </div>
+                    <div class="api-total">
+                        <div class="api-total-value">${(apiUsage.totals.totalTokens / 1000).toFixed(1)}K</div>
+                        <div class="api-total-label">Tokens Used</div>
+                    </div>
+                    <div class="api-total">
+                        <div class="api-total-value" style="color: var(--gold)">$${apiUsage.totals.estimatedCost}</div>
+                        <div class="api-total-label">Est. Cost</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('apiStats').innerHTML = providersHtml + totalsHtml;
         }
 
         function renderUsersTable(users) {
@@ -761,7 +1085,7 @@
                     <tr>
                         <td>${user.email}</td>
                         <td><span class="badge ${planClass}">${planLabel}</span></td>
-                        <td>${parseFloat(user.monthly_hours_used || 0).toFixed(2)}</td>
+                        <td>${parseFloat(user.actual_hours_from_sessions || user.monthly_hours_used || 0).toFixed(2)}</td>
                         <td>${user.session_count || 0}</td>
                         <td>
                             <span class="status-dot ${user.is_active ? 'active' : 'inactive'}"></span>
