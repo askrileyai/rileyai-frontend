@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RileyAI — Beta Access</title>
+    <title>RileyAI — The First AI Built for TradingView | Day Trading Edge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -488,6 +488,199 @@
             background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
             filter: blur(80px);
             z-index: -1;
+        }
+
+        /* Network Visualization Styles */
+        .network-visualization {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .network-svg {
+            width: 100%;
+            max-width: 550px;
+            height: auto;
+        }
+
+        .connection-line {
+            stroke: url(#lineGradient);
+            stroke-width: 1.5;
+            opacity: 0.4;
+        }
+
+        .node-circle {
+            fill: #1a1a2e;
+            stroke: #22c55e;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+
+        .node-circle.outer {
+            stroke-opacity: 0.6;
+        }
+
+        .node-circle.inner {
+            stroke-opacity: 0.8;
+        }
+
+        .node-group:hover .node-circle {
+            fill: rgba(34, 197, 94, 0.15);
+            stroke: #22c55e;
+            stroke-opacity: 1;
+            filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5));
+        }
+
+        .node-text {
+            fill: #e0e0e0;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            text-anchor: middle;
+            pointer-events: none;
+            transition: fill 0.3s ease;
+        }
+
+        .node-group:hover .node-text {
+            fill: #22c55e;
+        }
+
+        .center-circle {
+            fill: #1a1a2e;
+            stroke: #22c55e;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.4));
+        }
+
+        .center-text {
+            fill: #22c55e;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-anchor: middle;
+        }
+
+        .pulse-ring {
+            fill: none;
+            stroke: #22c55e;
+            stroke-width: 2;
+            opacity: 0;
+        }
+
+        .ring-1 {
+            animation: pulse 3s ease-out infinite;
+        }
+
+        .ring-2 {
+            animation: pulse 3s ease-out infinite 1.5s;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+                transform-origin: center;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+                transform-origin: center;
+            }
+        }
+
+        .traveling-dot {
+            opacity: 0.8;
+            filter: drop-shadow(0 0 4px #22c55e);
+        }
+
+        .dot-1 { animation: travel1 4s linear infinite; }
+        .dot-2 { animation: travel2 4s linear infinite 0.7s; }
+        .dot-3 { animation: travel3 4s linear infinite 1.4s; }
+        .dot-4 { animation: travel4 4s linear infinite 2.1s; }
+        .dot-5 { animation: travel5 4s linear infinite 2.8s; }
+        .dot-6 { animation: travel6 4s linear infinite 3.5s; }
+
+        @keyframes travel1 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(300px, 150px); opacity: 0; }
+        }
+
+        @keyframes travel2 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(430px, 225px); opacity: 0; }
+        }
+
+        @keyframes travel3 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(430px, 375px); opacity: 0; }
+        }
+
+        @keyframes travel4 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(300px, 450px); opacity: 0; }
+        }
+
+        @keyframes travel5 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(170px, 375px); opacity: 0; }
+        }
+
+        @keyframes travel6 {
+            0%, 100% { transform: translate(300px, 300px); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            95% { transform: translate(170px, 225px); opacity: 0; }
+        }
+
+        .particle {
+            fill: #22c55e;
+            opacity: 0.4;
+        }
+
+        .p1 { animation: float1 8s ease-in-out infinite; }
+        .p2 { animation: float2 10s ease-in-out infinite 1s; }
+        .p3 { animation: float3 9s ease-in-out infinite 2s; }
+        .p4 { animation: float4 11s ease-in-out infinite 0.5s; }
+        .p5 { animation: float5 7s ease-in-out infinite 1.5s; }
+        .p6 { animation: float6 12s ease-in-out infinite 3s; }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+            50% { transform: translate(20px, -30px); opacity: 0.7; }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(-25px, 20px); opacity: 0.6; }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+            50% { transform: translate(15px, 25px); opacity: 0.7; }
+        }
+
+        @keyframes float4 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(-20px, -20px); opacity: 0.6; }
+        }
+
+        @keyframes float5 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+            50% { transform: translate(30px, 15px); opacity: 0.7; }
+        }
+
+        @keyframes float6 {
+            0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(-15px, -25px); opacity: 0.6; }
         }
 
         .features {
@@ -1160,10 +1353,10 @@
         <div class="container">
             <div class="hero-grid">
                 <div class="hero-content">
-                    <div class="hero-badge">Free Beta — Limited Spots</div>
-                    <h1>Trade Smarter<br>with <span class="brand">RileyAI</span></h1>
+                    <div class="hero-badge">Exclusive Access — Limited Spots</div>
+                    <h1>The AI Trading Copilot That Didn't Exist—Until Now.</h1>
                     <p class="hero-subtitle">
-                        Real-time market intelligence and personalized coaching, seamlessly integrated with TradingView. Join our beta and help shape the future of trading.
+                        Real-time analysis, instant coaching, and strategy signals directly inside TradingView. No other tool does this.
                     </p>
 
                     <div class="beta-info">
@@ -1171,19 +1364,19 @@
                             <span class="beta-info-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                             </span>
-                            <span class="beta-info-text"><strong>Unlimited access</strong> to all features</span>
+                            <span class="beta-info-text"><strong>Instant analysis</strong> on every candle — 1m, 5m, 15m charts covered</span>
                         </div>
                         <div class="beta-info-row">
                             <span class="beta-info-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                             </span>
-                            <span class="beta-info-text"><strong>100% free</strong> until <strong class="beta-date">January 1, 2026</strong></span>
+                            <span class="beta-info-text"><strong>Built for speed</strong> — sub-second responses when every second counts</span>
                         </div>
                         <div class="beta-info-row">
                             <span class="beta-info-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                             </span>
-                            <span class="beta-info-text"><strong>50% off</strong> for 3 months when you subscribe</span>
+                            <span class="beta-info-text"><strong>Free unlimited access</strong> through January 2026 — no credit card</span>
                         </div>
                     </div>
 
@@ -1213,9 +1406,138 @@
                     </div>
                 </div>
 
-                <div class="hero-visual">
+                <div class="hero-visual network-visualization">
                     <div class="hero-glow"></div>
-                    <img src="hero-image.png" alt="RileyAI Trading Interface" class="hero-image">
+                    <!-- Network Visualization SVG -->
+                    <svg viewBox="0 0 600 600" class="network-svg">
+                        <defs>
+                            <!-- Gradient for connections -->
+                            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.6"/>
+                                <stop offset="100%" stop-color="#22c55e" stop-opacity="0.2"/>
+                            </linearGradient>
+                            <!-- Glow filter -->
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Connection lines from center to nodes -->
+                        <g class="connection-lines">
+                            <!-- Inner ring connections -->
+                            <line x1="300" y1="300" x2="300" y2="150" class="connection-line"/>
+                            <line x1="300" y1="300" x2="430" y2="225" class="connection-line"/>
+                            <line x1="300" y1="300" x2="430" y2="375" class="connection-line"/>
+                            <line x1="300" y1="300" x2="300" y2="450" class="connection-line"/>
+                            <line x1="300" y1="300" x2="170" y2="375" class="connection-line"/>
+                            <line x1="300" y1="300" x2="170" y2="225" class="connection-line"/>
+                            <!-- Outer ring connections -->
+                            <line x1="300" y1="300" x2="300" y2="80" class="connection-line"/>
+                            <line x1="300" y1="300" x2="456" y2="134" class="connection-line"/>
+                            <line x1="300" y1="300" x2="520" y2="300" class="connection-line"/>
+                            <line x1="300" y1="300" x2="456" y2="466" class="connection-line"/>
+                            <line x1="300" y1="300" x2="300" y2="520" class="connection-line"/>
+                            <line x1="300" y1="300" x2="144" y2="466" class="connection-line"/>
+                            <line x1="300" y1="300" x2="80" y2="300" class="connection-line"/>
+                            <line x1="300" y1="300" x2="144" y2="134" class="connection-line"/>
+                        </g>
+
+                        <!-- Animated dots traveling along lines -->
+                        <g class="traveling-dots">
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-1"/>
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-2"/>
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-3"/>
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-4"/>
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-5"/>
+                            <circle r="3" fill="#22c55e" class="traveling-dot dot-6"/>
+                        </g>
+
+                        <!-- Outer ring nodes -->
+                        <g class="outer-nodes">
+                            <g class="node-group" data-label="Volume Spikes">
+                                <circle cx="300" cy="80" r="28" class="node-circle outer"/>
+                                <text x="300" y="84" class="node-text">Volume</text>
+                            </g>
+                            <g class="node-group" data-label="Breakouts">
+                                <circle cx="456" cy="134" r="28" class="node-circle outer"/>
+                                <text x="456" y="138" class="node-text">Breakouts</text>
+                            </g>
+                            <g class="node-group" data-label="Chart Patterns">
+                                <circle cx="520" cy="300" r="28" class="node-circle outer"/>
+                                <text x="520" y="304" class="node-text">Patterns</text>
+                            </g>
+                            <g class="node-group" data-label="Risk Levels">
+                                <circle cx="456" cy="466" r="28" class="node-circle outer"/>
+                                <text x="456" y="470" class="node-text">Risk</text>
+                            </g>
+                            <g class="node-group" data-label="Price Targets">
+                                <circle cx="300" cy="520" r="28" class="node-circle outer"/>
+                                <text x="300" y="524" class="node-text">Targets</text>
+                            </g>
+                            <g class="node-group" data-label="Multi-Timeframe">
+                                <circle cx="144" cy="466" r="28" class="node-circle outer"/>
+                                <text x="144" y="470" class="node-text">MTF</text>
+                            </g>
+                            <g class="node-group" data-label="Indicators">
+                                <circle cx="80" cy="300" r="28" class="node-circle outer"/>
+                                <text x="80" y="304" class="node-text">Indicators</text>
+                            </g>
+                            <g class="node-group" data-label="Order Flow">
+                                <circle cx="144" cy="134" r="28" class="node-circle outer"/>
+                                <text x="144" y="138" class="node-text">Order Flow</text>
+                            </g>
+                        </g>
+
+                        <!-- Inner ring nodes -->
+                        <g class="inner-nodes">
+                            <g class="node-group" data-label="Divergences">
+                                <circle cx="300" cy="150" r="32" class="node-circle inner"/>
+                                <text x="300" y="154" class="node-text">Divergences</text>
+                            </g>
+                            <g class="node-group" data-label="Support/Resistance">
+                                <circle cx="430" cy="225" r="32" class="node-circle inner"/>
+                                <text x="430" y="229" class="node-text">S/R Levels</text>
+                            </g>
+                            <g class="node-group" data-label="Confluence">
+                                <circle cx="430" cy="375" r="32" class="node-circle inner"/>
+                                <text x="430" y="379" class="node-text">Confluence</text>
+                            </g>
+                            <g class="node-group" data-label="Entry Points">
+                                <circle cx="300" cy="450" r="32" class="node-circle inner"/>
+                                <text x="300" y="454" class="node-text">Entry Points</text>
+                            </g>
+                            <g class="node-group" data-label="Trend Reversals">
+                                <circle cx="170" cy="375" r="32" class="node-circle inner"/>
+                                <text x="170" y="379" class="node-text">Reversals</text>
+                            </g>
+                            <g class="node-group" data-label="Momentum">
+                                <circle cx="170" cy="225" r="32" class="node-circle inner"/>
+                                <text x="170" y="229" class="node-text">Momentum</text>
+                            </g>
+                        </g>
+
+                        <!-- Center node with pulsing rings -->
+                        <g class="center-node">
+                            <circle cx="300" cy="300" r="70" class="pulse-ring ring-1"/>
+                            <circle cx="300" cy="300" r="70" class="pulse-ring ring-2"/>
+                            <circle cx="300" cy="300" r="55" class="center-circle"/>
+                            <text x="300" y="308" class="center-text">RileyAI</text>
+                        </g>
+
+                        <!-- Floating particles -->
+                        <g class="particles">
+                            <circle cx="50" cy="100" r="2" class="particle p1"/>
+                            <circle cx="550" cy="150" r="1.5" class="particle p2"/>
+                            <circle cx="100" cy="500" r="2" class="particle p3"/>
+                            <circle cx="500" cy="450" r="1.5" class="particle p4"/>
+                            <circle cx="200" cy="50" r="1" class="particle p5"/>
+                            <circle cx="450" cy="550" r="2" class="particle p6"/>
+                        </g>
+                    </svg>
                 </div>
             </div>
         </div>
@@ -1224,45 +1546,45 @@
     <section class="features">
         <div class="container">
             <div class="section-header fade-in">
-                <p class="section-label">Capabilities</p>
-                <h2 class="section-title">Intelligence That Moves With the Market</h2>
+                <p class="section-label">Built Different</p>
+                <h2 class="section-title">The Only AI That Lives Inside Your Charts</h2>
             </div>
 
             <div class="features-grid">
                 <div class="feature-card fade-in">
                     <div class="feature-number">01</div>
                     <h3>Real-Time Analysis</h3>
-                    <p>AI-powered insights delivered as each candle closes. Multi-timeframe confluence identifies the highest probability setups.</p>
+                    <p>The first AI that analyzes your chart in real-time. Every candle, every timeframe, every signal—analyzed before you can blink. Built for scalpers and day traders who need speed.</p>
                 </div>
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">02</div>
                     <h3>Live AI Coaching</h3>
-                    <p>Natural conversation with Riley. Ask questions, explore scenarios, and receive guidance tailored to your current chart.</p>
+                    <p>Ask anything, get answers instantly. "Is this a good entry?" "Where's support?" Riley sees your chart and responds in context. No copy-pasting, no switching tabs.</p>
                 </div>
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">03</div>
                     <h3>Strategy Templates</h3>
-                    <p>11 proven strategies from mean reversion to VWAP. Riley suggests the optimal approach for current market conditions.</p>
+                    <p>25 battle-tested strategies at your fingertips. Mean reversion, momentum breakouts, order flow setups—Riley matches the right strategy to current conditions.</p>
                 </div>
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">04</div>
                     <h3>Market Scanner</h3>
-                    <p>AI identifies top opportunities across the market. Complete with precise entry points, stop losses, and targets.</p>
+                    <p>Your AI scout finds the setups. Real-time scanning across the market. Entry, stop loss, target—delivered in seconds. Perfect for day traders hunting momentum.</p>
                 </div>
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">05</div>
                     <h3>Portfolio Tracking</h3>
-                    <p>Connect your brokerage via Plaid. Monitor holdings, allocation, and performance against market benchmarks.</p>
+                    <p>Track your positions without leaving TradingView. Connect your brokerage via Plaid. Monitor P&L, allocation, and performance in one place.</p>
                 </div>
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">06</div>
                     <h3>Adaptive Learning</h3>
-                    <p>Riley learns your trading style over time. The more you trade together, the more personalized your experience.</p>
+                    <p>An AI that learns how YOU trade. The more sessions you run, the smarter Riley gets about your style, your favorite setups, your risk tolerance.</p>
                 </div>
             </div>
         </div>
@@ -1277,30 +1599,30 @@
                 </div>
 
                 <div class="showcase-text fade-in">
-                    <h2>Seamless Integration with <em>TradingView</em></h2>
+                    <h2>Why Nothing Else <em>Comes Close</em></h2>
                     <p>
-                        Riley lives where you trade. No context switching, no separate apps. Just intelligent analysis overlaid on your existing workflow.
+                        ChatGPT doesn't see your charts. Other tools make you switch tabs. Riley is the first AI built to live inside TradingView—analyzing what you see, when you see it.
                     </p>
                     <ul class="showcase-list">
+                        <li>
+                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
+                            The only AI that reads your TradingView chart in real-time
+                        </li>
+                        <li>
+                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
+                            No screenshots, no copy-paste, no context switching
+                        </li>
+                        <li>
+                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
+                            Works with stocks, ETFs, crypto, forex—any symbol
+                        </li>
                         <li>
                             <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
                             Draggable panel that stays out of your way
                         </li>
                         <li>
                             <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Automatic symbol detection as you navigate
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Works with any stock, ETF, crypto, or forex
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Session history with full export capability
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            All timeframes from 1-minute to daily
+                            From 1-minute scalps to daily swing setups
                         </li>
                     </ul>
                 </div>
@@ -1324,7 +1646,7 @@
                             </svg>
                         </div>
                         <h3>Unlimited Until 2026</h3>
-                        <p>Full unlimited access at no cost through January 1st, 2026.</p>
+                        <p>Full unlimited access at no cost through January 13th, 2026.</p>
                     </div>
 
                     <div class="perk-card">
@@ -1335,7 +1657,7 @@
                             </svg>
                         </div>
                         <h3>50% Off Launch</h3>
-                        <p>Beta testers get half off their first 3 months of any plan.</p>
+                        <p>Beta testers get 50% off for life on any plan.</p>
                     </div>
 
                     <div class="perk-card">
@@ -1355,10 +1677,9 @@
     <section class="exclusivity">
         <div class="container">
             <div class="exclusivity-content fade-in">
-                <h2><em>Built for traders</em> who want an edge</h2>
+                <h2><em>Built for Day Traders</em> Who Refuse to Lose Their Edge</h2>
                 <p>
-                    RileyAI combines institutional-grade analysis with the intuition of an experienced mentor. 
-                    Be among the first to experience the future of AI-powered trading.
+                    You spend hours staring at charts. You've tried indicators, alerts, scanners. But nothing reads the market like an experienced trader—until now. Riley is your tireless co-pilot that never misses a setup.
                 </p>
                 <div class="stats-row">
                     <div class="stat-item">
@@ -1366,7 +1687,7 @@
                         <p>Always Available</p>
                     </div>
                     <div class="stat-item">
-                        <h4>11+</h4>
+                        <h4>25</h4>
                         <p>Strategy Templates</p>
                     </div>
                     <div class="stat-item">
@@ -1381,8 +1702,8 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content fade-in">
-                <h2>Ready to Trade Smarter?</h2>
-                <p>Join the beta and get unlimited access to all features.</p>
+                <h2>Be First. Trade Smarter.</h2>
+                <p>Join the traders already using the only AI built for TradingView. Free unlimited access until 2026.</p>
 
                 <div class="signup-form" id="signupForm2">
                     <input type="email" id="emailInput2" placeholder="Enter your email" required>
@@ -1404,8 +1725,8 @@
         <div class="container">
             <p>© 2025 RileyAI. All rights reserved.</p>
             <div class="footer-links">
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
+                <a href="/privacy.html">Privacy</a>
+                <a href="/terms.html">Terms</a>
                 <a href="mailto:hello@askrileyai.com">Contact</a>
             </div>
         </div>
