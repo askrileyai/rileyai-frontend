@@ -9,3 +9,6 @@ extracted/
 
 # Exclude phonto (temp file)
 phonto.PNG
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — RileyAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050508;
+            --bg-secondary: #0a0a10;
+            --bg-card: #0f0f18;
+            --bg-elevated: #141420;
+            --text-primary: #ffffff;
+            --text-secondary: #7a7a8c;
+            --text-muted: #4a4a5a;
+            --accent: #2962ff;
+            --accent-light: #4d7fff;
+            --accent-glow: rgba(41, 98, 255, 0.35);
+            --gold: #d4af37;
+            --gold-soft: rgba(212, 175, 55, 0.12);
+            --border: rgba(255, 255, 255, 0.04);
+            --border-light: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 0;
+            background: rgba(5, 5, 8, 0.95);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav .container {
+            max-width: 1240px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            text-decoration: none;
+        }
+
+        .logo-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-cta:hover {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        .content {
+            padding: 140px 0 80px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 400;
+            margin-bottom: 16px;
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 48px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        ul, ol {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+        }
+
+        a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+        }
+
+        footer .container {
+            max-width: 1240px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            footer .container {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">
+                <span class="logo-text">RileyAI</span>
+            </a>
+            <a href="/" class="nav-cta">Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="content">
+        <div class="container">
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last Updated: November 29, 2025</p>
+
+            <p>RileyAI ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Chrome extension and related services.</p>
+
+            <div class="highlight-box">
+                <p><strong>Summary:</strong> We collect only the data necessary to provide our AI trading analysis service. We never store your actual trading credentials or execute trades on your behalf. Your data is encrypted and protected using industry-standard security measures.</p>
+            </div>
+
+            <h2>1. Information We Collect</h2>
+
+            <h3>1.1 Account Information</h3>
+            <p>When you create a RileyAI account, we collect:</p>
+            <ul>
+                <li>Email address</li>
+                <li>Name (optional)</li>
+                <li>Password (stored as a secure hash - we never store your actual password)</li>
+                <li>Account preferences and settings</li>
+            </ul>
+
+            <h3>1.2 Usage Data</h3>
+            <p>When you use RileyAI, we automatically collect:</p>
+            <ul>
+                <li>Session activity (start time, duration, symbols analyzed)</li>
+                <li>Features used (chat messages, confluence analysis, snapshots)</li>
+                <li>Trading symbols and timeframes you view</li>
+                <li>Analysis requests and responses</li>
+                <li>Timestamps of interactions</li>
+            </ul>
+
+            <h3>1.3 Financial Data (Optional - Plaid Integration)</h3>
+            <p>If you choose to connect a brokerage account via Plaid:</p>
+            <ul>
+                <li>Read-only access to portfolio holdings and positions</li>
+                <li>Account balances and performance data</li>
+                <li>We <strong>NEVER</strong> store your brokerage login credentials</li>
+                <li>We <strong>CANNOT</strong> execute trades or transfer funds</li>
+                <li>All access is read-only and can be revoked at any time</li>
+            </ul>
+
+            <h3>1.4 Device Information</h3>
+            <p>We may collect:</p>
+            <ul>
+                <li>Browser type and version</li>
+                <li>Operating system</li>
+                <li>Extension version</li>
+                <li>General location (country/region, not precise location)</li>
+            </ul>
+
+            <h2>2. How We Use Your Information</h2>
+            <p>We use collected information to:</p>
+            <ul>
+                <li>Provide and improve our AI trading analysis service</li>
+                <li>Generate personalized market insights and coaching</li>
+                <li>Process your subscription and payments</li>
+                <li>Send service-related communications</li>
+                <li>Analyze usage patterns to improve features</li>
+                <li>Prevent fraud and ensure security</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+
+            <h2>3. Data Storage and Security</h2>
+
+            <h3>3.1 Local Storage</h3>
+            <p>We use Chrome's local storage (chrome.storage.local) to store:</p>
+            <ul>
+                <li>Authentication tokens</li>
+                <li>Session preferences</li>
+                <li>UI settings (panel position, size)</li>
+            </ul>
+
+            <h3>3.2 Server Storage</h3>
+            <p>Your data is stored on secure servers hosted by Railway with:</p>
+            <ul>
+                <li>PostgreSQL database with encryption at rest</li>
+                <li>TLS/SSL encryption for all data in transit</li>
+                <li>Regular security audits and updates</li>
+                <li>Automated backups</li>
+            </ul>
+
+            <h3>3.3 What We Do NOT Store</h3>
+            <ul>
+                <li>Your brokerage login credentials</li>
+                <li>Raw bank account information</li>
+                <li>Credit card numbers (handled by Stripe)</li>
+                <li>Your actual trading orders or executions</li>
+            </ul>
+
+            <h2>4. Third-Party Services</h2>
+            <p>We share data with the following third-party services to provide our service:</p>
+
+            <h3>4.1 Anthropic (Claude AI)</h3>
+            <p>Your chat messages and analysis requests are processed by Anthropic's Claude AI. Messages are sent to generate responses and are subject to <a href="https://www.anthropic.com/privacy" target="_blank">Anthropic's Privacy Policy</a>.</p>
+
+            <h3>4.2 Stripe</h3>
+            <p>Payment processing is handled by Stripe. Your payment information is sent directly to Stripe and is subject to <a href="https://stripe.com/privacy" target="_blank">Stripe's Privacy Policy</a>.</p>
+
+            <h3>4.3 Plaid</h3>
+            <p>If you connect a brokerage account, the connection is facilitated by Plaid. Data is subject to <a href="https://plaid.com/legal/" target="_blank">Plaid's Privacy Policy</a>.</p>
+
+            <h3>4.4 Alpaca</h3>
+            <p>Market data is provided by Alpaca Markets. Subject to <a href="https://alpaca.markets/disclosures" target="_blank">Alpaca's Privacy Policy</a>.</p>
+
+            <h3>4.5 Railway</h3>
+            <p>Our servers are hosted on Railway. Subject to <a href="https://railway.app/legal/privacy" target="_blank">Railway's Privacy Policy</a>.</p>
+
+            <h2>5. Your Rights</h2>
+            <p>Depending on your location, you may have the following rights under GDPR, CCPA, and other privacy laws:</p>
+
+            <h3>5.1 Right to Access</h3>
+            <p>You can request a copy of all personal data we hold about you.</p>
+
+            <h3>5.2 Right to Deletion</h3>
+            <p>You can request deletion of your account and all associated data. Some data may be retained for legal compliance.</p>
+
+            <h3>5.3 Right to Correction</h3>
+            <p>You can request correction of inaccurate personal data.</p>
+
+            <h3>5.4 Right to Data Portability</h3>
+            <p>You can request your data in a portable format (JSON/CSV).</p>
+
+            <h3>5.5 Right to Opt-Out</h3>
+            <p>You can opt-out of non-essential data collection and marketing communications.</p>
+
+            <h3>5.6 How to Exercise Your Rights</h3>
+            <p>To exercise any of these rights, contact us at <a href="mailto:privacy@askrileyai.com">privacy@askrileyai.com</a>. We will respond within 30 days.</p>
+
+            <h2>6. Data Retention</h2>
+            <ul>
+                <li><strong>Session data:</strong> Retained for 90 days, then automatically deleted</li>
+                <li><strong>Chat history:</strong> Retained for 90 days, then automatically deleted</li>
+                <li><strong>Account data:</strong> Retained until you request account deletion</li>
+                <li><strong>Payment history:</strong> Retained for 7 years per legal requirements</li>
+                <li><strong>Plaid connections:</strong> Can be revoked at any time through your account settings</li>
+            </ul>
+
+            <h2>7. Cookies and Tracking</h2>
+            <p>RileyAI uses:</p>
+            <ul>
+                <li><strong>Authentication tokens:</strong> Essential for maintaining your login session</li>
+                <li><strong>Functional cookies:</strong> To remember your preferences</li>
+            </ul>
+            <p>We do <strong>NOT</strong> use:</p>
+            <ul>
+                <li>Third-party advertising cookies</li>
+                <li>Cross-site tracking</li>
+                <li>Social media tracking pixels</li>
+            </ul>
+
+            <h2>8. Children's Privacy</h2>
+            <p>RileyAI is not intended for users under 18 years of age. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.</p>
+
+            <h2>9. International Data Transfers</h2>
+            <p>Your data may be transferred to and processed in the United States. By using RileyAI, you consent to this transfer. We ensure appropriate safeguards are in place for international data transfers.</p>
+
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify you of any material changes by:</p>
+            <ul>
+                <li>Posting the new Privacy Policy on this page</li>
+                <li>Updating the "Last Updated" date</li>
+                <li>Sending an email notification for significant changes</li>
+            </ul>
+
+            <h2>11. Contact Us</h2>
+            <p>If you have questions about this Privacy Policy or our data practices, please contact us:</p>
+            <ul>
+                <li><strong>Email:</strong> <a href="mailto:privacy@askrileyai.com">privacy@askrileyai.com</a></li>
+                <li><strong>General inquiries:</strong> <a href="mailto:hello@askrileyai.com">hello@askrileyai.com</a></li>
+            </ul>
+
+            <div class="highlight-box">
+                <p><strong>California Residents:</strong> Under the CCPA, you have specific rights regarding your personal information. We do not sell your personal information. To exercise your CCPA rights, contact us at <a href="mailto:privacy@askrileyai.com">privacy@askrileyai.com</a>.</p>
+            </div>
+
+            <div class="highlight-box">
+                <p><strong>EU/EEA Residents:</strong> Under GDPR, you have rights including access, rectification, erasure, and data portability. Our legal basis for processing is contract performance and legitimate interests. Contact our data protection representative at <a href="mailto:privacy@askrileyai.com">privacy@askrileyai.com</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 RileyAI. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="/privacy.html">Privacy</a>
+                <a href="/terms.html">Terms</a>
+                <a href="mailto:hello@askrileyai.com">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
