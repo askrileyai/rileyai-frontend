@@ -373,26 +373,58 @@
             100% { transform: translateY(200vh); }
         }
 
-        /* Transition overlay */
-        .transition-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--primary);
-            transform: scaleX(0);
-            transform-origin: left;
-            z-index: 100;
-            pointer-events: none;
+        /* Forward acceleration transition */
+        .accelerating {
+            animation: accelerateForward 0.8s ease-in forwards;
         }
 
-        .transition-overlay.active {
-            animation: wipeTransition 1s ease-in-out forwards;
+        @keyframes accelerateForward {
+            0% {
+                transform: translateZ(0) scale(1);
+                filter: blur(0);
+                opacity: 1;
+            }
+            60% {
+                transform: translateZ(500px) scale(1.5);
+                filter: blur(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateZ(2000px) scale(3);
+                filter: blur(20px);
+                opacity: 0;
+            }
         }
 
-        @keyframes wipeTransition {
-            0% { transform: scaleX(0); transform-origin: left; }
-            45% { transform: scaleX(1); transform-origin: left; }
-            55% { transform: scaleX(1); transform-origin: right; }
-            100% { transform: scaleX(0); transform-origin: right; }
+        body.accelerating {
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        body.accelerating .grid-bg {
+            animation: gridAccelerate 0.8s ease-in forwards;
+        }
+
+        @keyframes gridAccelerate {
+            0% { transform: perspective(500px) rotateX(60deg) translateZ(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateZ(500px); }
+        }
+
+        body.accelerating .entry-container,
+        body.accelerating .corner,
+        body.accelerating .bottom-info,
+        body.accelerating .data-stream {
+            animation: accelerateForward 0.8s ease-in forwards;
+        }
+
+        body.accelerating .glow-orb {
+            animation: orbAccelerate 0.8s ease-in forwards;
+        }
+
+        @keyframes orbAccelerate {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.03; }
+            50% { transform: translate(-50%, -50%) scale(2); opacity: 0.1; }
+            100% { transform: translate(-50%, -50%) scale(5); opacity: 0; filter: blur(30px); }
         }
 
         /* Bottom info */
@@ -466,8 +498,6 @@
         <span>Trade Smarter</span>
     </div>
 
-    <div class="transition-overlay"></div>
-
     <script>
         // Particle system with gentle 3D forward drift toward viewer
         const canvas = document.getElementById('particles');
@@ -485,6 +515,7 @@
 
         class Particle {
             constructor() {
+                this.speedMultiplier = 1;
                 this.reset(true);
             }
 
@@ -492,7 +523,7 @@
                 // 3D coordinates - x, y around center, z is depth
                 this.x = (Math.random() - 0.5) * canvas.width * 0.8;
                 this.y = (Math.random() - 0.5) * canvas.height * 0.8;
-                
+
                 if (initial) {
                     // Spread across all depths initially
                     this.z = Math.random() * 1000 + 200;
@@ -500,17 +531,17 @@
                     // Reset far away
                     this.z = 1000 + Math.random() * 200;
                 }
-                
+
                 this.baseSize = Math.random() * 1.5 + 0.5;
                 this.baseOpacity = Math.random() * 0.4 + 0.2;
             }
 
             update() {
-                // Gentle forward movement
-                this.z -= 1.5;
-                
-                // Reset when too close
-                if (this.z <= 50) {
+                // Forward movement (accelerates when entering)
+                this.z -= 1.5 * this.speedMultiplier;
+
+                // Reset when too close (unless accelerating)
+                if (this.z <= 50 && this.speedMultiplier === 1) {
                     this.reset(false);
                 }
             }
@@ -590,14 +621,20 @@
 
         animate();
 
-        // Enter site function
+        // Enter site function - forward acceleration effect
         function enterSite() {
-            const overlay = document.querySelector('.transition-overlay');
-            overlay.classList.add('active');
-            
+            // Add accelerating class to body
+            document.body.classList.add('accelerating');
+
+            // Speed up particles dramatically
+            particles.forEach(p => {
+                p.speedMultiplier = 15;
+            });
+
+            // Navigate after animation
             setTimeout(() => {
                 window.location.href = 'landing.html';
-            }, 500);
+            }, 700);
         }
 
         // Keyboard support
