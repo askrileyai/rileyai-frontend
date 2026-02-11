@@ -859,6 +859,58 @@
             stroke-width: 2.5;
         }
 
+        /* App Showcase Styles */
+        .app-showcase {
+            padding: 140px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .app-feature {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 120px;
+        }
+
+        .app-feature:last-child {
+            margin-bottom: 0;
+        }
+
+        .app-feature.reverse {
+            direction: rtl;
+        }
+
+        .app-feature.reverse > * {
+            direction: ltr;
+        }
+
+        .phone-pair {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .phone-mockup {
+            max-width: 240px;
+            height: auto;
+            border-radius: 24px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .feature-info p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.85;
+        }
+
         .beta-perks {
             padding: 120px 0;
             border-top: 1px solid var(--border);
@@ -1112,6 +1164,20 @@
             .stats-row {
                 gap: 48px;
             }
+
+            .app-feature {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .app-feature.reverse {
+                direction: ltr;
+            }
+
+            .phone-mockup {
+                max-width: 180px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1250,6 +1316,26 @@
 
             .showcase-list li {
                 font-size: 14px;
+            }
+
+            .app-showcase {
+                padding: 80px 0;
+            }
+
+            .app-feature {
+                margin-bottom: 80px;
+            }
+
+            .phone-pair {
+                gap: 16px;
+            }
+
+            .phone-mockup {
+                max-width: 140px;
+            }
+
+            .feature-info h3 {
+                font-size: 24px;
             }
 
             .beta-perks {
@@ -1590,41 +1676,58 @@
         </div>
     </section>
 
-    <section class="showcase">
+    <section class="app-showcase">
         <div class="container">
-            <div class="showcase-content">
-                <div class="showcase-visual fade-in">
-                    <div class="showcase-glow"></div>
-                    <img src="showcase-image.png" alt="RileyAI Mobile App" class="showcase-image">
-                </div>
+            <div class="section-header fade-in">
+                <p class="section-label">See It In Action</p>
+                <h2 class="section-title">The App That Trades With You</h2>
+            </div>
 
-                <div class="showcase-text fade-in">
-                    <h2>Why Nothing Else <em>Comes Close</em></h2>
-                    <p>
-                        ChatGPT doesn't understand markets. Generic AI gives generic advice. Riley is the first AI built specifically for traders—analyzing every candle, every move, in real-time.
-                    </p>
-                    <ul class="showcase-list">
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Insights on every candle—never miss a setup
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Ask Riley anything—voice or text, instant answers
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Works with stocks, ETFs, crypto, forex—any symbol
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            Mobile and desktop—trade from anywhere
-                        </li>
-                        <li>
-                            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></span>
-                            From 1-minute scalps to daily swing setups
-                        </li>
-                    </ul>
+            <!-- Feature 1: Dashboard -->
+            <div class="app-feature fade-in">
+                <div class="phone-pair">
+                    <img src="RileyAI-iPhone-Dashboard.png" alt="RileyAI Dashboard on iPhone" class="phone-mockup">
+                    <img src="RileyAI-Android-Dashboard.png" alt="RileyAI Dashboard on Android" class="phone-mockup">
+                </div>
+                <div class="feature-info">
+                    <h3>Portfolio Dashboard</h3>
+                    <p>Track your entire portfolio in real-time. See total value, daily gains, and compare your performance against the S&P 500. Set wealth goals and watch your progress.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2: Chat -->
+            <div class="app-feature fade-in reverse">
+                <div class="feature-info">
+                    <h3>AI Trading Assistant</h3>
+                    <p>Ask Riley anything about the markets. Get personalized session prep with key levels to watch, game plans for different scenarios, and instant trade ideas.</p>
+                </div>
+                <div class="phone-pair">
+                    <img src="RileyAI-iPhone-Chat.png" alt="RileyAI Chat on iPhone" class="phone-mockup">
+                    <img src="RileyAI-Android-Chat.png" alt="RileyAI Chat on Android" class="phone-mockup">
+                </div>
+            </div>
+
+            <!-- Feature 3: Charts -->
+            <div class="app-feature fade-in">
+                <div class="phone-pair">
+                    <img src="RileyAI-iPhone-Charts.png" alt="RileyAI Charts on iPhone" class="phone-mockup">
+                    <img src="RileyAI-Android-Charts.png" alt="RileyAI Charts on Android" class="phone-mockup">
+                </div>
+                <div class="feature-info">
+                    <h3>Live Chart Analysis</h3>
+                    <p>Watch every candle with AI insights. Real-time order flow analysis shows buyer vs seller pressure, with live commentary on price action as it unfolds.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4: Tax Center -->
+            <div class="app-feature fade-in reverse">
+                <div class="feature-info">
+                    <h3>Tax Optimization</h3>
+                    <p>Stay on top of your tax liability. See unrealized gains broken down by holding period, and discover tax-loss harvesting opportunities to minimize your bill.</p>
+                </div>
+                <div class="phone-pair">
+                    <img src="RileyAI-iPhone-Tax-Center.png" alt="RileyAI Tax Center on iPhone" class="phone-mockup">
+                    <img src="RileyAI-Android-Tax-Center.png" alt="RileyAI Tax Center on Android" class="phone-mockup">
                 </div>
             </div>
         </div>
