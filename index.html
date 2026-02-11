@@ -413,6 +413,7 @@
         body.accelerating .entry-container,
         body.accelerating .corner,
         body.accelerating .bottom-info,
+        body.accelerating .legal-links,
         body.accelerating .data-stream {
             animation: accelerateForward 0.8s ease-in forwards;
         }
@@ -430,7 +431,7 @@
         /* Bottom info */
         .bottom-info {
             position: fixed;
-            bottom: 40px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -441,6 +442,35 @@
             text-transform: uppercase;
             opacity: 0;
             animation: fadeSlideUp 1s ease-out 2.2s forwards;
+        }
+
+        /* Legal links */
+        .legal-links {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            opacity: 0;
+            animation: fadeSlideUp 1s ease-out 2.5s forwards;
+        }
+
+        .legal-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .legal-links a:hover {
+            color: var(--primary);
+        }
+
+        .legal-links span {
+            color: var(--text-dim);
+            opacity: 0.5;
         }
 
         /* Glitch effect on hover */
@@ -496,6 +526,12 @@
         <span>AI-Powered Insights</span>
         <span>•</span>
         <span>Trade Smarter</span>
+    </div>
+
+    <div class="legal-links">
+        <a href="/privacy.html">Privacy Policy</a>
+        <span>•</span>
+        <a href="/terms.html">Terms of Service</a>
     </div>
 
     <script>
