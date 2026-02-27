@@ -125,6 +125,15 @@
 
         .logo {
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
         }
 
         .logo-text {
@@ -137,11 +146,9 @@
 
         .announcement-banner {
             background: linear-gradient(90deg, rgba(0,180,216,0.1), rgba(0,180,216,0.05));
-            border-bottom: 1px solid rgba(0,180,216,0.2);
+            border-top: 1px solid rgba(0,180,216,0.2);
             padding: 12px 0;
             text-align: center;
-            position: relative;
-            z-index: 2;
         }
         .announcement-banner p {
             font-size: 14px;
@@ -176,7 +183,7 @@
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 160px 0 120px;
+            padding: 200px 0 120px;
             position: relative;
         }
 
@@ -1226,7 +1233,7 @@
             }
 
             .hero {
-                padding: 120px 0 80px;
+                padding: 160px 0 80px;
                 min-height: auto;
             }
 
@@ -1456,17 +1463,41 @@
     <nav id="nav">
         <div class="container">
             <a href="#" class="logo">
+                <svg class="logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#22d3ee"/>
+                            <stop offset="100%" stop-color="#10b981"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="32" cy="32" r="9" fill="url(#logoGrad)"/>
+                    <line x1="32" y1="18" x2="32" y2="10" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="32" cy="8" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="43.5" y1="20.5" x2="49.1" y2="14.9" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="51" cy="13" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="46" y1="32" x2="54" y2="32" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="56" cy="32" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="43.5" y1="43.5" x2="49.1" y2="49.1" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="51" cy="51" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="32" y1="46" x2="32" y2="54" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="32" cy="56" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="20.5" y1="43.5" x2="14.9" y2="49.1" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="13" cy="51" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="18" y1="32" x2="10" y2="32" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="32" r="2.5" fill="url(#logoGrad)"/>
+                    <line x1="20.5" y1="20.5" x2="14.9" y2="14.9" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="13" cy="13" r="2.5" fill="url(#logoGrad)"/>
+                </svg>
                 <span class="logo-text">RileyAI</span>
             </a>
             <a href="#signup" class="nav-cta">Get Early Access</a>
         </div>
-    </nav>
-
-    <div class="announcement-banner">
-        <div class="container">
-            <p><strong>Important:</strong> The RileyAI Chrome Extension is being discontinued. The full mobile app launches next week with all your data preserved.</p>
+        <div class="announcement-banner">
+            <div class="container">
+                <p><strong>Important:</strong> The RileyAI Chrome Extension is being discontinued. The full mobile app launches next week with all your data preserved.</p>
+            </div>
         </div>
-    </div>
+    </nav>
 
     <section class="hero" id="signup">
         <div class="container">
