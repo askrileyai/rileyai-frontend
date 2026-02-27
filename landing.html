@@ -135,6 +135,23 @@
             color: var(--text-primary);
         }
 
+        .announcement-banner {
+            background: linear-gradient(90deg, rgba(0,180,216,0.1), rgba(0,180,216,0.05));
+            border-bottom: 1px solid rgba(0,180,216,0.2);
+            padding: 12px 0;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .announcement-banner p {
+            font-size: 14px;
+            color: #a1a1aa;
+            margin: 0;
+        }
+        .announcement-banner strong {
+            color: var(--accent);
+        }
+
         .nav-cta {
             padding: 14px 32px;
             background: transparent;
@@ -1181,6 +1198,10 @@
                 direction: ltr;
             }
 
+            .app-feature.reverse .phone-single {
+                order: -1;
+            }
+
             .phone-mockup {
                 max-width: 180px;
             }
@@ -1437,16 +1458,22 @@
             <a href="#" class="logo">
                 <span class="logo-text">RileyAI</span>
             </a>
-            <a href="#signup" class="nav-cta">Get Notified</a>
+            <a href="#signup" class="nav-cta">Get Early Access</a>
         </div>
     </nav>
+
+    <div class="announcement-banner">
+        <div class="container">
+            <p><strong>Important:</strong> The RileyAI Chrome Extension is being discontinued. The full mobile app launches next week with all your data preserved.</p>
+        </div>
+    </div>
 
     <section class="hero" id="signup">
         <div class="container">
             <div class="hero-grid">
                 <div class="hero-content">
-                    <div class="hero-badge">Coming Soon — Mobile & Desktop</div>
-                    <h1>The <span class="brand">ChatGPT</span> of Trading Is Almost Here.</h1>
+                    <div class="hero-badge">Launching Next Week — iOS & Android</div>
+                    <h1>The <span class="brand">ChatGPT</span> of Trading Is Here.</h1>
                     <p class="hero-subtitle">
                         AI insights on every candle. Real-time coaching. Voice conversations. The first AI built specifically for traders.
                     </p>
@@ -1470,20 +1497,26 @@
                             </span>
                             <span class="beta-info-text"><strong>Trade School</strong> — Learn trading with structured AI-guided lessons</span>
                         </div>
+                        <div class="beta-info-row">
+                            <span class="beta-info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            </span>
+                            <span class="beta-info-text"><strong>14 days free</strong> — Sign up now for full access to all paid features</span>
+                        </div>
                     </div>
 
                     <div class="signup-form" id="signupForm">
                         <input type="email" id="emailInput" placeholder="Enter your email" required>
-                        <button type="submit" onclick="handleSignup()">Notify Me</button>
+                        <button type="submit" onclick="handleSignup()">Get Early Access</button>
                     </div>
-                    <p class="form-note">Be the first to know when RileyAI launches.</p>
+                    <p class="form-note">Sign up now and get 14 days of full access free.</p>
 
                     <div class="desktop-notice">
                         <p>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                             </svg>
-                            Mobile apps launching soon on App Store & Google Play. Desktop also coming.
+                            Available next week on iOS and Android.
                         </p>
                     </div>
 
@@ -1663,8 +1696,8 @@
 
                 <div class="feature-card fade-in">
                     <div class="feature-number">04</div>
-                    <h3>Market Scanner</h3>
-                    <p>Let Riley find the setups for you. Scan the entire market for momentum plays, breakouts, and reversals. Entry, stop, target—delivered in seconds.</p>
+                    <h3>Real-Time Charts</h3>
+                    <p>Stream live candlestick data directly in your session. See support, resistance, and key levels update in real-time as the market moves.</p>
                 </div>
 
                 <div class="feature-card fade-in">
@@ -1801,7 +1834,7 @@
             <div class="exclusivity-content fade-in">
                 <h2><em>Built for Day Traders</em> Who Refuse to Lose Their Edge</h2>
                 <p>
-                    You spend hours staring at charts. You've tried indicators, alerts, scanners. But nothing reads the market like an experienced trader—until now. Riley is your tireless co-pilot that never misses a setup.
+                    You spend hours staring at charts. You've tried indicators, alerts, watchlists. But nothing reads the market like an experienced trader—until now. Riley is your tireless co-pilot that never misses a setup.
                 </p>
                 <div class="stats-row">
                     <div class="stat-item">
@@ -1824,19 +1857,19 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content fade-in">
-                <h2>The ChatGPT of Trading. Coming Soon.</h2>
-                <p>Get notified the moment RileyAI launches on iOS, Android, and Desktop.</p>
+                <h2>The ChatGPT of Trading. Launching Next Week.</h2>
+                <p>Sign up now and get 14 days of full access to all paid features — completely free.</p>
 
                 <div class="signup-form" id="signupForm2">
                     <input type="email" id="emailInput2" placeholder="Enter your email" required>
-                    <button type="submit" onclick="handleSignup2()">Notify Me</button>
+                    <button type="submit" onclick="handleSignup2()">Get Early Access</button>
                 </div>
                 <div class="desktop-notice">
                     <p>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                         </svg>
-                        App Store, Google Play, and Desktop — all coming soon.
+                        Available next week on iOS and Android.
                     </p>
                 </div>
             </div>
