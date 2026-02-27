@@ -19,8 +19,8 @@
             --accent: #00b4d8;
             --accent-light: #22d3ee;
             --accent-glow: rgba(0, 180, 216, 0.35);
-            --gold: #d4af37;
-            --gold-soft: rgba(212, 175, 55, 0.12);
+            --gold: #ff7850;
+            --gold-soft: rgba(255, 120, 80, 0.12);
             --border: rgba(255, 255, 255, 0.04);
             --border-light: rgba(255, 255, 255, 0.08);
             --green: #00c853;
@@ -66,7 +66,7 @@
             height: 200%;
             background: 
                 radial-gradient(ellipse 600px 400px at 30% 30%, rgba(0, 180, 216, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse 500px 300px at 70% 70%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+                radial-gradient(ellipse 500px 300px at 70% 70%, rgba(255, 120, 80, 0.03) 0%, transparent 50%);
             animation: ambientMove 40s ease-in-out infinite;
         }
 
@@ -204,7 +204,7 @@
             gap: 10px;
             padding: 10px 18px;
             background: var(--gold-soft);
-            border: 1px solid rgba(212, 175, 55, 0.25);
+            border: 1px solid rgba(255, 120, 80, 0.25);
             border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
@@ -311,8 +311,8 @@
 
         /* Beta Code Box */
         .beta-code-box {
-            background: linear-gradient(135deg, rgba(0, 180, 216, 0.1) 0%, rgba(212, 175, 55, 0.1) 100%);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.1) 0%, rgba(255, 120, 80, 0.1) 100%);
+            border: 1px solid rgba(255, 120, 80, 0.3);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 32px;
@@ -340,7 +340,7 @@
             padding: 12px 24px;
             border-radius: 8px;
             display: inline-block;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(255, 120, 80, 0.2);
         }
 
         .beta-code-note {
@@ -452,7 +452,7 @@
             display: none;
             padding: 40px;
             background: var(--bg-card);
-            border: 1px solid rgba(212, 175, 55, 0.25);
+            border: 1px solid rgba(255, 120, 80, 0.25);
             border-radius: 12px;
         }
 
@@ -869,7 +869,7 @@
             height: 24px;
             min-width: 24px;
             background: var(--gold-soft);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            border: 1px solid rgba(255, 120, 80, 0.3);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -987,7 +987,7 @@
             height: 56px;
             margin: 0 auto 20px;
             background: var(--gold-soft);
-            border: 1px solid rgba(212, 175, 55, 0.25);
+            border: 1px solid rgba(255, 120, 80, 0.25);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -2022,7 +2022,7 @@
                 if (data.success) {
                     emailInput.value = '';
                     emailInput.placeholder = 'Check your inbox!';
-                    emailInput.style.borderColor = '#d4af37';
+                    emailInput.style.borderColor = '#ff7850';
                     button.textContent = 'Signed up!';
                     button.style.background = '#00c853';
                 } else {
