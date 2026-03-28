@@ -755,6 +755,10 @@
                     <span class="icon">&#x2699;&#xFE0F;</span>
                     <span>System</span>
                 </li>
+                <li class="nav-item" data-tab="feedback">
+                    <span class="icon">&#x1F4AC;</span>
+                    <span>Feedback</span>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <button class="logout-btn" onclick="logout()">Logout</button>
@@ -968,6 +972,39 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Tab: Feedback -->
+            <div class="tab-panel" id="tab-feedback">
+                <div class="stats-grid" style="margin-bottom:24px">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Feedback</div>
+                        <div class="stat-value cyan" id="fbTotal">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Positive</div>
+                        <div class="stat-value" id="fbPositive" style="color:var(--green)">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Negative</div>
+                        <div class="stat-value" id="fbNegative" style="color:var(--red)">-</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;display:flex;gap:8px">
+                    <button class="action-btn" onclick="loadFeedback('all')" id="fbFilterAll" style="background:var(--accent)">All</button>
+                    <button class="action-btn" onclick="loadFeedback('positive')" id="fbFilterPos">Positive</button>
+                    <button class="action-btn" onclick="loadFeedback('negative')" id="fbFilterNeg">Negative</button>
+                </div>
+
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr><th>Date</th><th>User</th><th>Type</th><th>Symbol</th><th>Rating</th><th>Message</th></tr>
+                        </thead>
+                        <tbody id="feedbackTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1027,6 +1064,10 @@
                     loadHealthData();
                     loadSnapshotData();
                 }
+                if (tab === 'feedback' && !document.getElementById('fbTotal').dataset.loaded) {
+                    loadFeedback();
+                    document.getElementById('fbTotal').dataset.loaded = '1';
+                }
             });
         });
 
@@ -1047,6 +1088,40 @@
                 }
             });
             return res;
+        }
+
+        // ── Feedback ──
+        async function loadFeedback(filter = 'all') {
+            // Update filter button styles
+            document.querySelectorAll('[id^="fbFilter"]').forEach(b => b.style.background = 'var(--bg-elevated)');
+            const btnId = filter === 'all' ? 'fbFilterAll' : filter === 'positive' ? 'fbFilterPos' : 'fbFilterNeg';
+            document.getElementById(btnId).style.background = 'var(--accent)';
+
+            try {
+                const url = filter === 'all' ? '/admin/feedback?limit=200' : `/admin/feedback?limit=200&filter=${filter}`;
+                const res = await adminFetch(url);
+                const data = await res.json();
+
+                // Update stats
+                document.getElementById('fbTotal').textContent = data.stats.total;
+                document.getElementById('fbPositive').textContent = data.stats.positive;
+                document.getElementById('fbNegative').textContent = data.stats.negative;
+
+                // Render table
+                const tbody = document.getElementById('feedbackTableBody');
+                tbody.innerHTML = data.feedback.map(f => `
+                    <tr>
+                        <td>${new Date(f.created_at).toLocaleDateString()}</td>
+                        <td>${f.email || 'Unknown'}</td>
+                        <td>${f.conversation_type || '-'}</td>
+                        <td>${f.symbol || '-'}</td>
+                        <td>${f.is_positive ? '\u{1F44D}' : '\u{1F44E}'}</td>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(f.message_content || '').substring(0, 100)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load feedback:', error);
+            }
         }
 
         // ── Load Dashboard ──
