@@ -357,25 +357,25 @@
                 <div class="card">
                     <h3>1. Choose Video Type</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px">
-                        <div class="video-type-card active" data-type="avatar" onclick="selectVideoType(this)">
+                        <div class="video-type-card active" data-type="combo" onclick="selectVideoType(this)" style="border-color:var(--accent);background:rgba(0,180,216,0.06)">
+                            <div style="font-size:28px;margin-bottom:6px">🚀</div>
+                            <div style="font-weight:600;font-size:13px;color:var(--accent)">Viral Video</div>
+                            <div style="font-size:11px;color:var(--text3)">Full combo — recommended</div>
+                        </div>
+                        <div class="video-type-card" data-type="avatar" onclick="selectVideoType(this)">
                             <div style="font-size:28px;margin-bottom:6px">🧑‍💼</div>
-                            <div style="font-weight:600;font-size:13px">Avatar</div>
+                            <div style="font-weight:600;font-size:13px">Avatar Only</div>
                             <div style="font-size:11px;color:var(--text3)">HeyGen presenter</div>
                         </div>
                         <div class="video-type-card" data-type="broll" onclick="selectVideoType(this)">
                             <div style="font-size:28px;margin-bottom:6px">🎥</div>
-                            <div style="font-weight:600;font-size:13px">B-Roll</div>
+                            <div style="font-weight:600;font-size:13px">B-Roll Only</div>
                             <div style="font-size:11px;color:var(--text3)">Hailuo fast clips</div>
                         </div>
                         <div class="video-type-card" data-type="cinematic" onclick="selectVideoType(this)">
                             <div style="font-size:28px;margin-bottom:6px">🎬</div>
-                            <div style="font-weight:600;font-size:13px">Cinematic</div>
+                            <div style="font-weight:600;font-size:13px">Cinematic Only</div>
                             <div style="font-size:11px;color:var(--text3)">Luma Dream Machine</div>
-                        </div>
-                        <div class="video-type-card" data-type="text" onclick="selectVideoType(this)">
-                            <div style="font-size:28px;margin-bottom:6px">✍️</div>
-                            <div style="font-weight:600;font-size:13px">Text Video</div>
-                            <div style="font-size:11px;color:var(--text3)">Animated words</div>
                         </div>
                     </div>
                 </div>
@@ -857,7 +857,7 @@ function toast(msg, type) {
 // VIDEO STUDIO
 // ════════════════════════════════════════════════
 
-let selectedVideoType = 'avatar';
+let selectedVideoType = 'combo';
 let selectedAvatarId = null;
 let generatedVideoUrl = null;
 let avatarsLoaded = false;
@@ -946,7 +946,49 @@ async function generateVideo() {
     generatedVideoUrl = null;
 
     try {
-        if (selectedVideoType === 'avatar') {
+        if (selectedVideoType === 'combo') {
+            // FULL PIPELINE: prompt → script → assets → stitch → complete video
+            setProgress([
+                { label: 'Starting viral video pipeline...', state: 'active' },
+                { label: 'Riley AI writing timed script', state: 'pending' },
+                { label: 'Generating avatar + B-roll + stock clips', state: 'pending' },
+                { label: 'Stitching with transitions + captions', state: 'pending' },
+            ]);
+            const pipeResp = await api('/video/pipeline', {
+                method: 'POST', body: JSON.stringify({
+                    prompt: prompt || script,
+                    duration: parseInt(document.getElementById('videoDuration').value),
+                    avatarId: selectedAvatarId,
+                    aspectRatio: aspect,
+                })
+            });
+            if (!pipeResp.success) throw new Error(pipeResp.error);
+
+            // Poll for completion
+            const jobId = pipeResp.jobId;
+            for (let i = 0; i < 120; i++) { // 10 min max
+                await new Promise(r => setTimeout(r, 5000));
+                const status = await api(`/video/pipeline/${jobId}`);
+                if (status.status === 'completed') {
+                    generatedVideoUrl = status.videoUrl;
+                    setProgress([
+                        { label: 'Script written', state: 'done' },
+                        { label: 'All clips generated', state: 'done' },
+                        { label: 'Video stitched with captions', state: 'done' },
+                        { label: 'Viral video ready!', state: 'done' },
+                    ]);
+                    break;
+                }
+                if (status.status === 'failed') throw new Error(status.error || 'Pipeline failed');
+                // Update progress
+                setProgress([
+                    { label: 'Pipeline running...', state: 'active' },
+                    { label: `Processing (${Math.round(i * 5 / 60)}min elapsed)`, state: 'active' },
+                ]);
+            }
+            if (!generatedVideoUrl) throw new Error('Pipeline timed out');
+
+        } else if (selectedVideoType === 'avatar') {
             // Avatar: need script → HeyGen
             let finalScript = script;
             if (!finalScript) {
