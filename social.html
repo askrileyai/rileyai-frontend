@@ -163,6 +163,20 @@
         .empty { text-align:center; padding:40px; color:var(--text3); }
         .empty .icon { font-size:40px; margin-bottom:12px; }
 
+        /* Video type cards */
+        .video-type-card { padding:16px; border-radius:10px; background:var(--elevated); border:1px solid var(--border2); text-align:center; cursor:pointer; transition:all 0.15s; }
+        .video-type-card:hover { border-color:var(--text3); }
+        .video-type-card.active { border-color:var(--accent); background:rgba(0,180,216,0.06); }
+        .avatar-thumb { width:48px; height:48px; border-radius:8px; object-fit:cover; border:2px solid var(--border2); cursor:pointer; transition:all 0.15s; flex-shrink:0; }
+        .avatar-thumb:hover { border-color:var(--text3); }
+        .avatar-thumb.selected { border-color:var(--accent); box-shadow:0 0 8px var(--glow); }
+        .progress-step { display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14px; }
+        .progress-step .step-icon { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; }
+        .step-pending { background:var(--elevated); color:var(--text3); }
+        .step-active { background:rgba(0,180,216,0.15); color:var(--accent); }
+        .step-done { background:rgba(0,200,83,0.15); color:var(--green); }
+        .step-failed { background:rgba(255,82,82,0.15); color:var(--red); }
+
         /* Responsive */
         @media (max-width:900px) {
             .sidebar { width:60px; }
@@ -198,6 +212,7 @@
                 <li data-page="calendar"><span class="icon">📅</span><span>Calendar</span></li>
                 <li data-page="drafts"><span class="icon">📝</span><span>Drafts</span></li>
                 <li data-page="analytics"><span class="icon">📊</span><span>Analytics</span></li>
+                <li data-page="video"><span class="icon">🎬</span><span>Video Studio</span></li>
                 <li data-page="automation"><span class="icon">⚡</span><span>Automation</span></li>
                 <li data-page="settings"><span class="icon">⚙️</span><span>Settings</span></li>
             </ul>
@@ -329,6 +344,102 @@
                 </div>
                 <button class="btn btn-primary" onclick="showNewAutomation()" style="margin-bottom:16px">+ New Automation</button>
                 <div id="automationList"><div class="empty"><div class="icon">⚡</div>No automations yet</div></div>
+            </div>
+
+            <!-- ═══ VIDEO STUDIO ═══ -->
+            <div class="page" id="page-video">
+                <div class="page-header">
+                    <h1>Video Studio</h1>
+                    <p>Generate AI videos with HeyGen, Hailuo, and Luma — then post everywhere</p>
+                </div>
+
+                <!-- Step 1: Video Type -->
+                <div class="card">
+                    <h3>1. Choose Video Type</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px">
+                        <div class="video-type-card active" data-type="avatar" onclick="selectVideoType(this)">
+                            <div style="font-size:28px;margin-bottom:6px">🧑‍💼</div>
+                            <div style="font-weight:600;font-size:13px">Avatar</div>
+                            <div style="font-size:11px;color:var(--text3)">HeyGen presenter</div>
+                        </div>
+                        <div class="video-type-card" data-type="broll" onclick="selectVideoType(this)">
+                            <div style="font-size:28px;margin-bottom:6px">🎥</div>
+                            <div style="font-weight:600;font-size:13px">B-Roll</div>
+                            <div style="font-size:11px;color:var(--text3)">Hailuo fast clips</div>
+                        </div>
+                        <div class="video-type-card" data-type="cinematic" onclick="selectVideoType(this)">
+                            <div style="font-size:28px;margin-bottom:6px">🎬</div>
+                            <div style="font-weight:600;font-size:13px">Cinematic</div>
+                            <div style="font-size:11px;color:var(--text3)">Luma Dream Machine</div>
+                        </div>
+                        <div class="video-type-card" data-type="text" onclick="selectVideoType(this)">
+                            <div style="font-size:28px;margin-bottom:6px">✍️</div>
+                            <div style="font-weight:600;font-size:13px">Text Video</div>
+                            <div style="font-size:11px;color:var(--text3)">Animated words</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Prompt & Script -->
+                <div class="card">
+                    <h3>2. Describe Your Video</h3>
+                    <textarea class="compose-area" id="videoPrompt" placeholder="e.g. SPY just broke above $640 — here's why bulls are in control and what to watch next..." style="min-height:80px"></textarea>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-ai" onclick="writeScript()">✨ Write Script with Riley</button>
+                        <select id="videoDuration" class="schedule-input" style="padding:8px 12px">
+                            <option value="15">15 seconds</option>
+                            <option value="30" selected>30 seconds</option>
+                            <option value="60">60 seconds</option>
+                        </select>
+                    </div>
+                    <div id="scriptPreview" style="display:none;margin-top:12px">
+                        <label style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Generated Script:</label>
+                        <textarea class="compose-area" id="videoScript" style="min-height:100px;margin-top:4px"></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 3: Options -->
+                <div class="card">
+                    <h3>3. Options</h3>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                        <div>
+                            <label style="font-size:12px;color:var(--text3)">Aspect Ratio</label>
+                            <select id="videoAspect" class="schedule-input" style="display:block;margin-top:4px">
+                                <option value="9:16" selected>9:16 (TikTok/Reels)</option>
+                                <option value="16:9">16:9 (YouTube)</option>
+                                <option value="1:1">1:1 (Instagram)</option>
+                            </select>
+                        </div>
+                        <div id="avatarPickerSection">
+                            <label style="font-size:12px;color:var(--text3)">Avatar</label>
+                            <div id="avatarPicker" style="display:flex;gap:6px;margin-top:4px;max-width:400px;overflow-x:auto;padding-bottom:4px">
+                                <div style="color:var(--text3);font-size:13px;padding:8px">Loading avatars...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Generate -->
+                <div style="margin-bottom:16px">
+                    <button class="btn btn-primary" onclick="generateVideo()" id="genBtn" style="font-size:16px;padding:14px 28px">🚀 Generate Video</button>
+                </div>
+
+                <!-- Progress -->
+                <div class="card" id="videoProgress" style="display:none">
+                    <h3>Generating...</h3>
+                    <div id="progressSteps" style="margin-top:12px"></div>
+                </div>
+
+                <!-- Step 5: Preview -->
+                <div class="card" id="videoPreviewCard" style="display:none">
+                    <h3>Preview</h3>
+                    <video id="videoPlayer" controls style="width:100%;max-height:500px;border-radius:8px;background:#000;margin:12px 0"></video>
+                    <div style="display:flex;gap:10px;margin-top:12px">
+                        <button class="btn btn-primary" onclick="useVideo()">✅ Use This Video</button>
+                        <button class="btn btn-secondary" onclick="generateVideo()">🔄 Regenerate</button>
+                        <button class="btn btn-danger" onclick="discardVideo()">🗑 Discard</button>
+                    </div>
+                </div>
             </div>
 
             <!-- ═══ SETTINGS ═══ -->
@@ -741,6 +852,177 @@ function toast(msg, type) {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
 }
+
+// ════════════════════════════════════════════════
+// VIDEO STUDIO
+// ════════════════════════════════════════════════
+
+let selectedVideoType = 'avatar';
+let selectedAvatarId = null;
+let generatedVideoUrl = null;
+let avatarsLoaded = false;
+
+function selectVideoType(el) {
+    document.querySelectorAll('.video-type-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedVideoType = el.dataset.type;
+    // Show/hide avatar picker
+    document.getElementById('avatarPickerSection').style.display =
+        (selectedVideoType === 'avatar') ? 'block' : 'none';
+}
+
+// Load avatars on first visit to video page
+function loadAvatars() {
+    if (avatarsLoaded) return;
+    avatarsLoaded = true;
+    api('/video/avatars').then(resp => {
+        if (!resp.success || !resp.avatars?.length) {
+            document.getElementById('avatarPicker').innerHTML = '<div style="font-size:12px;color:var(--text3)">No avatars found — using default</div>';
+            return;
+        }
+        document.getElementById('avatarPicker').innerHTML = resp.avatars.slice(0, 20).map(a =>
+            `<img src="${a.thumbnail}" class="avatar-thumb${a.id === (selectedAvatarId || resp.avatars[0].id) ? ' selected' : ''}" data-id="${a.id}" title="${a.name}" onclick="pickAvatar(this)" onerror="this.style.display='none'">`
+        ).join('');
+        if (!selectedAvatarId) selectedAvatarId = resp.avatars[0].id;
+    }).catch(() => {
+        document.getElementById('avatarPicker').innerHTML = '<div style="font-size:12px;color:var(--text3)">Using default avatar</div>';
+    });
+}
+
+function pickAvatar(el) {
+    document.querySelectorAll('.avatar-thumb').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAvatarId = el.dataset.id;
+}
+
+async function writeScript() {
+    const prompt = document.getElementById('videoPrompt').value.trim();
+    if (!prompt) return toast('Enter a video idea first', 'error');
+    const duration = document.getElementById('videoDuration').value;
+    const btn = document.querySelector('.btn-ai');
+    btn.innerHTML = '<span class="spinner"></span> Writing...'; btn.disabled = true;
+    try {
+        const resp = await api('/video/script', {
+            method: 'POST', body: JSON.stringify({ prompt, duration: parseInt(duration) })
+        });
+        if (resp.success) {
+            document.getElementById('videoScript').value = resp.script;
+            document.getElementById('scriptPreview').style.display = 'block';
+            toast('Script ready!', 'success');
+        }
+    } catch (e) { toast('Script failed', 'error'); }
+    btn.innerHTML = '✨ Write Script with Riley'; btn.disabled = false;
+}
+
+function setProgress(steps) {
+    document.getElementById('videoProgress').style.display = 'block';
+    document.getElementById('progressSteps').innerHTML = steps.map(s =>
+        `<div class="progress-step"><div class="step-icon step-${s.state}">${s.state === 'done' ? '✓' : s.state === 'active' ? '⏳' : s.state === 'failed' ? '✗' : '○'}</div><span>${s.label}</span></div>`
+    ).join('');
+}
+
+async function pollStatus(provider, id, maxAttempts = 60) {
+    for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(r => setTimeout(r, 5000)); // 5s between polls
+        try {
+            const resp = await api(`/video/status/${provider}/${id}`);
+            if (resp.status === 'completed') return resp;
+            if (resp.status === 'failed') throw new Error('Generation failed');
+        } catch (e) { if (i > 5) throw e; }
+    }
+    throw new Error('Generation timed out');
+}
+
+async function generateVideo() {
+    const prompt = document.getElementById('videoPrompt').value.trim();
+    const script = document.getElementById('videoScript')?.value?.trim() || '';
+    const aspect = document.getElementById('videoAspect').value;
+
+    if (!prompt && !script) return toast('Enter a prompt or script', 'error');
+
+    const btn = document.getElementById('genBtn');
+    btn.innerHTML = '<span class="spinner"></span> Generating...'; btn.disabled = true;
+    document.getElementById('videoPreviewCard').style.display = 'none';
+    generatedVideoUrl = null;
+
+    try {
+        if (selectedVideoType === 'avatar') {
+            // Avatar: need script → HeyGen
+            let finalScript = script;
+            if (!finalScript) {
+                setProgress([{ label: 'Writing script with Riley...', state: 'active' }]);
+                const scriptResp = await api('/video/script', { method: 'POST', body: JSON.stringify({ prompt, duration: parseInt(document.getElementById('videoDuration').value) }) });
+                finalScript = scriptResp.script;
+                document.getElementById('videoScript').value = finalScript;
+                document.getElementById('scriptPreview').style.display = 'block';
+            }
+            setProgress([
+                { label: 'Script ready', state: 'done' },
+                { label: 'Generating avatar video with HeyGen...', state: 'active' },
+            ]);
+            const gen = await api('/video/heygen', { method: 'POST', body: JSON.stringify({ script: finalScript, avatarId: selectedAvatarId, aspectRatio: aspect }) });
+            setProgress([
+                { label: 'Script ready', state: 'done' },
+                { label: 'HeyGen rendering (1-3 min)...', state: 'active' },
+            ]);
+            const result = await pollStatus('heygen', gen.videoId);
+            generatedVideoUrl = result.videoUrl;
+
+        } else if (selectedVideoType === 'broll') {
+            setProgress([{ label: 'Generating B-roll with Hailuo...', state: 'active' }]);
+            const gen = await api('/video/hailuo', { method: 'POST', body: JSON.stringify({ prompt, aspectRatio: aspect }) });
+            setProgress([{ label: 'Hailuo rendering...', state: 'active' }]);
+            const result = await pollStatus('hailuo', gen.taskId);
+            generatedVideoUrl = result.videoUrl;
+
+        } else if (selectedVideoType === 'cinematic') {
+            setProgress([{ label: 'Generating cinematic clip with Luma...', state: 'active' }]);
+            const gen = await api('/video/luma', { method: 'POST', body: JSON.stringify({ prompt, aspectRatio: aspect }) });
+            setProgress([{ label: 'Luma Dream Machine rendering...', state: 'active' }]);
+            const result = await pollStatus('luma', gen.generationId);
+            generatedVideoUrl = result.videoUrl;
+
+        } else if (selectedVideoType === 'text') {
+            // Text video: for now, just show a message
+            toast('Text video generation coming soon — use Avatar or B-Roll', 'error');
+            btn.innerHTML = '🚀 Generate Video'; btn.disabled = false;
+            return;
+        }
+
+        if (generatedVideoUrl) {
+            setProgress([{ label: 'Video ready!', state: 'done' }]);
+            document.getElementById('videoPlayer').src = generatedVideoUrl;
+            document.getElementById('videoPreviewCard').style.display = 'block';
+            toast('Video generated!', 'success');
+        }
+    } catch (e) {
+        setProgress([{ label: 'Failed: ' + e.message, state: 'failed' }]);
+        toast('Video generation failed: ' + e.message, 'error');
+    }
+
+    btn.innerHTML = '🚀 Generate Video'; btn.disabled = false;
+}
+
+function useVideo() {
+    if (!generatedVideoUrl) return;
+    uploadedMedia.push(generatedVideoUrl);
+    renderMediaPreview();
+    // Switch to compose page
+    document.querySelectorAll('.nav li').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-page="compose"]').classList.add('active');
+    document.getElementById('page-compose').classList.add('active');
+    toast('Video attached to compose!', 'success');
+}
+
+function discardVideo() {
+    generatedVideoUrl = null;
+    document.getElementById('videoPreviewCard').style.display = 'none';
+    document.getElementById('videoProgress').style.display = 'none';
+}
+
+// Load avatars when switching to video page
+document.querySelector('[data-page="video"]').addEventListener('click', () => setTimeout(loadAvatars, 100));
 </script>
 </body>
 </html>
