@@ -255,6 +255,10 @@
                             <div class="dot dot-youtube"></div>
                             <span class="name">YouTube</span>
                         </div>
+                        <div class="platform-toggle active" data-platform="linkedin" onclick="togglePlatform(this)">
+                            <div class="dot" style="background:#0A66C2"></div>
+                            <span class="name">LinkedIn</span>
+                        </div>
                     </div>
 
                     <!-- Media upload -->
@@ -1046,6 +1050,7 @@ async function loadConnections() {
             { key: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F' },
             { key: 'tiktok', name: 'TikTok', icon: '🎵', color: '#fff' },
             { key: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000' },
+            { key: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
         ];
         document.getElementById('connectionsList').innerHTML = platforms.map(p => {
             const c = conns[p.key] || {};
@@ -1086,7 +1091,7 @@ async function disconnect(platform) {
 
 // ── Helpers ──
 function platformEmoji(p) {
-    return { twitter: '𝕏', instagram: '📷', tiktok: '🎵', youtube: '▶️' }[p] || '📱';
+    return { twitter: '𝕏', instagram: '📷', tiktok: '🎵', youtube: '▶️', linkedin: '💼' }[p] || '📱';
 }
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function toast(msg, type) {
