@@ -819,14 +819,28 @@ function renderCalendar() {
         const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
         const dayPosts = scheduled.filter(p => {
             const pd = new Date(p.scheduled_at || p.posted_at || p.created_at);
-            // Compare in ET timezone
             const etDay = parseInt(pd.toLocaleDateString('en-US', {timeZone:'America/New_York', day:'numeric'}));
             const etMonth = pd.toLocaleDateString('en-US', {timeZone:'America/New_York', month:'numeric'}) - 1;
             const etYear = parseInt(pd.toLocaleDateString('en-US', {timeZone:'America/New_York', year:'numeric'}));
             return etDay === d && etMonth === month && etYear === year;
         });
+
+        // Check if any active automations cover this day
+        const dayDate = new Date(year, month, d);
+        const automationMarkers = (window._automations || []).filter(a => {
+            if (!a.enabled) return false;
+            const start = a.config?.startDate ? new Date(a.config.startDate) : new Date(a.created_at);
+            const end = a.config?.endDate ? new Date(a.config.endDate) : null;
+            start.setHours(0,0,0,0);
+            const dayCheck = new Date(dayDate); dayCheck.setHours(0,0,0,0);
+            if (dayCheck < start) return false;
+            if (end) { end.setHours(23,59,59); if (dayCheck > end) return false; }
+            return true;
+        });
+
         html += `<div class="calendar-day${isToday ? ' today' : ''}">
             <div class="day-num">${d}</div>
+            ${automationMarkers.map(a => `<div class="calendar-post twitter" style="font-size:9px" title="${escHtml(a.name)}">⚡ ${(a.config?.platforms||['x']).map(p=>platformEmoji(p)).join('')} Auto</div>`).join('')}
             ${dayPosts.map(p => `<div class="calendar-post ${p.platforms?.[0] || ''}" title="${escHtml(p.content?.substring(0, 50) || '')}">${escHtml(p.content?.substring(0, 20) || '...')}</div>`).join('')}
         </div>`;
     }
@@ -860,6 +874,7 @@ async function loadAutomations() {
     try {
         const resp = await api('/automations');
         const list = resp.automations || [];
+        window._automations = list; // Store globally for calendar
         if (!list.length) { document.getElementById('automationList').innerHTML = '<div class="empty"><div class="icon">⚡</div>No automations yet</div>'; return; }
 
         // Also load recent automated posts
@@ -892,10 +907,17 @@ async function loadAutomations() {
                     <span>🕐 Last run: <strong>${lastRun}</strong></span>
                     <span>Status: <strong style="color:${a.enabled ? 'var(--green)' : 'var(--red)'}">${a.enabled ? 'Active' : 'Paused'}</strong></span>
                 </div>
-                <div style="display:flex;gap:8px;margin-bottom:12px">
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
                     <button class="btn btn-sm btn-secondary" onclick="editAutomationInterval(${a.id}, ${interval})">⏱ Change Interval</button>
                     <button class="btn btn-sm btn-ai" onclick="previewAutomation(${a.id})">👁 Preview Next Post</button>
                     <button class="btn btn-sm btn-primary" onclick="triggerAutomation(${a.id})">🚀 Post Now</button>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:12px">
+                    <label style="color:var(--text3)">📅 Start:</label>
+                    <input type="date" class="schedule-input" id="autoStart_${a.id}" value="${config.startDate || new Date(a.created_at).toISOString().split('T')[0]}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px">
+                    <label style="color:var(--text3)">End:</label>
+                    <input type="date" class="schedule-input" id="autoEnd_${a.id}" value="${config.endDate || ''}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px" placeholder="∞">
+                    <span style="color:var(--text3);font-size:11px">${config.endDate ? '' : '(∞ No end date — runs forever)'}</span>
                 </div>
                 ${a.type === 'ai_contextual' ? `<div style="font-size:11px;color:var(--text3);padding:8px;background:var(--elevated);border-radius:6px;margin-bottom:8px">
                     📋 <strong>Schedule:</strong> Pre-market → market insights • Market hours → trade setups & analysis • After hours → journaling & review • Overnight → Riley Trade School
@@ -937,6 +959,19 @@ async function deleteAutomation(id) {
     await api('/automations/' + id, { method: 'DELETE' });
     toast('Automation deleted', 'success');
     loadAutomations();
+}
+
+async function saveAutomationDates(id) {
+    const startDate = document.getElementById('autoStart_' + id)?.value || '';
+    const endDate = document.getElementById('autoEnd_' + id)?.value || '';
+    const resp = await api('/automations');
+    const auto = (resp.automations || []).find(a => a.id === id);
+    if (!auto) return;
+    const config = { ...auto.config, startDate: startDate || undefined, endDate: endDate || undefined };
+    await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ config }) });
+    toast(endDate ? `Runs ${startDate} to ${endDate}` : `Runs from ${startDate} (no end date)`, 'success');
+    loadAutomations();
+    renderCalendar();
 }
 
 async function saveAutomationPrompt(id) {
