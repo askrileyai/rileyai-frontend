@@ -857,20 +857,109 @@ async function loadAutomations() {
         const resp = await api('/automations');
         const list = resp.automations || [];
         if (!list.length) { document.getElementById('automationList').innerHTML = '<div class="empty"><div class="icon">⚡</div>No automations yet</div>'; return; }
-        document.getElementById('automationList').innerHTML = list.map(a => `
-            <div class="automation-card">
-                <div class="automation-info">
-                    <div class="automation-name">${escHtml(a.name)}</div>
-                    <div class="automation-desc">${a.type} — ${a.enabled ? 'Active' : 'Paused'}</div>
+
+        // Also load recent automated posts
+        const postsResp = await api('/posts?limit=10');
+        const automatedPosts = (postsResp.posts || []).filter(p => (p.tags || []).includes('automated'));
+
+        document.getElementById('automationList').innerHTML = list.map(a => {
+            const config = a.config || {};
+            const lastRun = a.last_run_at ? new Date(a.last_run_at).toLocaleString() : 'Never';
+            const interval = config.intervalMinutes || 60;
+            const platforms = (config.platforms || []).map(p => platformEmoji(p)).join(' ');
+
+            return `
+            <div class="card" style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <div>
+                        <div style="font-size:16px;font-weight:600">${escHtml(a.name)}</div>
+                        <div style="font-size:12px;color:var(--text3);margin-top:2px">
+                            ${a.type === 'ai_contextual' ? '🤖 AI-generated contextual posts' : '📝 Template-based'} • Every ${interval} min • ${platforms}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="toggle-switch ${a.enabled ? 'on' : ''}" onclick="toggleAutomation(${a.id}, ${!a.enabled})"></div>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAutomation(${a.id})">🗑</button>
+                    </div>
                 </div>
-                <div class="toggle-switch ${a.enabled ? 'on' : ''}" onclick="toggleAutomation(${a.id}, ${!a.enabled})"></div>
-            </div>
-        `).join('');
+                <div style="display:flex;gap:16px;font-size:12px;color:var(--text2);margin-bottom:12px">
+                    <span>⏱ Interval: <strong>${interval} min</strong></span>
+                    <span>📡 Platforms: <strong>${(config.platforms || []).join(', ')}</strong></span>
+                    <span>🕐 Last run: <strong>${lastRun}</strong></span>
+                    <span>Status: <strong style="color:${a.enabled ? 'var(--green)' : 'var(--red)'}">${a.enabled ? 'Active' : 'Paused'}</strong></span>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:12px">
+                    <button class="btn btn-sm btn-secondary" onclick="editAutomationInterval(${a.id}, ${interval})">⏱ Change Interval</button>
+                    <button class="btn btn-sm btn-ai" onclick="previewAutomation(${a.id})">👁 Preview Next Post</button>
+                    <button class="btn btn-sm btn-primary" onclick="triggerAutomation(${a.id})">🚀 Post Now</button>
+                </div>
+                ${a.type === 'ai_contextual' ? '<div style="font-size:11px;color:var(--text3);padding:8px;background:var(--elevated);border-radius:6px;margin-bottom:8px">📋 <strong>Schedule:</strong> Pre-market → market insights • Market hours → trade setups & analysis • After hours → journaling & review • Overnight → Riley Trade School</div>' : ''}
+            </div>`;
+        }).join('');
+
+        // Show recent automated posts
+        if (automatedPosts.length > 0) {
+            document.getElementById('automationList').innerHTML += `
+                <div class="card">
+                    <h3>📜 Recent Automated Posts</h3>
+                    ${automatedPosts.map(p => `
+                        <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+                            <div style="flex:1">
+                                <p style="font-size:13px;color:var(--text2);margin-bottom:4px">${escHtml((p.content || '').substring(0, 200))}</p>
+                                <span style="font-size:11px;color:var(--text3)">${new Date(p.posted_at || p.created_at).toLocaleString()} • ${(p.platforms || []).map(pl => platformEmoji(pl)).join(' ')} • <span class="status-badge status-${p.status}">${p.status}</span></span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+        }
     } catch {}
 }
 
 async function toggleAutomation(id, enabled) {
     await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ enabled }) });
+    toast(enabled ? 'Automation enabled' : 'Automation paused', 'success');
+    loadAutomations();
+}
+
+async function deleteAutomation(id) {
+    if (!confirm('Delete this automation?')) return;
+    await api('/automations/' + id, { method: 'DELETE' });
+    toast('Automation deleted', 'success');
+    loadAutomations();
+}
+
+async function editAutomationInterval(id, currentInterval) {
+    const newInterval = prompt('Post every how many minutes?', currentInterval);
+    if (!newInterval || isNaN(newInterval)) return;
+    await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ config: { intervalMinutes: parseInt(newInterval), platforms: ['twitter'], tags: ['automated', 'promo', 'rileyai'] } }) });
+    toast('Interval updated to ' + newInterval + ' min', 'success');
+    loadAutomations();
+}
+
+async function previewAutomation() {
+    const el = document.getElementById('automationList');
+    el.innerHTML += '<div class="card"><div class="spinner"></div> Generating preview...</div>';
+    try {
+        const resp = await api('/generate-caption', { method: 'POST', body: JSON.stringify({ description: 'RileyAI coming soon promo - contextual for current time of day', platforms: ['twitter'] }) });
+        if (resp.success && resp.captions?.twitter) {
+            el.innerHTML += `<div class="card"><h3>👁 Next Post Preview</h3><p style="color:var(--text2);margin-top:8px;font-size:14px">${escHtml(resp.captions.twitter)}</p><button class="btn btn-sm btn-primary" onclick="postPreview(this)" style="margin-top:10px">🚀 Post This Now</button></div>`;
+        }
+    } catch (e) { toast('Preview failed', 'error'); }
+}
+
+async function triggerAutomation() {
+    toast('Generating and posting...', 'success');
+    try {
+        const resp = await api('/generate-caption', { method: 'POST', body: JSON.stringify({ description: 'RileyAI coming soon promo tweet - contextual for current market time', platforms: ['twitter'] }) });
+        if (resp.success && resp.captions?.twitter) {
+            const postResp = await api('/posts', { method: 'POST', body: JSON.stringify({ content: resp.captions.twitter, platforms: ['twitter'], status: 'publishing', tags: ['automated', 'promo'] }) });
+            if (postResp.success && postResp.post?.status === 'posted') {
+                toast('Posted to X!', 'success');
+            } else {
+                toast('Post failed: ' + (postResp.post?.platform_status?.twitter || 'unknown'), 'error');
+            }
+        }
+    } catch (e) { toast('Failed: ' + e.message, 'error'); }
     loadAutomations();
 }
 
