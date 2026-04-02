@@ -355,6 +355,30 @@
                     <p>Set up recurring posts and auto-publishing rules</p>
                 </div>
                 <button class="btn btn-primary" onclick="showNewAutomation()" style="margin-bottom:16px">+ New Automation</button>
+
+                <!-- X Auto-Engage -->
+                <div class="card" style="margin-bottom:16px">
+                    <h3>❤️ X Auto-Engage</h3>
+                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Automatically like posts with your target hashtags to grow your audience. Rate-limited to stay safe (max 15/hour).</p>
+                    <div style="margin-bottom:10px">
+                        <label style="font-size:12px;color:var(--text3)">Hashtags to engage with (comma separated):</label>
+                        <input class="auth-input" id="engageHashtags" placeholder="#AITrading, #DayTrading, #StockMarket, #FinTech, #TradingTips" style="margin:4px 0 0;font-size:13px">
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+                        <label style="font-size:12px;color:var(--text3)">Likes per hour:</label>
+                        <select class="schedule-input" id="engageLikesPerHour" style="padding:6px 10px;font-size:13px">
+                            <option value="3">3 (conservative)</option>
+                            <option value="5" selected>5 (moderate)</option>
+                            <option value="10">10 (active)</option>
+                            <option value="15">15 (max safe limit)</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn btn-primary" onclick="saveAutoEngage(true)">✅ Enable Auto-Engage</button>
+                        <button class="btn btn-secondary" onclick="saveAutoEngage(false)">⏸ Disable</button>
+                    </div>
+                    <div id="engageStatus" style="margin-top:8px;font-size:12px;color:var(--text3)"></div>
+                </div>
                 <div id="automationList"><div class="empty"><div class="icon">⚡</div>No automations yet</div></div>
             </div>
 
@@ -1337,6 +1361,32 @@ function discardVideo() {
     document.getElementById('videoPreviewCard').style.display = 'none';
     document.getElementById('videoProgress').style.display = 'none';
 }
+
+// ── X Auto-Engage ──
+async function saveAutoEngage(enabled) {
+    const hashtagsRaw = document.getElementById('engageHashtags').value;
+    const hashtags = hashtagsRaw.split(',').map(h => h.trim().replace(/^#/, '')).filter(Boolean);
+    const likesPerHour = parseInt(document.getElementById('engageLikesPerHour').value) || 5;
+    if (enabled && hashtags.length === 0) return toast('Enter at least one hashtag', 'error');
+    await api('/x/auto-engage', { method: 'POST', body: JSON.stringify({ hashtags, likesPerHour, enabled }) });
+    toast(enabled ? `Auto-engage enabled: ${likesPerHour} likes/hr on ${hashtags.length} hashtags` : 'Auto-engage disabled', 'success');
+    loadAutoEngage();
+}
+
+async function loadAutoEngage() {
+    try {
+        const resp = await api('/x/auto-engage');
+        const config = resp.config;
+        if (config) {
+            const c = config.config || {};
+            document.getElementById('engageHashtags').value = (c.hashtags || []).map(h => '#' + h).join(', ');
+            document.getElementById('engageLikesPerHour').value = c.likesPerHour || 5;
+            const liked = (c.likedTweets || []).length;
+            document.getElementById('engageStatus').innerHTML = `Status: <strong style="color:${config.enabled ? 'var(--green)' : 'var(--red)'}">${config.enabled ? 'Active' : 'Paused'}</strong> • ${liked} tweets liked total • Last run: ${config.last_run_at ? new Date(config.last_run_at).toLocaleString('en-US', {timeZone:'America/New_York', hour:'numeric', minute:'2-digit'}) : 'Never'}`;
+        }
+    } catch {}
+}
+document.querySelector('[data-page="automation"]')?.addEventListener('click', () => setTimeout(loadAutoEngage, 100));
 
 // Load avatars when switching to video page
 document.querySelector('[data-page="video"]').addEventListener('click', () => setTimeout(loadAvatars, 100));
