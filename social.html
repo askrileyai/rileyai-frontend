@@ -213,6 +213,10 @@
                 <li data-page="drafts"><span class="icon">📝</span><span>Drafts</span></li>
                 <li data-page="analytics"><span class="icon">📊</span><span>Analytics</span></li>
                 <li data-page="video"><span class="icon">🎬</span><span>Video Studio</span></li>
+                <li data-page="hashtags"><span class="icon">#️⃣</span><span>Hashtags</span></li>
+                <li data-page="templates"><span class="icon">📋</span><span>Templates</span></li>
+                <li data-page="ai"><span class="icon">🤖</span><span>AI Assistant</span></li>
+                <li data-page="links"><span class="icon">🔗</span><span>Link in Bio</span></li>
                 <li data-page="automation"><span class="icon">⚡</span><span>Automation</span></li>
                 <li data-page="settings"><span class="icon">⚙️</span><span>Settings</span></li>
             </ul>
@@ -440,6 +444,100 @@
                         <button class="btn btn-danger" onclick="discardVideo()">🗑 Discard</button>
                     </div>
                 </div>
+            </div>
+
+            <!-- ═══ HASHTAGS ═══ -->
+            <div class="page" id="page-hashtags">
+                <div class="page-header">
+                    <h1>Hashtag Research</h1>
+                    <p>Find trending hashtags and save reusable groups</p>
+                </div>
+                <div class="card">
+                    <h3>Generate Hashtags</h3>
+                    <div style="display:flex;gap:10px;margin-bottom:12px">
+                        <input class="auth-input" id="hashtagTopic" placeholder="Topic: e.g., AI trading, stock market, fintech" style="margin:0;flex:1">
+                        <button class="btn btn-primary" onclick="generateHashtags()">🔍 Research</button>
+                    </div>
+                    <div id="hashtagResults"></div>
+                </div>
+                <div class="card">
+                    <h3>Saved Hashtag Groups</h3>
+                    <div id="hashtagGroups"><div class="empty"><div class="icon">#️⃣</div>No saved groups yet</div></div>
+                </div>
+            </div>
+
+            <!-- ═══ TEMPLATES ═══ -->
+            <div class="page" id="page-templates">
+                <div class="page-header">
+                    <h1>Caption Templates</h1>
+                    <p>Reusable templates for faster posting</p>
+                </div>
+                <div class="card">
+                    <h3>Create Template</h3>
+                    <input class="auth-input" id="templateName" placeholder="Template name (e.g., Market Update)" style="margin-bottom:8px">
+                    <textarea class="compose-area" id="templateContent" placeholder="Template content... Use {ticker}, {price}, {direction} as variables" style="min-height:80px"></textarea>
+                    <div style="display:flex;gap:10px;margin-top:10px">
+                        <select class="schedule-input" id="templateCategory">
+                            <option value="educational">Educational</option>
+                            <option value="promo">Promotional</option>
+                            <option value="market_update">Market Update</option>
+                            <option value="engagement">Engagement</option>
+                            <option value="meme">Meme</option>
+                            <option value="testimonial">Testimonial</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="saveTemplate()">💾 Save Template</button>
+                    </div>
+                </div>
+                <div id="templateList"><div class="empty"><div class="icon">📋</div>No templates yet</div></div>
+            </div>
+
+            <!-- ═══ AI ASSISTANT ═══ -->
+            <div class="page" id="page-ai">
+                <div class="page-header">
+                    <h1>AI Growth Assistant</h1>
+                    <p>Riley analyzes your social performance and helps you grow</p>
+                </div>
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+                    <div class="card" style="cursor:pointer;text-align:center" onclick="getGrowthReport()">
+                        <div style="font-size:32px;margin-bottom:8px">📊</div>
+                        <h3>Weekly Report</h3>
+                        <p style="color:var(--text3);font-size:13px">Performance analysis + 5 action items</p>
+                    </div>
+                    <div class="card" style="cursor:pointer;text-align:center" onclick="getContentIdeas()">
+                        <div style="font-size:32px;margin-bottom:8px">💡</div>
+                        <h3>Content Ideas</h3>
+                        <p style="color:var(--text3);font-size:13px">10 ready-to-use post ideas</p>
+                    </div>
+                    <div class="card" style="cursor:pointer;text-align:center" onclick="showRewriter()">
+                        <div style="font-size:32px;margin-bottom:8px">✏️</div>
+                        <h3>Caption Rewriter</h3>
+                        <p style="color:var(--text3);font-size:13px">Optimize for each platform</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Repurpose Content</h3>
+                    <p style="color:var(--text2);margin-bottom:12px">Paste a blog post, article, or long caption → Riley creates multiple social posts from it</p>
+                    <textarea class="compose-area" id="repurposeInput" placeholder="Paste your content here..." style="min-height:100px"></textarea>
+                    <button class="btn btn-ai" onclick="repurposeContent()" style="margin-top:10px">✨ Repurpose into 5 Posts</button>
+                </div>
+                <div id="aiOutput" style="margin-top:16px"></div>
+            </div>
+
+            <!-- ═══ LINK IN BIO ═══ -->
+            <div class="page" id="page-links">
+                <div class="page-header">
+                    <h1>Link in Bio</h1>
+                    <p>Manage your link page at askrileyai.com/links</p>
+                </div>
+                <div class="card">
+                    <h3>Add Link</h3>
+                    <div style="display:flex;gap:10px;margin-bottom:10px">
+                        <input class="auth-input" id="linkTitle" placeholder="Link title" style="margin:0;flex:1">
+                        <input class="auth-input" id="linkUrl" placeholder="https://..." style="margin:0;flex:2">
+                        <button class="btn btn-primary" onclick="addLink()">+ Add</button>
+                    </div>
+                </div>
+                <div id="linksList"><div class="empty"><div class="icon">🔗</div>No links yet</div></div>
             </div>
 
             <!-- ═══ SETTINGS ═══ -->
@@ -1065,6 +1163,218 @@ function discardVideo() {
 
 // Load avatars when switching to video page
 document.querySelector('[data-page="video"]').addEventListener('click', () => setTimeout(loadAvatars, 100));
+
+// ════════════════════════════════════════════════
+// HASHTAG RESEARCH
+// ════════════════════════════════════════════════
+
+async function generateHashtags() {
+    const topic = document.getElementById('hashtagTopic').value.trim();
+    if (!topic) return toast('Enter a topic', 'error');
+    document.getElementById('hashtagResults').innerHTML = '<div class="spinner"></div> Researching...';
+    try {
+        const resp = await api('/hashtags/generate', { method: 'POST', body: JSON.stringify({ topic }) });
+        if (resp.success && resp.hashtags?.length) {
+            const tags = resp.hashtags;
+            document.getElementById('hashtagResults').innerHTML = `
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${tags.map(h =>
+                    `<span style="padding:4px 10px;border-radius:20px;font-size:12px;cursor:pointer;background:${h.reach==='high'?'rgba(0,200,83,0.12)':h.reach==='medium'?'rgba(0,180,216,0.12)':'rgba(255,255,255,0.06)'};color:${h.reach==='high'?'var(--green)':h.reach==='medium'?'var(--accent)':'var(--text2)'}" onclick="navigator.clipboard.writeText('${h.tag}');toast('Copied!','success')">${h.tag}</span>`
+                ).join('')}</div>
+                <button class="btn btn-sm btn-secondary" onclick="saveHashtagGroup()">💾 Save as Group</button>
+                <span style="font-size:12px;color:var(--text3);margin-left:8px">Click any hashtag to copy</span>`;
+            window._lastHashtags = tags;
+        }
+    } catch (e) { document.getElementById('hashtagResults').innerHTML = 'Failed: ' + e.message; }
+}
+
+async function saveHashtagGroup() {
+    if (!window._lastHashtags) return;
+    const name = prompt('Group name:');
+    if (!name) return;
+    await api('/hashtags/groups', { method: 'POST', body: JSON.stringify({ name, hashtags: window._lastHashtags.map(h => h.tag), category: 'custom' }) });
+    toast('Hashtag group saved!', 'success');
+    loadHashtagGroups();
+}
+
+async function loadHashtagGroups() {
+    try {
+        const resp = await api('/hashtags/groups');
+        const groups = resp.groups || [];
+        if (!groups.length) { document.getElementById('hashtagGroups').innerHTML = '<div class="empty"><div class="icon">#️⃣</div>No saved groups yet</div>'; return; }
+        document.getElementById('hashtagGroups').innerHTML = groups.map(g => `
+            <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div><strong>${escHtml(g.name)}</strong> <span style="color:var(--text3);font-size:12px">(${(g.hashtags||[]).length} tags)</span>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${(g.hashtags||[]).map(t => `<span style="font-size:11px;color:var(--accent);background:rgba(0,180,216,0.08);padding:2px 6px;border-radius:10px">${t}</span>`).join('')}</div></div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('${(g.hashtags||[]).join(' ')}');toast('Copied all!','success')">📋 Copy All</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteHashtagGroup(${g.id})">🗑</button>
+                </div>
+            </div>
+        `).join('');
+    } catch {}
+}
+async function deleteHashtagGroup(id) { await api('/hashtags/groups/' + id, { method: 'DELETE' }); loadHashtagGroups(); }
+document.querySelector('[data-page="hashtags"]')?.addEventListener('click', () => setTimeout(loadHashtagGroups, 100));
+
+// ════════════════════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════════════════════
+
+async function saveTemplate() {
+    const name = document.getElementById('templateName').value.trim();
+    const content = document.getElementById('templateContent').value.trim();
+    const category = document.getElementById('templateCategory').value;
+    if (!name || !content) return toast('Name and content required', 'error');
+    await api('/templates', { method: 'POST', body: JSON.stringify({ name, content, category, platforms: getSelectedPlatforms() }) });
+    toast('Template saved!', 'success');
+    document.getElementById('templateName').value = '';
+    document.getElementById('templateContent').value = '';
+    loadTemplates();
+}
+
+async function loadTemplates() {
+    try {
+        const resp = await api('/templates');
+        const templates = resp.templates || [];
+        if (!templates.length) { document.getElementById('templateList').innerHTML = '<div class="empty"><div class="icon">📋</div>No templates yet</div>'; return; }
+        document.getElementById('templateList').innerHTML = templates.map(t => `
+            <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div style="flex:1"><strong>${escHtml(t.name)}</strong> <span class="status-badge status-draft">${t.category || 'general'}</span>
+                <p style="margin-top:6px;color:var(--text2);font-size:13px">${escHtml(t.content).substring(0, 120)}${t.content.length > 120 ? '...' : ''}</p>
+                <span style="font-size:11px;color:var(--text3)">Used ${t.use_count} times</span></div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm btn-primary" onclick="useTemplate(${JSON.stringify(t.content).replace(/"/g, '&quot;')})">Use</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">🗑</button>
+                </div>
+            </div>
+        `).join('');
+    } catch {}
+}
+function useTemplate(content) {
+    document.getElementById('composeText').value = content;
+    updateCharCount();
+    document.querySelectorAll('.nav li').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-page="compose"]').classList.add('active');
+    document.getElementById('page-compose').classList.add('active');
+    toast('Template loaded!', 'success');
+}
+async function deleteTemplate(id) { await api('/templates/' + id, { method: 'DELETE' }); loadTemplates(); }
+document.querySelector('[data-page="templates"]')?.addEventListener('click', () => setTimeout(loadTemplates, 100));
+
+// ════════════════════════════════════════════════
+// AI GROWTH ASSISTANT
+// ════════════════════════════════════════════════
+
+async function getGrowthReport() {
+    document.getElementById('aiOutput').innerHTML = '<div class="card"><div class="spinner"></div> Riley is analyzing your performance...</div>';
+    try {
+        const resp = await api('/ai/growth-report', { method: 'POST', body: '{}' });
+        if (resp.success) {
+            document.getElementById('aiOutput').innerHTML = `<div class="card"><h3>📊 Weekly Growth Report</h3><div style="white-space:pre-wrap;color:var(--text2);margin-top:12px;font-size:14px;line-height:1.7">${escHtml(resp.report)}</div></div>`;
+        }
+    } catch (e) { document.getElementById('aiOutput').innerHTML = `<div class="card" style="color:var(--red)">Failed: ${e.message}</div>`; }
+}
+
+async function getContentIdeas() {
+    const topic = prompt('What topic? (leave blank for general Riley AI content)') || '';
+    document.getElementById('aiOutput').innerHTML = '<div class="card"><div class="spinner"></div> Riley is brainstorming ideas...</div>';
+    try {
+        const resp = await api('/ai/content-ideas', { method: 'POST', body: JSON.stringify({ topic }) });
+        if (resp.success && resp.ideas?.length) {
+            document.getElementById('aiOutput').innerHTML = `<div class="card"><h3>💡 Content Ideas</h3>${resp.ideas.map((idea, i) => `
+                <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <strong>${i+1}. ${idea.platform} — ${idea.format || idea.type}</strong>
+                        <button class="btn btn-sm btn-primary" onclick="useTemplate(${JSON.stringify(idea.caption).replace(/"/g, '&quot;')})">Use</button>
+                    </div>
+                    <p style="color:var(--text2);margin:6px 0;font-size:13px">${escHtml(idea.caption).substring(0, 200)}</p>
+                    <div style="font-size:11px;color:var(--text3)">${(idea.hashtags||[]).join(' ')} • Best: ${idea.bestTime || 'Any time'}</div>
+                </div>
+            `).join('')}</div>`;
+        }
+    } catch (e) { document.getElementById('aiOutput').innerHTML = `<div class="card" style="color:var(--red)">Failed: ${e.message}</div>`; }
+}
+
+function showRewriter() {
+    document.getElementById('aiOutput').innerHTML = `
+        <div class="card">
+            <h3>✏️ Caption Rewriter</h3>
+            <textarea class="compose-area" id="rewriteInput" placeholder="Paste your caption here..." style="min-height:80px"></textarea>
+            <button class="btn btn-ai" onclick="rewriteCaption()" style="margin-top:10px">✨ Rewrite for All Platforms</button>
+        </div>`;
+}
+
+async function rewriteCaption() {
+    const content = document.getElementById('rewriteInput').value.trim();
+    if (!content) return toast('Enter content first', 'error');
+    document.getElementById('aiOutput').innerHTML += '<div class="card"><div class="spinner"></div> Rewriting...</div>';
+    try {
+        const resp = await api('/ai/rewrite', { method: 'POST', body: JSON.stringify({ content }) });
+        if (resp.success && resp.rewrites) {
+            const r = resp.rewrites;
+            document.getElementById('aiOutput').innerHTML = `<div class="card"><h3>✏️ Platform-Optimized Versions</h3>
+                ${r.twitter ? `<div style="padding:12px 0;border-bottom:1px solid var(--border)"><strong>𝕏 Twitter</strong><p style="color:var(--text2);margin:6px 0;font-size:13px">${escHtml(r.twitter)}</p><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(${JSON.stringify(r.twitter).replace(/"/g, '&quot;')});toast('Copied!','success')">📋 Copy</button></div>` : ''}
+                ${r.instagram ? `<div style="padding:12px 0;border-bottom:1px solid var(--border)"><strong>📷 Instagram</strong><p style="color:var(--text2);margin:6px 0;font-size:13px">${escHtml(r.instagram).substring(0, 300)}</p><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(${JSON.stringify(r.instagram).replace(/"/g, '&quot;')});toast('Copied!','success')">📋 Copy</button></div>` : ''}
+                ${r.tiktok ? `<div style="padding:12px 0;border-bottom:1px solid var(--border)"><strong>🎵 TikTok</strong><p style="color:var(--text2);margin:6px 0;font-size:13px">${escHtml(r.tiktok)}</p><button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText(${JSON.stringify(r.tiktok).replace(/"/g, '&quot;')});toast('Copied!','success')">📋 Copy</button></div>` : ''}
+            </div>`;
+        }
+    } catch (e) { toast('Rewrite failed', 'error'); }
+}
+
+async function repurposeContent() {
+    const content = document.getElementById('repurposeInput').value.trim();
+    if (!content) return toast('Paste content first', 'error');
+    document.getElementById('aiOutput').innerHTML = '<div class="card"><div class="spinner"></div> Repurposing into social posts...</div>';
+    try {
+        const resp = await api('/ai/repurpose', { method: 'POST', body: JSON.stringify({ content, source_type: 'blog post' }) });
+        if (resp.success && resp.posts?.length) {
+            document.getElementById('aiOutput').innerHTML = `<div class="card"><h3>✨ Repurposed Posts</h3>${resp.posts.map((p, i) => `
+                <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+                    <strong>${i+1}. ${p.platform} — ${p.format}</strong>
+                    <p style="color:var(--text2);margin:6px 0;font-size:13px">${escHtml(p.caption).substring(0, 250)}</p>
+                    <div style="font-size:11px;color:var(--text3)">${(p.hashtags||[]).join(' ')}</div>
+                    <button class="btn btn-sm btn-primary" onclick="useTemplate(${JSON.stringify(p.caption).replace(/"/g, '&quot;')})" style="margin-top:6px">Use This</button>
+                </div>
+            `).join('')}</div>`;
+        }
+    } catch (e) { document.getElementById('aiOutput').innerHTML = `<div class="card" style="color:var(--red)">Failed: ${e.message}</div>`; }
+}
+
+// ════════════════════════════════════════════════
+// LINK IN BIO
+// ════════════════════════════════════════════════
+
+async function addLink() {
+    const title = document.getElementById('linkTitle').value.trim();
+    const url = document.getElementById('linkUrl').value.trim();
+    if (!title || !url) return toast('Title and URL required', 'error');
+    await api('/links', { method: 'POST', body: JSON.stringify({ title, url }) });
+    toast('Link added!', 'success');
+    document.getElementById('linkTitle').value = '';
+    document.getElementById('linkUrl').value = '';
+    loadLinks();
+}
+
+async function loadLinks() {
+    try {
+        const resp = await api('/links');
+        const links = resp.links || [];
+        if (!links.length) { document.getElementById('linksList').innerHTML = '<div class="empty"><div class="icon">🔗</div>No links yet</div>'; return; }
+        document.getElementById('linksList').innerHTML = links.map(l => `
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <strong>${escHtml(l.title)}</strong>
+                    <div style="font-size:12px;color:var(--accent);margin-top:2px">${escHtml(l.url).substring(0, 60)}</div>
+                    <div style="font-size:11px;color:var(--text3)">${l.clicks || 0} clicks</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="deleteLink(${l.id})">🗑</button>
+            </div>
+        `).join('');
+    } catch {}
+}
+async function deleteLink(id) { await api('/links/' + id, { method: 'DELETE' }); loadLinks(); }
+document.querySelector('[data-page="links"]')?.addEventListener('click', () => setTimeout(loadLinks, 100));
 </script>
 </body>
 </html>
