@@ -749,7 +749,7 @@ function renderRecentPosts() {
     document.getElementById('recentPosts').innerHTML = `<table class="posts-table">
         <tr><th>Date</th><th>Content</th><th>Platforms</th><th>Status</th><th></th></tr>
         ${posts.map(p => `<tr>
-            <td style="white-space:nowrap;font-size:13px;color:var(--text2)">${new Date(p.posted_at || p.scheduled_at || p.created_at).toLocaleString()}</td>
+            <td style="white-space:nowrap;font-size:13px;color:var(--text2)">${new Date(p.posted_at || p.scheduled_at || p.created_at).toLocaleString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})}</td>
             <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.content || '').substring(0, 80)}</td>
             <td><div class="platform-icons">${(p.platforms || []).map(pl => `<span class="platform-icon" title="${pl}">${platformEmoji(pl)}</span>`).join('')}</div></td>
             <td><span class="status-badge status-${p.status}">${p.status}</span></td>
@@ -811,15 +811,19 @@ function renderCalendar() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
 
-    const scheduled = allPosts.filter(p => p.status === 'scheduled' || p.status === 'posted');
+    const scheduled = allPosts.filter(p => p.status === 'scheduled' || p.status === 'posted' || p.status === 'partial');
 
     let html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="calendar-header">${d}</div>`).join('');
     for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day" style="opacity:0.3"></div>';
     for (let d = 1; d <= daysInMonth; d++) {
         const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
         const dayPosts = scheduled.filter(p => {
-            const pd = new Date(p.scheduled_at || p.posted_at);
-            return pd.getDate() === d && pd.getMonth() === month && pd.getFullYear() === year;
+            const pd = new Date(p.scheduled_at || p.posted_at || p.created_at);
+            // Compare in ET timezone
+            const etDay = parseInt(pd.toLocaleDateString('en-US', {timeZone:'America/New_York', day:'numeric'}));
+            const etMonth = pd.toLocaleDateString('en-US', {timeZone:'America/New_York', month:'numeric'}) - 1;
+            const etYear = parseInt(pd.toLocaleDateString('en-US', {timeZone:'America/New_York', year:'numeric'}));
+            return etDay === d && etMonth === month && etYear === year;
         });
         html += `<div class="calendar-day${isToday ? ' today' : ''}">
             <div class="day-num">${d}</div>
@@ -864,7 +868,7 @@ async function loadAutomations() {
 
         document.getElementById('automationList').innerHTML = list.map(a => {
             const config = a.config || {};
-            const lastRun = a.last_run_at ? new Date(a.last_run_at).toLocaleString() : 'Never';
+            const lastRun = a.last_run_at ? new Date(a.last_run_at).toLocaleString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : 'Never';
             const interval = config.intervalMinutes || 60;
             const platforms = (config.platforms || []).map(p => platformEmoji(p)).join(' ');
 
@@ -893,7 +897,14 @@ async function loadAutomations() {
                     <button class="btn btn-sm btn-ai" onclick="previewAutomation(${a.id})">👁 Preview Next Post</button>
                     <button class="btn btn-sm btn-primary" onclick="triggerAutomation(${a.id})">🚀 Post Now</button>
                 </div>
-                ${a.type === 'ai_contextual' ? '<div style="font-size:11px;color:var(--text3);padding:8px;background:var(--elevated);border-radius:6px;margin-bottom:8px">📋 <strong>Schedule:</strong> Pre-market → market insights • Market hours → trade setups & analysis • After hours → journaling & review • Overnight → Riley Trade School</div>' : ''}
+                ${a.type === 'ai_contextual' ? `<div style="font-size:11px;color:var(--text3);padding:8px;background:var(--elevated);border-radius:6px;margin-bottom:8px">
+                    📋 <strong>Schedule:</strong> Pre-market → market insights • Market hours → trade setups & analysis • After hours → journaling & review • Overnight → Riley Trade School
+                </div>
+                <div style="margin-bottom:8px">
+                    <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">✏️ Custom Prompt (optional — overrides default AI generation):</label>
+                    <textarea class="compose-area" id="automationPrompt_${a.id}" placeholder="Leave blank for default time-based content, or write a custom prompt like: 'Promote RileyAI with focus on options trading and risk management'" style="min-height:60px;font-size:12px">${config.customPrompt || ''}</textarea>
+                    <button class="btn btn-sm btn-secondary" onclick="saveAutomationPrompt(${a.id})" style="margin-top:6px">💾 Save Prompt</button>
+                </div>` : ''}
             </div>`;
         }).join('');
 
@@ -926,6 +937,17 @@ async function deleteAutomation(id) {
     await api('/automations/' + id, { method: 'DELETE' });
     toast('Automation deleted', 'success');
     loadAutomations();
+}
+
+async function saveAutomationPrompt(id) {
+    const prompt = document.getElementById('automationPrompt_' + id)?.value?.trim() || '';
+    // Fetch current config, merge in customPrompt
+    const resp = await api('/automations');
+    const auto = (resp.automations || []).find(a => a.id === id);
+    if (!auto) return;
+    const config = { ...auto.config, customPrompt: prompt };
+    await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ config }) });
+    toast(prompt ? 'Custom prompt saved!' : 'Prompt cleared — will use default', 'success');
 }
 
 async function editAutomationInterval(id, currentInterval) {
