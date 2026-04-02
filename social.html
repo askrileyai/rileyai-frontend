@@ -1072,6 +1072,27 @@ async function loadConnections() {
 }
 
 function connectPlatform(platform) {
+    // LinkedIn uses OAuth flow
+    if (platform === 'linkedin') {
+        api('/connect/linkedin').then(resp => {
+            if (resp.success && resp.url) {
+                window.open(resp.url, '_blank', 'width=600,height=700');
+                toast('Authorizing with LinkedIn...', 'success');
+                // Poll for connection
+                const poll = setInterval(() => {
+                    api('/connections').then(r => {
+                        if (r.connections?.linkedin?.connected) {
+                            clearInterval(poll);
+                            loadConnections();
+                            toast('LinkedIn connected!', 'success');
+                        }
+                    });
+                }, 3000);
+                setTimeout(() => clearInterval(poll), 120000); // Stop after 2 min
+            }
+        });
+        return;
+    }
     const token = prompt(`Enter ${platform} access token:`);
     if (!token) return;
     const secret = prompt(`Enter ${platform} access secret/refresh token (or leave blank):`);
