@@ -177,13 +177,76 @@
         .step-done { background:rgba(0,200,83,0.15); color:var(--green); }
         .step-failed { background:rgba(255,82,82,0.15); color:var(--red); }
 
+        /* Dashboard */
+        .dash-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+        .dash-card { background:var(--elevated); border:1px solid var(--border2); border-radius:10px; padding:16px; }
+        .dash-card .dash-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+        .dash-card .dash-value { font-size:26px; font-weight:700; }
+        .dash-card .dash-sub { font-size:12px; color:var(--text2); margin-top:4px; }
+        .platform-dots { display:flex; gap:6px; margin-top:8px; }
+        .platform-dots .pdot { width:10px; height:10px; border-radius:50%; }
+        .activity-item { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+        .activity-item:last-child { border-bottom:none; }
+        .activity-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; background:var(--elevated); flex-shrink:0; }
+        .activity-text { flex:1; font-size:13px; }
+        .activity-time { font-size:11px; color:var(--text3); margin-top:2px; }
+        .quick-actions { display:flex; gap:10px; margin-top:16px; }
+
+        /* Type Badges */
+        .type-badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; display:inline-block; }
+        .type-ai_contextual { background:rgba(167,139,250,0.15); color:#a78bfa; }
+        .type-ig_reels { background:rgba(228,64,95,0.15); color:#E4405F; }
+        .type-auto_engage, .type-x_auto_engage, .type-bsky_auto_engage { background:rgba(0,180,216,0.15); color:#00b4d8; }
+        .type-auto_reply, .type-ig_auto_reply, .type-yt_auto_reply, .type-x_auto_reply, .type-bsky_auto_reply { background:rgba(0,200,83,0.15); color:#00c853; }
+        .type-welcome_dm, .type-ig_welcome_dm { background:rgba(255,152,0,0.15); color:#ff9800; }
+
+        /* Automation sections */
+        .auto-section { margin-bottom:24px; }
+        .auto-section-header { font-size:13px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+        .auto-card { padding:16px; background:var(--elevated); border:1px solid var(--border2); border-radius:10px; margin-bottom:10px; }
+        .auto-card-top { display:flex; align-items:center; justify-content:space-between; }
+        .auto-card-left { display:flex; align-items:center; gap:12px; }
+        .auto-card-right { display:flex; align-items:center; gap:12px; }
+        .auto-status { font-size:12px; font-weight:600; }
+        .auto-status.active { color:var(--green); }
+        .auto-status.paused { color:var(--red); }
+        .auto-meta { font-size:12px; color:var(--text3); margin-top:6px; }
+        .auto-expand { margin-top:12px; padding-top:12px; border-top:1px solid var(--border); display:none; }
+        .auto-expand.open { display:block; }
+        .interval-select { padding:6px 10px; background:var(--elevated); border:1px solid var(--border2); border-radius:6px; color:var(--text); font-family:inherit; font-size:13px; }
+        .interval-select:focus { outline:none; border-color:var(--accent); }
+
+        /* Post Feed Cards */
+        .post-feed { display:flex; flex-direction:column; gap:10px; }
+        .post-card { background:var(--elevated); border:1px solid var(--border2); border-radius:10px; padding:14px; }
+        .post-card-content { font-size:14px; color:var(--text); line-height:1.5; margin-bottom:10px; }
+        .post-card-content.collapsed { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer; }
+        .post-card-meta { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+        .post-card-platforms { display:flex; gap:6px; align-items:center; }
+        .post-plat-badge { display:flex; align-items:center; gap:3px; padding:2px 8px; border-radius:12px; font-size:11px; }
+        .post-plat-badge.success { background:rgba(0,200,83,0.1); color:var(--green); }
+        .post-plat-badge.failed { background:rgba(255,82,82,0.1); color:var(--red); }
+        .post-error-banner { background:rgba(255,82,82,0.08); border:1px solid rgba(255,82,82,0.2); border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px; color:var(--red); }
+        .filter-tabs { display:flex; gap:6px; margin-bottom:16px; }
+        .filter-tab { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; background:var(--elevated); color:var(--text3); border:1px solid var(--border2); transition:all 0.15s; }
+        .filter-tab.active { background:rgba(0,180,216,0.1); color:var(--accent); border-color:var(--accent); }
+        .filter-tab:hover { color:var(--text); }
+
+        /* Connection Cards Overhaul */
+        .conn-section-header { font-size:13px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px; margin-top:20px; }
+        .conn-section-header:first-child { margin-top:0; }
+        .conn-card-new { display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--elevated); border-radius:10px; margin-bottom:10px; border-left:4px solid var(--text3); }
+        .conn-card-new.conn-connected { border-left-color:var(--green); }
+        .conn-account { font-size:16px; font-weight:600; margin-top:2px; }
+        .conn-last-post { font-size:11px; color:var(--text3); margin-top:4px; }
+
         /* Responsive */
         @media (max-width:900px) {
             .sidebar { width:60px; }
             .nav li span:not(.icon) { display:none; }
             .sidebar .logo h2, .sidebar .logo span, .sidebar-footer { display:none; }
             .main { margin-left:60px; padding:16px; }
-            .stats-grid { grid-template-columns:repeat(2,1fr); }
+            .stats-grid, .dash-grid { grid-template-columns:repeat(2,1fr); }
         }
     </style>
 </head>
@@ -208,7 +271,8 @@
                 <span>Social Hub</span>
             </div>
             <ul class="nav">
-                <li class="active" data-page="compose"><span class="icon">✏️</span><span>Compose</span></li>
+                <li class="active" data-page="dashboard"><span class="icon">🏠</span><span>Dashboard</span></li>
+                <li data-page="compose"><span class="icon">✏️</span><span>Compose</span></li>
                 <li data-page="calendar"><span class="icon">📅</span><span>Calendar</span></li>
                 <li data-page="drafts"><span class="icon">📝</span><span>Drafts</span></li>
                 <li data-page="analytics"><span class="icon">📊</span><span>Analytics</span></li>
@@ -226,8 +290,44 @@
         </aside>
 
         <div class="main">
+            <!-- ═══ DASHBOARD ═══ -->
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Your social media command center at a glance</p>
+                </div>
+                <div class="dash-grid" id="dashGrid">
+                    <div class="dash-card">
+                        <div class="dash-label">Posts Today / This Week</div>
+                        <div class="dash-value" id="dashPostCount">- / -</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-label">Active Automations</div>
+                        <div class="dash-value" id="dashAutoCount" style="display:flex;align-items:center;gap:8px">-</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-label">Platform Status</div>
+                        <div class="platform-dots" id="dashPlatDots"></div>
+                        <div class="dash-sub" id="dashPlatSub">Loading...</div>
+                    </div>
+                    <div class="dash-card">
+                        <div class="dash-label">Next Scheduled Post</div>
+                        <div class="dash-value" style="font-size:18px" id="dashNextPost">--</div>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="navigateTo('compose')">🚀 Post Now</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('calendar')">📅 View Calendar</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('analytics')">📊 Check Analytics</button>
+                </div>
+                <div class="card" style="margin-top:20px">
+                    <h3>Recent Activity</h3>
+                    <div id="dashActivity"><div class="empty"><div class="icon">📭</div>No recent activity</div></div>
+                </div>
+            </div>
+
             <!-- ═══ COMPOSE ═══ -->
-            <div class="page active" id="page-compose">
+            <div class="page" id="page-compose">
                 <div class="page-header">
                     <h1>Compose Post</h1>
                     <p>Create and publish to all platforms at once</p>
@@ -301,6 +401,12 @@
                 <!-- Recent Posts -->
                 <div class="card">
                     <h3>Recent Posts</h3>
+                    <div class="filter-tabs" id="postFilterTabs">
+                        <div class="filter-tab active" data-filter="all" onclick="filterPosts('all',this)">All</div>
+                        <div class="filter-tab" data-filter="posted" onclick="filterPosts('posted',this)">Posted</div>
+                        <div class="filter-tab" data-filter="scheduled" onclick="filterPosts('scheduled',this)">Scheduled</div>
+                        <div class="filter-tab" data-filter="failed" onclick="filterPosts('failed',this)">Failed</div>
+                    </div>
                     <div id="recentPosts"><div class="empty"><div class="icon">📭</div>No posts yet</div></div>
                 </div>
             </div>
@@ -352,34 +458,11 @@
             <div class="page" id="page-automation">
                 <div class="page-header">
                     <h1>Automation</h1>
-                    <p>Set up recurring posts and auto-publishing rules</p>
+                    <p>Manage your automated posting, engagement, and reply bots</p>
                 </div>
-                <button class="btn btn-primary" onclick="showNewAutomation()" style="margin-bottom:16px">+ New Automation</button>
-
-                <!-- X Auto-Engage -->
-                <div class="card" style="margin-bottom:16px">
-                    <h3>❤️ X Auto-Engage</h3>
-                    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Automatically like posts with your target hashtags to grow your audience. Rate-limited to stay safe (max 15/hour).</p>
-                    <div style="margin-bottom:10px">
-                        <label style="font-size:12px;color:var(--text3)">Hashtags to engage with (comma separated):</label>
-                        <input class="auth-input" id="engageHashtags" placeholder="#AITrading, #DayTrading, #StockMarket, #FinTech, #TradingTips" style="margin:4px 0 0;font-size:13px">
-                    </div>
-                    <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
-                        <label style="font-size:12px;color:var(--text3)">Likes per hour:</label>
-                        <select class="schedule-input" id="engageLikesPerHour" style="padding:6px 10px;font-size:13px">
-                            <option value="3">3 (conservative)</option>
-                            <option value="5" selected>5 (moderate)</option>
-                            <option value="10">10 (active)</option>
-                            <option value="15">15 (max safe limit)</option>
-                        </select>
-                    </div>
-                    <div style="display:flex;gap:10px">
-                        <button class="btn btn-primary" onclick="saveAutoEngage(true)">✅ Enable Auto-Engage</button>
-                        <button class="btn btn-secondary" onclick="saveAutoEngage(false)">⏸ Disable</button>
-                    </div>
-                    <div id="engageStatus" style="margin-top:8px;font-size:12px;color:var(--text3)"></div>
+                <div id="automationSections">
+                    <div class="empty"><div class="icon">⚡</div>Loading automations...</div>
                 </div>
-                <div id="automationList"><div class="empty"><div class="icon">⚡</div>No automations yet</div></div>
             </div>
 
             <!-- ═══ VIDEO STUDIO ═══ -->
@@ -576,7 +659,7 @@
             <div class="page" id="page-settings">
                 <div class="page-header">
                     <h1>Platform Connections</h1>
-                    <p>Connect your social media accounts</p>
+                    <p>Connect and manage your social media accounts</p>
                 </div>
                 <div id="connectionsList"></div>
             </div>
@@ -629,9 +712,15 @@ function api(path, opts = {}) {
 }
 
 // ── Load All Data ──
-function loadAll() {
-    loadPosts(); loadConnections(); loadAnalytics(); loadAutomations(); renderCalendar();
+async function loadAll() {
+    loadAnalytics();
+    await Promise.all([loadPosts(), loadConnections(), loadAutomations()]);
+    renderCalendar();
+    loadDashboard();
 }
+
+// Auto-refresh every 30 seconds
+setInterval(() => { if (adminKey) loadAll(); }, 30000);
 
 // ── Compose ──
 function updateCharCount() {
@@ -776,18 +865,36 @@ async function loadPosts() {
 }
 
 function renderRecentPosts() {
-    const posts = allPosts.filter(p => p.status !== 'draft').slice(0, 20);
-    if (!posts.length) { document.getElementById('recentPosts').innerHTML = '<div class="empty"><div class="icon">📭</div>No posts yet</div>'; return; }
-    document.getElementById('recentPosts').innerHTML = `<table class="posts-table">
-        <tr><th>Date</th><th>Content</th><th>Platforms</th><th>Status</th><th></th></tr>
-        ${posts.map(p => `<tr>
-            <td style="white-space:nowrap;font-size:13px;color:var(--text2)">${new Date(p.posted_at || p.scheduled_at || p.created_at).toLocaleString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})}</td>
-            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.content || '').substring(0, 80)}</td>
-            <td><div class="platform-icons">${(p.platforms || []).map(pl => `<span class="platform-icon" title="${pl}">${platformEmoji(pl)}</span>`).join('')}</div></td>
-            <td><span class="status-badge status-${p.status}">${p.status}</span></td>
-            <td><button class="btn btn-sm btn-danger" onclick="deletePost(${p.id})">🗑</button></td>
-        </tr>`).join('')}
-    </table>`;
+    let posts = allPosts.filter(p => p.status !== 'draft');
+    if (currentPostFilter !== 'all') {
+        posts = posts.filter(p => p.status === currentPostFilter);
+    }
+    posts = posts.slice(0, 20);
+    if (!posts.length) {
+        document.getElementById('recentPosts').innerHTML = '<div class="empty"><div class="icon">📭</div>No posts' + (currentPostFilter !== 'all' ? ' with status "' + currentPostFilter + '"' : ' yet') + '</div>';
+        return;
+    }
+    document.getElementById('recentPosts').innerHTML = '<div class="post-feed">' + posts.map(p => {
+        const platStatus = p.platform_status || {};
+        const platBadges = (p.platforms || []).map(pl => {
+            const ps = platStatus[pl];
+            const ok = ps === 'posted' || ps === 'success' || p.status === 'posted';
+            const fail = ps === 'failed' || p.status === 'failed';
+            return `<span class="post-plat-badge ${fail ? 'failed' : (ok ? 'success' : '')}">${platformEmoji(pl)} ${fail ? '✗' : (ok ? '✓' : '–')}</span>`;
+        }).join('');
+        const errorMsg = p.error || (p.platform_status ? Object.entries(p.platform_status).filter(([k,v]) => v === 'failed').map(([k]) => k + ' failed').join(', ') : '');
+        return `<div class="post-card">
+            <div class="post-card-content collapsed" onclick="this.classList.toggle('collapsed')">${escHtml(p.content || '')}</div>
+            <div class="post-card-meta">
+                <div class="post-card-platforms">${platBadges} <span class="status-badge status-${p.status}" style="margin-left:6px">${p.status}</span></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="color:var(--text3)">${timeAgo(p.posted_at || p.scheduled_at || p.created_at)}</span>
+                    <button class="btn btn-sm btn-danger" onclick="deletePost(${p.id})" style="padding:4px 8px">🗑</button>
+                </div>
+            </div>
+            ${errorMsg && p.status === 'failed' ? `<div class="post-error-banner">${escHtml(errorMsg)}</div>` : ''}
+        </div>`;
+    }).join('') + '</div>';
 }
 
 function renderDrafts() {
@@ -902,82 +1009,118 @@ async function loadAnalytics() {
 }
 
 // ── Automations ──
+const autoSections = {
+    'Content Posting': ['ai_contextual', 'ig_reels', 'recurring'],
+    'Auto-Engagement': ['x_auto_engage', 'bsky_auto_engage'],
+    'Auto-Reply & DMs': ['ig_auto_reply', 'ig_welcome_dm', 'yt_auto_reply', 'x_auto_reply', 'bsky_auto_reply'],
+};
+
+function renderAutoCard(a) {
+    const config = a.config || {};
+    const interval = config.intervalMinutes || 60;
+    const lastRunText = timeAgo(a.last_run_at);
+    let extraInfo = '';
+    if (a.type === 'ig_reels') {
+        extraInfo = '<div class="auto-meta">Next post at: <strong>2:00 PM ET</strong> (schedule: 8am / 2pm / 8pm ET)</div>';
+    }
+    const expandId = 'autoExpand_' + a.id;
+    return `<div class="auto-card">
+        <div class="auto-card-top">
+            <div class="auto-card-left">
+                <div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-weight:600;font-size:15px">${escHtml(a.name)}</span>
+                        ${automationTypeBadge(a.type)}
+                    </div>
+                    <div class="auto-meta">
+                        <span class="auto-status ${a.enabled ? 'active' : 'paused'}">${a.enabled ? '● Active' : '● Paused'}</span>
+                        &nbsp;·&nbsp; Last run: ${lastRunText}
+                    </div>
+                    ${extraInfo}
+                </div>
+            </div>
+            <div class="auto-card-right">
+                <button class="btn btn-sm btn-secondary" onclick="document.getElementById('${expandId}').classList.toggle('open')">Edit</button>
+                <button class="btn btn-sm btn-primary" onclick="triggerAutomation(${a.id})">🚀 Run</button>
+                <div class="toggle-switch ${a.enabled ? 'on' : ''}" onclick="toggleAutomation(${a.id}, ${!a.enabled})"></div>
+            </div>
+        </div>
+        <div class="auto-expand" id="${expandId}">
+            ${a.type === 'ai_contextual' ? `
+                <div style="margin-bottom:10px">
+                    <label style="font-size:12px;color:var(--text3)">Post Interval</label>
+                    <select class="interval-select" id="autoInterval_${a.id}" onchange="saveAutoInterval(${a.id})">
+                        <option value="60" ${interval===60?'selected':''}>Every 1 hour</option>
+                        <option value="120" ${interval===120?'selected':''}>Every 2 hours</option>
+                        <option value="180" ${interval===180?'selected':''}>Every 3 hours</option>
+                        <option value="360" ${interval===360?'selected':''}>Every 6 hours</option>
+                        <option value="720" ${interval===720?'selected':''}>Every 12 hours</option>
+                        <option value="1440" ${interval===1440?'selected':''}>Every 24 hours</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:10px">
+                    <label style="font-size:12px;color:var(--text3)">Custom Prompt (optional)</label>
+                    <textarea class="compose-area" id="automationPrompt_${a.id}" placeholder="Leave blank for default time-based content..." style="min-height:60px;font-size:12px;margin-top:4px">${escHtml(config.customPrompt || '')}</textarea>
+                    <button class="btn btn-sm btn-secondary" onclick="saveAutomationPrompt(${a.id})" style="margin-top:6px">Save Prompt</button>
+                </div>
+            ` : ''}
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;font-size:12px">
+                <label style="color:var(--text3)">Start:</label>
+                <input type="date" class="schedule-input" id="autoStart_${a.id}" value="${config.startDate || (a.created_at ? new Date(a.created_at).toISOString().split('T')[0] : '')}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px">
+                <label style="color:var(--text3)">End:</label>
+                <input type="date" class="schedule-input" id="autoEnd_${a.id}" value="${config.endDate || ''}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px">
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-sm btn-ai" onclick="previewAutomation(${a.id})">Preview Next</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteAutomation(${a.id})">Delete</button>
+            </div>
+        </div>
+    </div>`;
+}
+
 async function loadAutomations() {
     try {
         const resp = await api('/automations');
         const list = resp.automations || [];
-        window._automations = list; // Store globally for calendar
-        if (!list.length) { document.getElementById('automationList').innerHTML = '<div class="empty"><div class="icon">⚡</div>No automations yet</div>'; return; }
-
-        // Also load recent automated posts
-        const postsResp = await api('/posts?limit=10');
-        const automatedPosts = (postsResp.posts || []).filter(p => (p.tags || []).includes('automated'));
-
-        document.getElementById('automationList').innerHTML = list.map(a => {
-            const config = a.config || {};
-            const lastRun = a.last_run_at ? new Date(a.last_run_at).toLocaleString('en-US', {timeZone:'America/New_York', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : 'Never';
-            const interval = config.intervalMinutes || 60;
-            const platforms = (config.platforms || []).map(p => platformEmoji(p)).join(' ');
-
-            return `
-            <div class="card" style="margin-bottom:16px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                    <div>
-                        <div style="font-size:16px;font-weight:600">${escHtml(a.name)}</div>
-                        <div style="font-size:12px;color:var(--text3);margin-top:2px">
-                            ${a.type === 'ai_contextual' ? '🤖 AI-generated contextual posts' : '📝 Template-based'} • Every ${interval} min • ${platforms}
-                        </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:10px">
-                        <div class="toggle-switch ${a.enabled ? 'on' : ''}" onclick="toggleAutomation(${a.id}, ${!a.enabled})"></div>
-                        <button class="btn btn-sm btn-danger" onclick="deleteAutomation(${a.id})">🗑</button>
-                    </div>
-                </div>
-                <div style="display:flex;gap:16px;font-size:12px;color:var(--text2);margin-bottom:12px">
-                    <span>⏱ Interval: <strong>${interval} min</strong></span>
-                    <span>📡 Platforms: <strong>${(config.platforms || []).join(', ')}</strong></span>
-                    <span>🕐 Last run: <strong>${lastRun}</strong></span>
-                    <span>Status: <strong style="color:${a.enabled ? 'var(--green)' : 'var(--red)'}">${a.enabled ? 'Active' : 'Paused'}</strong></span>
-                </div>
-                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-                    <button class="btn btn-sm btn-secondary" onclick="editAutomationInterval(${a.id}, ${interval})">⏱ Change Interval</button>
-                    <button class="btn btn-sm btn-ai" onclick="previewAutomation(${a.id})">👁 Preview Next Post</button>
-                    <button class="btn btn-sm btn-primary" onclick="triggerAutomation(${a.id})">🚀 Post Now</button>
-                </div>
-                <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:12px">
-                    <label style="color:var(--text3)">📅 Start:</label>
-                    <input type="date" class="schedule-input" id="autoStart_${a.id}" value="${config.startDate || new Date(a.created_at).toISOString().split('T')[0]}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px">
-                    <label style="color:var(--text3)">End:</label>
-                    <input type="date" class="schedule-input" id="autoEnd_${a.id}" value="${config.endDate || ''}" onchange="saveAutomationDates(${a.id})" style="padding:4px 8px;font-size:12px" placeholder="∞">
-                    <span style="color:var(--text3);font-size:11px">${config.endDate ? '' : '(∞ No end date — runs forever)'}</span>
-                </div>
-                ${a.type === 'ai_contextual' ? `<div style="font-size:11px;color:var(--text3);padding:8px;background:var(--elevated);border-radius:6px;margin-bottom:8px">
-                    📋 <strong>Schedule:</strong> Pre-market → market insights • Market hours → trade setups & analysis • After hours → journaling & review • Overnight → Riley Trade School
-                </div>
-                <div style="margin-bottom:8px">
-                    <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">✏️ Custom Prompt (optional — overrides default AI generation):</label>
-                    <textarea class="compose-area" id="automationPrompt_${a.id}" placeholder="Leave blank for default time-based content, or write a custom prompt like: 'Promote RileyAI with focus on options trading and risk management'" style="min-height:60px;font-size:12px">${config.customPrompt || ''}</textarea>
-                    <button class="btn btn-sm btn-secondary" onclick="saveAutomationPrompt(${a.id})" style="margin-top:6px">💾 Save Prompt</button>
-                </div>` : ''}
-            </div>`;
-        }).join('');
-
-        // Show recent automated posts
-        if (automatedPosts.length > 0) {
-            document.getElementById('automationList').innerHTML += `
-                <div class="card">
-                    <h3>📜 Recent Automated Posts</h3>
-                    ${automatedPosts.map(p => `
-                        <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
-                            <div style="flex:1">
-                                <p style="font-size:13px;color:var(--text2);margin-bottom:4px">${escHtml((p.content || '').substring(0, 200))}</p>
-                                <span style="font-size:11px;color:var(--text3)">${new Date(p.posted_at || p.created_at).toLocaleString()} • ${(p.platforms || []).map(pl => platformEmoji(pl)).join(' ')} • <span class="status-badge status-${p.status}">${p.status}</span></span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>`;
+        window._automations = list;
+        if (!list.length) {
+            document.getElementById('automationSections').innerHTML = '<div class="empty"><div class="icon">⚡</div>No automations yet</div>';
+            return;
         }
+
+        let html = '';
+        for (const [sectionName, types] of Object.entries(autoSections)) {
+            const sectionAutos = list.filter(a => types.includes(a.type));
+            if (!sectionAutos.length) continue;
+            html += `<div class="auto-section">
+                <div class="auto-section-header">${sectionName}</div>
+                ${sectionAutos.map(a => renderAutoCard(a)).join('')}
+            </div>`;
+        }
+        // Any automations not in defined sections
+        const allKnownTypes = Object.values(autoSections).flat();
+        const uncategorized = list.filter(a => !allKnownTypes.includes(a.type));
+        if (uncategorized.length) {
+            html += `<div class="auto-section">
+                <div class="auto-section-header">Other</div>
+                ${uncategorized.map(a => renderAutoCard(a)).join('')}
+            </div>`;
+        }
+
+        document.getElementById('automationSections').innerHTML = html;
     } catch {}
+}
+
+async function saveAutoInterval(id) {
+    const val = parseInt(document.getElementById('autoInterval_' + id)?.value);
+    if (!val) return;
+    const resp = await api('/automations');
+    const auto = (resp.automations || []).find(a => a.id === id);
+    if (!auto) return;
+    const config = { ...auto.config, intervalMinutes: val };
+    await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ config }) });
+    toast('Interval updated to ' + val + ' min', 'success');
+    loadAutomations();
 }
 
 async function toggleAutomation(id, enabled) {
@@ -1018,6 +1161,7 @@ async function saveAutomationPrompt(id) {
 }
 
 async function editAutomationInterval(id, currentInterval) {
+    // Legacy — now handled by inline dropdown via saveAutoInterval
     const newInterval = prompt('Post every how many minutes?', currentInterval);
     if (!newInterval || isNaN(newInterval)) return;
     await api('/automations/' + id, { method: 'PUT', body: JSON.stringify({ config: { intervalMinutes: parseInt(newInterval), platforms: ['twitter'], tags: ['automated', 'promo', 'rileyai'] } }) });
@@ -1026,7 +1170,7 @@ async function editAutomationInterval(id, currentInterval) {
 }
 
 async function previewAutomation() {
-    const el = document.getElementById('automationList');
+    const el = document.getElementById('automationSections');
     el.innerHTML += '<div class="card"><div class="spinner"></div> Generating preview...</div>';
     try {
         const resp = await api('/generate-caption', { method: 'POST', body: JSON.stringify({ description: 'RileyAI coming soon promo - contextual for current time of day', platforms: ['twitter'] }) });
@@ -1069,34 +1213,54 @@ function showNewAutomation() {
 }
 
 // ── Connections ──
+let _connectionsData = {};
 async function loadConnections() {
     try {
         const resp = await api('/connections');
         const conns = resp.connections || {};
+        _connectionsData = conns;
         const platforms = [
             { key: 'twitter', name: 'X / Twitter', icon: '𝕏', color: '#1DA1F2' },
             { key: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F' },
-            { key: 'tiktok', name: 'TikTok', icon: '🎵', color: '#fff' },
+            { key: 'tiktok', name: 'TikTok', icon: '🎵', color: '#ffffff' },
             { key: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000' },
             { key: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
             { key: 'bluesky', name: 'Bluesky', icon: '🦋', color: '#0085FF' },
         ];
-        document.getElementById('connectionsList').innerHTML = platforms.map(p => {
+        const connected = platforms.filter(p => conns[p.key]?.connected);
+        const notConnected = platforms.filter(p => !conns[p.key]?.connected);
+
+        function renderConnCard(p) {
             const c = conns[p.key] || {};
-            return `<div class="connection-card">
+            const isConn = !!c.connected;
+            // Find last posted time for this platform from allPosts
+            const lastPost = allPosts.find(post => (post.platforms || []).includes(p.key) && post.status === 'posted');
+            const lastPostedText = lastPost ? 'Last posted: ' + timeAgo(lastPost.posted_at || lastPost.created_at) : '';
+            return `<div class="conn-card-new ${isConn ? 'conn-connected' : ''}" style="border-left-color:${isConn ? p.color : 'var(--text3)'}">
                 <div class="connection-info">
-                    <div class="connection-icon" style="background:${c.connected ? p.color + '20' : 'var(--elevated)'};font-size:20px">${p.icon}</div>
+                    <div class="connection-icon" style="background:${isConn ? p.color + '20' : 'var(--elevated)'};font-size:20px">${p.icon}</div>
                     <div>
-                        <div class="connection-name">${p.name}</div>
-                        <div class="connection-status ${c.connected ? 'connected' : 'disconnected'}">${c.connected ? '● Connected' + (c.accountName ? ' — @' + c.accountName : '') : '○ Not connected'}</div>
+                        <div style="font-size:13px;color:var(--text3)">${p.name}</div>
+                        ${isConn && c.accountName ? `<div class="conn-account">@${escHtml(c.accountName)}</div>` : `<div class="conn-account" style="color:var(--text3)">${isConn ? 'Connected' : 'Not connected'}</div>`}
+                        ${isConn ? `<div class="connection-status connected">● Connected</div>` : ''}
+                        ${isConn && lastPostedText ? `<div class="conn-last-post">${lastPostedText}</div>` : ''}
                     </div>
                 </div>
-                ${c.connected
+                ${isConn
                     ? `<button class="btn btn-sm btn-danger" onclick="disconnect('${p.key}')">Disconnect</button>`
                     : `<button class="btn btn-sm btn-primary" onclick="connectPlatform('${p.key}')">Connect</button>`
                 }
             </div>`;
-        }).join('');
+        }
+
+        let html = '';
+        if (connected.length) {
+            html += '<div class="conn-section-header">Connected</div>' + connected.map(renderConnCard).join('');
+        }
+        if (notConnected.length) {
+            html += '<div class="conn-section-header">Not Connected</div>' + notConnected.map(renderConnCard).join('');
+        }
+        document.getElementById('connectionsList').innerHTML = html;
     } catch {}
 }
 
@@ -1150,6 +1314,56 @@ function toast(msg, type) {
     el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
+}
+
+function timeAgo(date) {
+    if (!date) return 'Never';
+    const now = new Date();
+    const d = new Date(date);
+    const secs = Math.floor((now - d) / 1000);
+    if (secs < 0) return 'just now';
+    if (secs < 60) return secs + 's ago';
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + ' min ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + ' hour' + (hrs > 1 ? 's' : '') + ' ago';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function automationTypeBadge(type) {
+    const labels = {
+        ai_contextual: 'AI Contextual',
+        ig_reels: 'IG Reels',
+        x_auto_engage: 'X Engage',
+        bsky_auto_engage: 'Bsky Engage',
+        ig_auto_reply: 'IG Reply',
+        ig_welcome_dm: 'IG Welcome DM',
+        yt_auto_reply: 'YT Reply',
+        x_auto_reply: 'X Reply',
+        bsky_auto_reply: 'Bsky Reply',
+        recurring: 'Recurring',
+    };
+    const cssType = type || 'recurring';
+    return `<span class="type-badge type-${cssType}">${labels[type] || type || 'Custom'}</span>`;
+}
+
+function navigateTo(page) {
+    document.querySelectorAll('.nav li').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const navItem = document.querySelector('[data-page="' + page + '"]');
+    if (navItem) navItem.classList.add('active');
+    const pageEl = document.getElementById('page-' + page);
+    if (pageEl) pageEl.classList.add('active');
+}
+
+let currentPostFilter = 'all';
+function filterPosts(filter, el) {
+    currentPostFilter = filter;
+    document.querySelectorAll('#postFilterTabs .filter-tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderRecentPosts();
 }
 
 // ════════════════════════════════════════════════
@@ -1362,6 +1576,63 @@ function discardVideo() {
     document.getElementById('videoProgress').style.display = 'none';
 }
 
+// ── Dashboard ──
+async function loadDashboard() {
+    try {
+        // Posts today / this week
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekStart = new Date(todayStart); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        const postsToday = allPosts.filter(p => p.status === 'posted' && new Date(p.posted_at || p.created_at) >= todayStart).length;
+        const postsWeek = allPosts.filter(p => p.status === 'posted' && new Date(p.posted_at || p.created_at) >= weekStart).length;
+        document.getElementById('dashPostCount').textContent = postsToday + ' / ' + postsWeek;
+
+        // Active automations
+        const activeAutos = (window._automations || []).filter(a => a.enabled).length;
+        const totalAutos = (window._automations || []).length;
+        document.getElementById('dashAutoCount').innerHTML = `${activeAutos} <span style="font-size:12px;color:var(--text2)">of ${totalAutos}</span>` + (activeAutos > 0 ? ' <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>' : '');
+
+        // Platform connection dots
+        const platColors = { twitter: '#1DA1F2', instagram: '#E4405F', tiktok: '#ffffff', youtube: '#FF0000', bluesky: '#0085FF', linkedin: '#0A66C2' };
+        const conns = _connectionsData || {};
+        const dotKeys = ['twitter', 'instagram', 'youtube', 'bluesky'];
+        document.getElementById('dashPlatDots').innerHTML = dotKeys.map(k => {
+            const c = conns[k]?.connected;
+            return `<span class="pdot" style="background:${c ? platColors[k] : 'var(--text3)'}" title="${k}: ${c ? 'connected' : 'not connected'}"></span>`;
+        }).join('');
+        const connCount = dotKeys.filter(k => conns[k]?.connected).length;
+        document.getElementById('dashPlatSub').textContent = connCount + '/' + dotKeys.length + ' connected';
+
+        // Next scheduled post
+        const scheduled = allPosts.filter(p => p.status === 'scheduled' && new Date(p.scheduled_at) > now).sort((a,b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+        if (scheduled.length) {
+            const next = new Date(scheduled[0].scheduled_at);
+            document.getElementById('dashNextPost').textContent = next.toLocaleString('en-US', { timeZone:'America/New_York', hour:'numeric', minute:'2-digit', month:'short', day:'numeric' }) + ' ET';
+        } else {
+            document.getElementById('dashNextPost').textContent = 'None scheduled';
+        }
+
+        // Activity feed
+        const recentActions = allPosts.filter(p => p.status !== 'draft').slice(0, 10);
+        if (recentActions.length) {
+            document.getElementById('dashActivity').innerHTML = recentActions.map(p => {
+                const actionType = p.status === 'posted' ? '📤' : p.status === 'scheduled' ? '📅' : p.status === 'failed' ? '❌' : '📝';
+                const actionLabel = p.status === 'posted' ? 'Posted' : p.status === 'scheduled' ? 'Scheduled' : p.status === 'failed' ? 'Failed' : 'Created';
+                const plats = (p.platforms || []).map(pl => platformEmoji(pl)).join(' ');
+                return `<div class="activity-item">
+                    <div class="activity-icon">${actionType}</div>
+                    <div class="activity-text">
+                        <div>${actionLabel} to ${plats}: ${escHtml((p.content || '').substring(0, 80))}${(p.content||'').length > 80 ? '...' : ''}</div>
+                        <div class="activity-time">${timeAgo(p.posted_at || p.scheduled_at || p.created_at)}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            document.getElementById('dashActivity').innerHTML = '<div class="empty"><div class="icon">📭</div>No recent activity</div>';
+        }
+    } catch(e) { console.error('Dashboard load error:', e); }
+}
+
 // ── X Auto-Engage ──
 async function saveAutoEngage(enabled) {
     const hashtagsRaw = document.getElementById('engageHashtags').value;
@@ -1386,7 +1657,7 @@ async function loadAutoEngage() {
         }
     } catch {}
 }
-document.querySelector('[data-page="automation"]')?.addEventListener('click', () => setTimeout(loadAutoEngage, 100));
+document.querySelector('[data-page="automation"]')?.addEventListener('click', () => { setTimeout(loadAutoEngage, 100); setTimeout(loadAutomations, 100); });
 
 // Load avatars when switching to video page
 document.querySelector('[data-page="video"]').addEventListener('click', () => setTimeout(loadAvatars, 100));
