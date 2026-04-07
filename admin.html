@@ -759,6 +759,10 @@
                     <span class="icon">&#x1F4AC;</span>
                     <span>Feedback</span>
                 </li>
+                <li class="nav-item" data-tab="waitlist">
+                    <span class="icon">&#x2709;&#xFE0F;</span>
+                    <span>Waitlist</span>
+                </li>
             </ul>
             <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.04)">
                 <a href="social.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,180,216,0.08);border:1px solid rgba(0,180,216,0.2);border-radius:8px;color:#00b4d8;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.15s">
@@ -1011,6 +1015,71 @@
                     </table>
                 </div>
             </div>
+
+            <!-- ═══ WAITLIST TAB ═══ -->
+            <div class="tab-panel" id="tab-waitlist">
+                <div class="stats-grid" style="margin-bottom:24px">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Signups</div>
+                        <div class="stat-value cyan" id="wlTotal">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Last 24 Hours</div>
+                        <div class="stat-value" id="wl24h" style="color:var(--green)">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Last 7 Days</div>
+                        <div class="stat-value" id="wl7d" style="color:#fbbf24">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Welcome Sent</div>
+                        <div class="stat-value" id="wlWelcome" style="color:#a78bfa">-</div>
+                    </div>
+                </div>
+
+                <!-- Broadcast Composer -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin-bottom:24px">
+                    <h3 style="margin:0 0 14px 0;font-size:16px;font-weight:600">📣 Send Broadcast Email</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.5);margin:0 0 14px 0">Send an update to all <span id="wlBroadcastCount">0</span> subscribers. Use the test email field first to preview before blasting everyone.</p>
+
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <input type="text" id="wlSubject" placeholder="Email subject (e.g. RileyAI launches next Monday!)" style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;font-family:inherit">
+
+                        <textarea id="wlBody" placeholder="Email body (HTML supported)..." style="width:100%;min-height:200px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical"></textarea>
+
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="action-btn" onclick="loadEmailTemplate('launch')" style="background:rgba(0,180,216,0.1);border:1px solid rgba(0,180,216,0.3);color:#00d4d8">📦 Launch Template</button>
+                            <button class="action-btn" onclick="loadEmailTemplate('update')" style="background:rgba(0,180,216,0.1);border:1px solid rgba(0,180,216,0.3);color:#00d4d8">✨ Update Template</button>
+                            <button class="action-btn" onclick="loadEmailTemplate('feature')" style="background:rgba(0,180,216,0.1);border:1px solid rgba(0,180,216,0.3);color:#00d4d8">🎯 Feature Template</button>
+                        </div>
+
+                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px">
+                            <input type="email" id="wlTestEmail" placeholder="Test email (sends to just this address)" style="flex:1;min-width:240px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px">
+                            <button class="action-btn" onclick="sendBroadcast(true)" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-weight:600">📧 Send Test</button>
+                            <button class="action-btn" onclick="sendBroadcast(false)" style="background:var(--accent);font-weight:700">🚀 Send to All</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waitlist Table -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <h3 style="margin:0;font-size:16px;font-weight:600">All Signups</h3>
+                    <div style="display:flex;gap:8px">
+                        <input type="text" id="wlSearch" placeholder="Search emails..." oninput="renderWaitlist()" style="padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;width:200px">
+                        <button class="action-btn" onclick="exportWaitlist()" style="background:rgba(255,255,255,0.06)">📥 Export CSV</button>
+                        <button class="action-btn" onclick="loadWaitlist()" style="background:rgba(255,255,255,0.06)">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr><th>Email</th><th>Signed Up</th><th>Welcome Sent</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody id="waitlistTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1073,6 +1142,9 @@
                 if (tab === 'feedback' && !document.getElementById('fbTotal').dataset.loaded) {
                     loadFeedback();
                     document.getElementById('fbTotal').dataset.loaded = '1';
+                }
+                if (tab === 'waitlist') {
+                    loadWaitlist();
                 }
             });
         });
@@ -1624,6 +1696,189 @@
             toast.textContent = message;
             toast.className = `toast ${type} show`;
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // ============================================================
+        // ── WAITLIST ──
+        // ============================================================
+        let waitlistData = [];
+
+        async function loadWaitlist() {
+            try {
+                const res = await adminFetch('/beta/list');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Failed');
+
+                waitlistData = data.signups || [];
+                const stats = data.stats || {};
+
+                document.getElementById('wlTotal').textContent = stats.total || 0;
+                document.getElementById('wl24h').textContent = stats.last24h || 0;
+                document.getElementById('wl7d').textContent = stats.last7days || 0;
+                document.getElementById('wlWelcome').textContent = stats.welcomeSent || 0;
+                document.getElementById('wlBroadcastCount').textContent = stats.total || 0;
+
+                renderWaitlist();
+            } catch (err) {
+                showToast('Failed to load waitlist: ' + err.message, 'error');
+            }
+        }
+
+        function renderWaitlist() {
+            const search = document.getElementById('wlSearch').value.toLowerCase();
+            const filtered = waitlistData.filter(s => s.email.toLowerCase().includes(search));
+
+            const tbody = document.getElementById('waitlistTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.4)">No signups found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(s => {
+                const date = new Date(s.created_at).toLocaleString();
+                const welcomeBadge = s.welcome_email_sent
+                    ? '<span style="color:var(--green);font-size:12px">✓ Sent</span>'
+                    : '<span style="color:rgba(255,255,255,0.3);font-size:12px">— Pending</span>';
+                const status = s.converted_to_user
+                    ? '<span style="background:rgba(0,200,83,0.15);color:var(--green);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">CONVERTED</span>'
+                    : '<span style="background:rgba(0,180,216,0.12);color:var(--accent);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">WAITING</span>';
+                return `<tr>
+                    <td style="font-weight:500">${s.email}</td>
+                    <td style="font-size:13px;color:rgba(255,255,255,0.6)">${date}</td>
+                    <td>${welcomeBadge}</td>
+                    <td>${status}</td>
+                    <td><button onclick="deleteWaitlistEntry(${s.id})" style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);color:#ff5252;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer">Remove</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function deleteWaitlistEntry(id) {
+            if (!confirm('Remove this signup from the waitlist?')) return;
+            try {
+                await adminFetch(`/beta/list/${id}`, { method: 'DELETE' });
+                showToast('Removed', 'success');
+                loadWaitlist();
+            } catch (err) {
+                showToast('Failed: ' + err.message, 'error');
+            }
+        }
+
+        function exportWaitlist() {
+            window.open(`${API_URL}/beta/export?key=${ADMIN_KEY}`, '_blank');
+            // Note: GET endpoint requires admin key header — fall back to fetch + download
+            fetch(`${API_URL}/beta/export`, { headers: { 'X-Admin-Key': ADMIN_KEY } })
+                .then(r => r.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `waitlist-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+        }
+
+        async function sendBroadcast(testMode) {
+            const subject = document.getElementById('wlSubject').value.trim();
+            const html = document.getElementById('wlBody').value.trim();
+            const testEmail = document.getElementById('wlTestEmail').value.trim();
+
+            if (!subject) return showToast('Subject required', 'error');
+            if (!html) return showToast('Email body required', 'error');
+
+            if (testMode) {
+                if (!testEmail) return showToast('Test email required', 'error');
+                if (!confirm(`Send test email to ${testEmail}?`)) return;
+            } else {
+                const total = waitlistData.length;
+                if (!confirm(`Send to ALL ${total} subscribers? This cannot be undone.`)) return;
+            }
+
+            try {
+                showToast(testMode ? 'Sending test...' : `Sending to ${waitlistData.length} subscribers...`);
+                const res = await adminFetch('/beta/broadcast', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        subject,
+                        html,
+                        testEmail: testMode ? testEmail : undefined,
+                    }),
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Failed');
+
+                if (testMode) {
+                    showToast(`✓ Test sent to ${testEmail}`);
+                } else {
+                    showToast(`✓ Sent to ${data.sent}/${data.total} subscribers (${data.failed || 0} failed)`);
+                    document.getElementById('wlSubject').value = '';
+                    document.getElementById('wlBody').value = '';
+                }
+            } catch (err) {
+                showToast('Failed: ' + err.message, 'error');
+            }
+        }
+
+        function loadEmailTemplate(type) {
+            const templates = {
+                launch: {
+                    subject: '🚀 Riley AI is launching this week!',
+                    body: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#050510;color:#fff;padding:40px 24px">
+  <h1 style="color:#00d4d8;font-size:32px;margin:0 0 16px">Riley AI is here.</h1>
+  <p style="font-size:18px;line-height:1.6;color:rgba(255,255,255,0.85)">Hey trader 👋</p>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)">You signed up early — and Riley AI is officially launching this week. The AI trading coach you've been waiting for is finally ready.</p>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)"><strong style="color:#fff">What you get:</strong></p>
+  <ul style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.75)">
+    <li>Real-time AI chart analysis</li>
+    <li>Voice conversations with your trading coach</li>
+    <li>AI scans 500+ charts in seconds</li>
+    <li>Personal trade journaling and review</li>
+  </ul>
+  <div style="text-align:center;margin:32px 0">
+    <a href="https://askrileyai.com" style="display:inline-block;background:#00d4d8;color:#050510;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px">Get Early Access →</a>
+  </div>
+  <p style="font-size:14px;color:rgba(255,255,255,0.4);margin-top:40px;border-top:1px solid rgba(255,255,255,0.1);padding-top:20px">Riley AI · askrileyai.com</p>
+</div>`,
+                },
+                update: {
+                    subject: '✨ New in Riley AI this week',
+                    body: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#050510;color:#fff;padding:40px 24px">
+  <h1 style="color:#00d4d8;font-size:28px;margin:0 0 16px">What's new at Riley AI</h1>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)">A quick update on what we've been building for you:</p>
+  <ul style="font-size:16px;line-height:1.8;color:rgba(255,255,255,0.85)">
+    <li><strong>[Feature 1]</strong> — description here</li>
+    <li><strong>[Feature 2]</strong> — description here</li>
+    <li><strong>[Feature 3]</strong> — description here</li>
+  </ul>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)">Stay tuned — launch is just around the corner.</p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="https://askrileyai.com" style="display:inline-block;background:#00d4d8;color:#050510;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px">Visit askrileyai.com →</a>
+  </div>
+  <p style="font-size:14px;color:rgba(255,255,255,0.4);margin-top:40px;border-top:1px solid rgba(255,255,255,0.1);padding-top:20px">Riley AI · askrileyai.com</p>
+</div>`,
+                },
+                feature: {
+                    subject: '🎯 Sneak peek: [Feature Name]',
+                    body: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#050510;color:#fff;padding:40px 24px">
+  <p style="color:#00d4d8;font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 8px">Sneak Peek</p>
+  <h1 style="font-size:32px;margin:0 0 16px;color:#fff">[Feature Name]</h1>
+  <p style="font-size:18px;line-height:1.6;color:rgba(255,255,255,0.85)">[One-sentence description of the feature]</p>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)">[Detailed paragraph explaining what it does and why traders will love it]</p>
+  <p style="font-size:16px;line-height:1.7;color:rgba(255,255,255,0.75)"><strong style="color:#fff">Why it matters:</strong> [The problem this solves]</p>
+  <div style="text-align:center;margin:32px 0">
+    <a href="https://askrileyai.com" style="display:inline-block;background:#00d4d8;color:#050510;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px">Stay tuned →</a>
+  </div>
+  <p style="font-size:14px;color:rgba(255,255,255,0.4);margin-top:40px;border-top:1px solid rgba(255,255,255,0.1);padding-top:20px">Riley AI · askrileyai.com</p>
+</div>`,
+                },
+            };
+
+            const tpl = templates[type];
+            if (tpl) {
+                document.getElementById('wlSubject').value = tpl.subject;
+                document.getElementById('wlBody').value = tpl.body;
+                showToast('Template loaded — customize and send');
+            }
         }
     </script>
 </body>
