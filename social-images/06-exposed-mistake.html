@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1080px; height:1350px; background:#050510; font-family:'Inter','Helvetica Neue',sans-serif; overflow:hidden; position:relative; }
+.container { padding:80px 70px; height:100%; display:flex; flex-direction:column; position:relative; z-index:2; }
+.top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:60px; }
+.logo { font-size:28px; font-weight:700; color:#fff; } .logo span { color:#00d4d8; }
+.badge { background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.3); color:#f97316; font-size:14px; font-weight:600; padding:8px 18px; border-radius:20px; letter-spacing:1px; }
+.hook { font-size:72px; font-weight:900; color:#fff; line-height:1.08; margin-bottom:50px; letter-spacing:-2px; }
+.hook .orange { color:#f97316; }
+.chat { display:flex; flex-direction:column; gap:16px; margin-bottom:40px; }
+.msg { padding:28px 32px; border-radius:20px; max-width:85%; }
+.msg-riley { background:rgba(0,212,216,0.06); border:1px solid rgba(0,212,216,0.12); align-self:flex-start; }
+.msg-user { background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.12); align-self:flex-end; }
+.msg-label { font-size:14px; font-weight:700; margin-bottom:6px; letter-spacing:1px; }
+.msg-label.cyan { color:#00d4d8; } .msg-label.orange { color:#f97316; }
+.msg-text { font-size:24px; color:rgba(255,255,255,0.8); line-height:1.45; }
+.bottom { margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; }
+.cta { font-size:22px; color:rgba(255,255,255,0.4); } .cta strong { color:#00d4d8; }
+.handle { font-size:16px; color:rgba(255,255,255,0.25); letter-spacing:2px; font-weight:600; }
+</style></head><body>
+<div class="container">
+  <div class="top-bar">
+    <div class="logo">Riley<span>AI</span></div>
+    <div class="badge">Behavioral Alert</div>
+  </div>
+  <div class="hook">Riley exposed my <span class="orange">biggest mistake.</span></div>
+  <div class="chat">
+    <div class="msg msg-riley"><div class="msg-label cyan">RILEY</div><div class="msg-text">You've taken 4 trades in the last hour. Three were losses. You're revenge trading.</div></div>
+    <div class="msg msg-user"><div class="msg-label orange">YOU</div><div class="msg-text">No I'm not, the setups were there</div></div>
+    <div class="msg msg-riley"><div class="msg-label cyan">RILEY</div><div class="msg-text">None of those matched your plan. You're chasing to recover. Stop. Walk away for 30 minutes.</div></div>
+    <div class="msg msg-user"><div class="msg-label orange">YOU</div><div class="msg-text">...okay.</div></div>
+  </div>
+  <div class="bottom">
+    <div class="cta">Your trading partner. <strong>askrileyai.com</strong></div>
+    <div class="handle">@askrileyai</div>
+  </div>
+</div>
+</body></html>

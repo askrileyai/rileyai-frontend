@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1080px; height:1350px; background:#050510; font-family:'Inter','Helvetica Neue',sans-serif; overflow:hidden; position:relative; }
+.bg-glow { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:900px; height:900px; background:radial-gradient(circle,rgba(0,212,216,0.08) 0%,transparent 50%); }
+.bg-glow2 { position:absolute; bottom:15%; right:20%; width:500px; height:500px; background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 60%); }
+.container { padding:80px 70px; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative; z-index:2; }
+.logo-big { font-size:44px; font-weight:800; color:#fff; margin-bottom:60px; letter-spacing:-1px; }
+.logo-big span { color:#00d4d8; }
+.main-text { font-size:72px; font-weight:900; color:#fff; line-height:1.08; letter-spacing:-3px; margin-bottom:30px; max-width:900px; }
+.main-text .cyan { color:#00d4d8; }
+.sub-text { font-size:28px; color:rgba(255,255,255,0.4); line-height:1.5; margin-bottom:50px; max-width:700px; }
+.divider { width:100px; height:4px; background:linear-gradient(90deg,#00d4d8,#f97316); border-radius:2px; margin-bottom:50px; }
+.features-row { display:flex; gap:24px; margin-bottom:60px; }
+.feat { padding:16px 28px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; }
+.feat-text { font-size:18px; color:rgba(255,255,255,0.5); font-weight:600; }
+.cta-box { padding:24px 60px; background:linear-gradient(135deg,#00d4d8,#0891b2); border-radius:16px; margin-bottom:20px; }
+.cta-text { font-size:24px; font-weight:800; color:#050510; letter-spacing:0.5px; }
+.url { font-size:22px; color:#00d4d8; font-weight:600; letter-spacing:1px; }
+.handle { font-size:16px; color:rgba(255,255,255,0.2); letter-spacing:2px; font-weight:600; margin-top:30px; }
+</style></head><body>
+<div class="bg-glow"></div><div class="bg-glow2"></div>
+<div class="container">
+  <div class="logo-big">Riley<span>AI</span></div>
+  <div class="main-text">You don't need more indicators. You need <span class="cyan">discipline.</span></div>
+  <div class="divider"></div>
+  <div class="sub-text">Riley coaches you in real-time, catches your mistakes, and keeps you accountable to your plan.</div>
+  <div class="features-row">
+    <div class="feat"><div class="feat-text">🧠 Live Coaching</div></div>
+    <div class="feat"><div class="feat-text">🎙️ Voice Mode</div></div>
+    <div class="feat"><div class="feat-text">⚠️ Mistake Detection</div></div>
+    <div class="feat"><div class="feat-text">📊 Confluence</div></div>
+  </div>
+  <div class="cta-box"><div class="cta-text">Coming Soon</div></div>
+  <div class="url">askrileyai.com</div>
+  <div class="handle">@askrileyai</div>
+</div>
+</body></html>

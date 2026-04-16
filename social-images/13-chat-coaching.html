@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { width:1080px; height:1350px; background:#050510; font-family:'Inter','Helvetica Neue',sans-serif; overflow:hidden; position:relative; }
+.bg-glow { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:800px; height:800px; background:radial-gradient(circle,rgba(0,212,216,0.06) 0%,transparent 60%); }
+.container { padding:80px 70px; height:100%; display:flex; flex-direction:column; position:relative; z-index:2; }
+.top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:60px; }
+.logo { font-size:28px; font-weight:700; color:#fff; } .logo span { color:#00d4d8; }
+.badge { background:rgba(0,212,216,0.1); border:1px solid rgba(0,212,216,0.25); color:#00d4d8; font-size:14px; font-weight:600; padding:8px 18px; border-radius:20px; letter-spacing:1px; }
+.hook { font-size:68px; font-weight:900; color:#fff; line-height:1.1; margin-bottom:50px; letter-spacing:-2px; }
+.hook .cyan { color:#00d4d8; }
+.chat { display:flex; flex-direction:column; gap:14px; margin-bottom:30px; }
+.msg { padding:24px 28px; border-radius:20px; max-width:88%; font-size:24px; color:rgba(255,255,255,0.8); line-height:1.45; }
+.msg-user { background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.12); align-self:flex-end; }
+.msg-riley { background:rgba(0,212,216,0.06); border:1px solid rgba(0,212,216,0.12); align-self:flex-start; }
+.msg-label { font-size:13px; font-weight:700; margin-bottom:6px; letter-spacing:1px; }
+.msg-label.cyan { color:#00d4d8; } .msg-label.orange { color:#f97316; }
+.msg strong { color:#fff; }
+.saved-tag { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.25); border-radius:14px; color:#22c55e; font-size:20px; font-weight:700; align-self:center; margin-top:10px; }
+.bottom { margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end; }
+.cta { font-size:22px; color:rgba(255,255,255,0.4); } .cta strong { color:#00d4d8; }
+.handle { font-size:16px; color:rgba(255,255,255,0.25); letter-spacing:2px; font-weight:600; }
+</style></head><body>
+<div class="bg-glow"></div>
+<div class="container">
+  <div class="top-bar">
+    <div class="logo">Riley<span>AI</span></div>
+    <div class="badge">💬 Chat Coaching</div>
+  </div>
+  <div class="hook">I asked Riley this before <span class="cyan">entering.</span></div>
+  <div class="chat">
+    <div class="msg msg-user"><div class="msg-label orange">YOU</div>SPY just broke $545. Should I go long?</div>
+    <div class="msg msg-riley"><div class="msg-label cyan">RILEY</div>Not yet. That breakout has <strong>no volume behind it</strong>. Low volume breakouts fail 70% of the time. Wait for a retest of $545 with buyers stepping in.</div>
+    <div class="msg msg-user"><div class="msg-label orange">YOU</div>What if it keeps going?</div>
+    <div class="msg msg-riley"><div class="msg-label cyan">RILEY</div>Then you miss it. <strong>Missing a trade costs you nothing.</strong> Chasing a fake breakout costs you money. Your plan says wait for confirmation. Stick to it.</div>
+    <div class="saved-tag">✓ This reply saved $340</div>
+  </div>
+  <div class="bottom">
+    <div class="cta">Ask before you enter. <strong>askrileyai.com</strong></div>
+    <div class="handle">@askrileyai</div>
+  </div>
+</div>
+</body></html>
