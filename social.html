@@ -472,12 +472,12 @@
                     <p>Generate AI videos with HeyGen, Hailuo, Luma, and Seedance — then post everywhere</p>
                 </div>
 
-                <!-- Seedance Pipeline (Higgsfield × Claude Code) -->
+                <!-- Seedance Library (Higgsfield × Claude Code) -->
                 <div class="card" style="border-color:rgba(0,212,170,0.3);background:linear-gradient(135deg,rgba(0,212,170,0.06) 0%,var(--bg2) 100%)">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
                         <div>
-                            <h3 style="color:#00d4aa">🎥 Seedance Pipeline</h3>
-                            <p style="color:var(--text2);font-size:13px;margin-top:4px">Upload a Seedance 2.0 clip generated locally via Claude Code → auto-posts at 11am ET</p>
+                            <h3 style="color:#00d4aa">🎥 Seedance Library</h3>
+                            <p style="color:var(--text2);font-size:13px;margin-top:4px">Generate cinematic AI videos locally via Claude Code + Higgsfield — saved here for manual review. Does NOT auto-post.</p>
                         </div>
                         <a href="#" onclick="document.getElementById('seedanceDocs').style.display=document.getElementById('seedanceDocs').style.display==='none'?'block':'none';return false" style="color:#00d4aa;font-size:12px;text-decoration:none">⚙️ Setup guide</a>
                     </div>
@@ -488,7 +488,7 @@
                             <li>Clone Playwright MCP and Seedance skills (see <code>SEEDANCE_SETUP.md</code> in the backend repo)</li>
                             <li>Register the Playwright MCP server in <code>~/.claude/settings.json</code></li>
                             <li>Restart Claude Code and say: <em>"Generate a Seedance cinematic ad for RileyAI"</em></li>
-                            <li>When Claude finishes, the MP4 downloads to your machine — drop it in the upload box below</li>
+                            <li>When Claude finishes the clip uploads here automatically — or drop the MP4 below manually</li>
                         </ol>
                     </div>
 
@@ -496,25 +496,25 @@
                         <div class="drop-zone" id="seedanceDropZone" onclick="document.getElementById('seedanceFile').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleSeedanceDrop(event)" style="padding:28px;text-align:center;cursor:pointer">
                             <div style="font-size:32px">🎬</div>
                             <div style="margin-top:8px;font-weight:600">Drop Seedance MP4 or click to upload</div>
-                            <div style="font-size:11px;color:var(--text3);margin-top:4px">Max 500MB · will be added to pending queue</div>
+                            <div style="font-size:11px;color:var(--text3);margin-top:4px">Max 500MB · saved to library, not auto-posted</div>
                         </div>
                         <input type="file" id="seedanceFile" accept="video/mp4,video/quicktime" style="display:none" onchange="handleSeedanceSelect(this)">
 
-                        <input class="auth-input" id="seedanceHint" placeholder="Caption hint (optional) — e.g. 'Cinematic ad for Trading Desk launch'" style="margin:0;padding:10px 14px;font-size:13px">
+                        <input class="auth-input" id="seedanceHint" placeholder="Description (optional) — e.g. 'Cinematic ad for Trading Desk launch'" style="margin:0;padding:10px 14px;font-size:13px">
 
                         <div id="seedancePreview" style="display:none"></div>
 
-                        <button class="btn btn-primary" id="seedanceUploadBtn" onclick="uploadSeedanceVideo()" disabled style="opacity:0.5">Enqueue for next post</button>
+                        <button class="btn btn-primary" id="seedanceUploadBtn" onclick="uploadSeedanceVideo()" disabled style="opacity:0.5">Save to library</button>
                         <div id="seedanceStatus" style="font-size:12px;color:var(--text2)"></div>
                     </div>
 
-                    <!-- Queue table -->
+                    <!-- Library -->
                     <div style="margin-top:20px">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-                            <strong style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Video Queue</strong>
+                            <strong style="font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Library</strong>
                             <button class="btn btn-ghost" onclick="loadSeedanceQueue()" style="padding:4px 10px;font-size:12px">⟳ Refresh</button>
                         </div>
-                        <div id="seedanceQueueList" style="font-size:12px"><div class="empty" style="padding:20px;text-align:center;color:var(--text3)">Loading queue...</div></div>
+                        <div id="seedanceQueueList" style="font-size:12px"><div class="empty" style="padding:20px;text-align:center;color:var(--text3)">Loading...</div></div>
                     </div>
                 </div>
 
@@ -836,15 +836,14 @@ async function uploadSeedanceVideo() {
         const fd = new FormData();
         fd.append('file', seedanceFile);
         fd.append('hint', document.getElementById('seedanceHint').value || '');
-        fd.append('source', 'seedance');
-        const resp = await fetch(API + '/heygen/enqueue-upload', {
+        const resp = await fetch(API + '/seedance/upload', {
             method: 'POST',
             headers: { 'X-Admin-Key': adminKey },
             body: fd,
         });
         const data = await resp.json();
         if (data.success) {
-            status.innerHTML = `<span style="color:#00d4aa">✓ Queued as #${data.queued.id} — will post at next 11am ET window</span>`;
+            status.innerHTML = `<span style="color:#00d4aa">✓ Saved to library (#${data.video.id})</span>`;
             seedanceFile = null;
             document.getElementById('seedanceFile').value = '';
             document.getElementById('seedanceHint').value = '';
@@ -862,26 +861,37 @@ async function uploadSeedanceVideo() {
 async function loadSeedanceQueue() {
     const list = document.getElementById('seedanceQueueList');
     try {
-        const data = await api('/heygen/queue');
+        const data = await api('/seedance/list');
         const videos = data.videos || [];
-        if (!videos.length) { list.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--text3)">Queue is empty</div>'; return; }
-        const statusColor = { pending: '#ff9800', posting: '#00b4d8', posted: '#00c853', failed: '#ff5252' };
+        if (!videos.length) { list.innerHTML = '<div class="empty" style="padding:20px;text-align:center;color:var(--text3)">Library is empty</div>'; return; }
         list.innerHTML = videos.map(v => {
-            const color = statusColor[v.status] || 'var(--text2)';
-            const when = v.posted_at ? new Date(v.posted_at).toLocaleString() : new Date(v.created_at).toLocaleString();
-            const hint = v.script_hint ? `<div style="color:var(--text3);font-size:11px;margin-top:2px">${escapeHtml(v.script_hint)}</div>` : '';
-            return `<div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;align-items:center">
+            const when = new Date(v.created_at).toLocaleString();
+            const hint = v.hint ? `<div style="color:var(--text)font-size:12px;margin-top:2px">${escapeHtml(v.hint)}</div>` : '';
+            const skill = v.skill ? `<span style="padding:2px 8px;border-radius:10px;background:rgba(0,212,170,0.15);color:#00d4aa;font-size:10px;text-transform:uppercase;letter-spacing:1px">${escapeHtml(v.skill)}</span>` : '';
+            return `<div style="display:grid;grid-template-columns:120px 1fr auto;gap:12px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;align-items:center">
+                <video src="${escapeHtml(v.public_url)}" style="width:120px;height:68px;object-fit:cover;border-radius:4px;background:#000" preload="metadata" muted></video>
                 <div>
-                    <div style="font-family:monospace;font-size:11px;color:var(--text2)">${escapeHtml(v.filename)}</div>
+                    ${skill}
                     ${hint}
-                    <div style="color:var(--text3);font-size:11px;margin-top:2px">${when}</div>
+                    <div style="color:var(--text3);font-size:11px;margin-top:4px;font-family:monospace">${escapeHtml(v.filename)}</div>
+                    <div style="color:var(--text3);font-size:11px">${when}</div>
                 </div>
-                <span style="padding:3px 10px;border-radius:12px;background:${color}22;color:${color};font-size:11px;font-weight:600;text-transform:uppercase">${v.status}</span>
+                <div style="display:flex;gap:6px;flex-direction:column">
+                    <a href="${escapeHtml(v.public_url)}" target="_blank" class="btn btn-ghost" style="padding:4px 10px;font-size:11px;text-decoration:none;text-align:center">View</a>
+                    <button class="btn btn-ghost" onclick="deleteSeedance(${v.id})" style="padding:4px 10px;font-size:11px;color:var(--red)">Delete</button>
+                </div>
             </div>`;
         }).join('');
     } catch (e) {
         list.innerHTML = `<div class="empty" style="padding:20px;text-align:center;color:var(--red)">${e.message}</div>`;
     }
+}
+async function deleteSeedance(id) {
+    if (!confirm('Delete this video from the library?')) return;
+    try {
+        await api('/seedance/' + id, { method: 'DELETE' });
+        loadSeedanceQueue();
+    } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
