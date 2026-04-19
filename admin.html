@@ -699,17 +699,61 @@
             .health-grid { grid-template-columns: 1fr; }
         }
 
+        /* Mobile hamburger (hidden on desktop) */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 12px; left: 12px;
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 49;
+        }
+        .sidebar-backdrop.visible { display: block; }
+
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
-            .sidebar .nav-item span:not(.icon) { display: none; }
-            .sidebar-logo h2, .sidebar-logo span { display: none; }
-            .sidebar-footer { display: none; }
-            .main-content { margin-left: 60px; padding: 20px; }
+            .mobile-menu-btn { display: flex; }
+            .sidebar {
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar .nav-item span:not(.icon) { display: inline; }
+            .sidebar-logo h2, .sidebar-logo span { display: block; }
+            .sidebar-footer { display: block; position: relative; }
+            .side-link-text { display: inline; }
+            .main-content { margin-left: 0; padding: 72px 16px 24px; }
             .stats-grid { grid-template-columns: 1fr; }
-            .users-header { flex-direction: column; }
+            .users-header { flex-direction: column; align-items: stretch; gap: 12px; }
             .search-input { width: 100%; }
-            .page-header { flex-direction: column; gap: 12px; }
-            .metric-grid-3 { grid-template-columns: 1fr 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .metric-grid-3 { grid-template-columns: 1fr; }
+            .metric-grid { grid-template-columns: 1fr; }
+            .header-right { width: 100%; justify-content: space-between; }
+            /* Scrollable tables on small screens */
+            .users-section, .users-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .users-table { min-width: 600px; }
+            /* Inputs touch targets */
+            input, button, select, textarea { font-size: 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-content { padding: 68px 12px 20px; }
+            .page-header h1 { font-size: 22px; }
         }
     </style>
 </head>
@@ -728,8 +772,12 @@
 
     <!-- App Layout -->
     <div class="app-layout" id="appLayout">
+        <!-- Mobile menu button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <h2>RileyAI</h2>
                 <span>Admin Panel</span>
@@ -764,10 +812,14 @@
                     <span>Waitlist</span>
                 </li>
             </ul>
-            <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.04)">
+            <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:8px">
                 <a href="social.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,180,216,0.08);border:1px solid rgba(0,180,216,0.2);border-radius:8px;color:#00b4d8;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.15s">
                     <span>📱</span>
-                    <span>Social Media Hub</span>
+                    <span class="side-link-text">Social Media Hub</span>
+                </a>
+                <a href="marketing.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;color:#00d4aa;text-decoration:none;font-size:14px;font-weight:600;transition:all 0.15s">
+                    <span>📣</span>
+                    <span class="side-link-text">Marketing Strategy</span>
                 </a>
             </div>
             <div class="sidebar-footer">
@@ -1124,6 +1176,20 @@
             location.reload();
         }
 
+        // ── Mobile sidebar toggle ──
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const btn = document.getElementById('mobileMenuBtn');
+            const close = () => { sidebar.classList.remove('open'); backdrop.classList.remove('visible'); };
+            btn?.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                backdrop.classList.toggle('visible');
+            });
+            backdrop?.addEventListener('click', close);
+            window.__closeMobileSidebar = close;
+        })();
+
         // ── Navigation ──
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -1133,6 +1199,7 @@
                 const tab = item.dataset.tab;
                 document.getElementById(`tab-${tab}`).classList.add('active');
                 document.getElementById('pageTitle').textContent = item.querySelector('span:last-child').textContent;
+                window.__closeMobileSidebar && window.__closeMobileSidebar();
 
                 // Load tab-specific data
                 if (tab === 'system' && !document.getElementById('healthStatus').dataset.loaded) {

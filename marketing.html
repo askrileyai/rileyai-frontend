@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>RileyAI Content Strategy — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan: #00d4aa;
+      --dark: #0a0e17;
+      --darker: #060a12;
+      --card: #111827;
+      --border: #1e293b;
+      --muted: #64748b;
+      --light: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--dark); color: var(--light); min-height: 100vh; font-family: 'DM Sans', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--darker); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+    .header {
+      background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 50%, #0d1520 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 32px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-glow {
+      position: absolute; top: -100px; right: -100px; width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,212,170,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+    .header-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .header-eyebrow-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px rgba(0,212,170,0.5); animation: pulse 2s infinite; }
+    .header-eyebrow-text { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+    .header h1 {
+      font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1.2;
+      background: linear-gradient(135deg, var(--light) 0%, var(--cyan) 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 6s ease infinite;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header p { font-size: 15px; color: var(--muted); margin-top: 8px; max-width: 600px; line-height: 1.6; }
+    .back-link { position: absolute; top: 20px; left: 32px; color: var(--cyan); text-decoration: none; font-size: 13px; font-family: 'JetBrains Mono', monospace; z-index: 2; }
+    .back-link:hover { opacity: 0.8; }
+
+    .tabs { border-bottom: 1px solid var(--border); padding: 0 32px; background: var(--darker); position: sticky; top: 0; z-index: 10; overflow-x: auto; white-space: nowrap; }
+    .tabs-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 0; }
+    .tab-btn { padding: 14px 20px; font-size: 13px; font-weight: 400; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; white-space: nowrap; }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); font-weight: 600; }
+
+    .content { max-width: 900px; margin: 0 auto; padding: 32px 32px 64px; }
+    .tab-panel { display: none; animation: fadeIn 0.4s ease; }
+    .tab-panel.active { display: block; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 32px; }
+    .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan); margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
+
+    .mission-card { background: linear-gradient(135deg, rgba(0,212,170,0.06) 0%, var(--card) 100%); border: 1px solid rgba(0,212,170,0.2); border-radius: 16px; padding: 32px; margin-bottom: 32px; }
+    .mission-headline { font-size: 20px; font-weight: 700; line-height: 1.5; color: var(--light); }
+    .mission-headline .accent { color: var(--cyan); }
+    .mission-sub { font-size: 14px; color: var(--muted); margin-top: 12px; line-height: 1.7; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+    .stat-label { font-size: 13px; font-weight: 600; color: var(--light); margin-top: 4px; }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .comp-row { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 16px; padding: 12px 16px; background: var(--darker); border-radius: 10px; font-size: 13px; align-items: start; margin-bottom: 12px; }
+    .comp-head { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 16px; padding: 4px 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .comp-name { font-weight: 600; color: var(--light); }
+    .comp-their { color: var(--muted); }
+    .comp-gap { color: var(--cyan); font-size: 12px; }
+
+    .personas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .persona { background: var(--darker); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+    .persona-emoji { font-size: 28px; margin-bottom: 10px; }
+    .persona-title { font-size: 14px; font-weight: 700; color: var(--light); margin-bottom: 8px; }
+    .persona-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+    .pillar { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; margin-bottom: 16px; }
+    .pillar.expanded { border-color: var(--pillar-color, var(--cyan)); }
+    .pillar-header { padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; }
+    .pillar-head-left { display: flex; align-items: center; gap: 16px; }
+    .pillar-icon { font-size: 32px; }
+    .pillar-title { font-size: 18px; font-weight: 700; color: var(--light); font-family: 'JetBrains Mono', monospace; }
+    .pillar-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .pillar-chev { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.3s ease; }
+    .pillar.expanded .pillar-chev { transform: rotate(180deg); }
+    .pillar-body { padding: 0 28px 28px; display: none; animation: fadeIn 0.3s ease; }
+    .pillar.expanded .pillar-body { display: block; }
+    .pillar-rationale { padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; }
+    .pillar-rationale-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+    .pillar-rationale-text { font-size: 14px; color: var(--light); line-height: 1.7; opacity: 0.9; }
+    .pillar-section-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+    .pillar-item { background: var(--darker); border-radius: 10px; padding: 14px 18px; border: 1px solid var(--border); margin-bottom: 10px; }
+    .pillar-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .pillar-item-title { font-size: 14px; font-weight: 600; color: var(--light); flex: 1; min-width: 200px; }
+    .pillar-item-priority { font-size: 11px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+    .pillar-item-meta { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+
+    .cal-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; align-items: center; margin-bottom: 12px; }
+    .cal-week { font-size: 11px; font-weight: 600; color: var(--muted); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
+    .cal-content { font-size: 14px; font-weight: 600; color: var(--light); }
+    .cal-meta { display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; font-size: 11px; }
+    .cal-pillar-pill { padding: 2px 8px; border-radius: 6px; }
+    .cal-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .cal-note { margin-top: 24px; padding: 20px; background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.15); border-radius: 12px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .cal-note strong { color: var(--cyan); }
+
+    .channel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+    .channel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .channel-title { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; color: var(--light); font-family: 'JetBrains Mono', monospace; }
+    .channel-emoji { font-size: 24px; }
+    .channel-priority { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; }
+    .pri-primary { background: rgba(0,212,170,0.12); color: var(--cyan); }
+    .pri-foundation { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .pri-secondary { background: rgba(100,116,139,0.12); color: var(--muted); }
+    .tactic { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .tactic-mark { color: var(--cyan); flex-shrink: 0; margin-top: 2px; }
+
+    .cta { background: linear-gradient(135deg, rgba(0,212,170,0.08) 0%, var(--card) 100%); border: 1px solid rgba(0,212,170,0.2); border-radius: 16px; padding: 28px; text-align: center; }
+    .cta-headline { font-size: 20px; font-weight: 700; color: var(--light); line-height: 1.5; }
+    .cta-headline .accent { color: var(--cyan); }
+    .cta-sub { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="back-link" href="admin.html">← Admin</a>
+    <div class="header-glow"></div>
+    <div class="header-inner">
+      <div class="header-eyebrow">
+        <div class="header-eyebrow-dot"></div>
+        <span class="header-eyebrow-text">Content Strategy 2026</span>
+      </div>
+      <h1>RileyAI</h1>
+      <p>A comprehensive content strategy to establish RileyAI as the definitive AI trading copilot for retail traders—built on behavioral intelligence, education, and the underdog narrative.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tabs-inner" id="tabs-inner"></div>
+  </div>
+
+  <div class="content">
+    <div class="tab-panel active" id="panel-overview"></div>
+    <div class="tab-panel" id="panel-pillars"></div>
+    <div class="tab-panel" id="panel-calendar"></div>
+    <div class="tab-panel" id="panel-playbook"></div>
+  </div>
+
+  <script>
+    const pillars = [
+      {
+        id: "behavioral-edge", icon: "🧠", title: "Behavioral Edge", subtitle: "Trading Psychology × AI",
+        rationale: "Riley's core differentiator is Behavioral DNA—no competitor owns this space. Retail traders lose money because of psychology, not bad charts. This pillar positions RileyAI as the only app that actually addresses WHY traders fail.",
+        searchable: [
+          { title: "Why 90% of Day Traders Lose Money (And What AI Can See That You Can't)", type: "Hub Page", keyword: "why day traders lose money", stage: "Awareness", priority: "🔴 High" },
+          { title: "The 7 Trading Anti-Patterns Destroying Your P&L", type: "Spoke / Listicle", keyword: "common trading mistakes patterns", stage: "Awareness", priority: "🔴 High" },
+          { title: "Revenge Trading: How to Recognize It and Stop", type: "Spoke / Guide", keyword: "revenge trading how to stop", stage: "Awareness", priority: "🟡 Medium" },
+          { title: "What Is a Trading Personality Type? (And Why It Matters)", type: "Spoke / Explainer", keyword: "trading personality type quiz", stage: "Awareness", priority: "🟡 Medium" },
+        ],
+        shareable: [
+          { title: "I Built an AI That Roasts Your Trading Habits", type: "Meta / Behind-the-Scenes", channel: "X, TikTok, Reddit", format: "Thread + Short Video" },
+          { title: "Your Behavioral DNA Report: What 500 Beta Traders Revealed", type: "Data-Driven Content", channel: "X, Blog, LinkedIn", format: "Infographic Thread" },
+          { title: "The $2,000 Lesson: How One Anti-Pattern Cost Me a Month of Gains", type: "Vulnerable Story", channel: "X, TikTok", format: "Storytelling Thread" },
+        ],
+      },
+      {
+        id: "ai-copilot", icon: "🤖", title: "AI Trading Copilot", subtitle: "Product-Led Content",
+        rationale: "The 'AI trading copilot' category is exploding—Jenova, TradingView, BetterTrader, Capybara all competing for it. RileyAI needs to own the MOBILE-FIRST, retail-focused niche within this space before it gets crowded.",
+        searchable: [
+          { title: "Best AI Trading Apps for Beginners in 2026", type: "Comparison / Listicle", keyword: "best AI trading app beginners 2026", stage: "Consideration", priority: "🔴 High" },
+          { title: "AI Trading Copilot vs. Robo-Advisor: What's the Difference?", type: "Explainer", keyword: "AI trading copilot vs robo advisor", stage: "Awareness", priority: "🟡 Medium" },
+          { title: "How to Use AI to Analyze Your Trades (Step-by-Step)", type: "Tutorial", keyword: "AI trade analysis how to", stage: "Implementation", priority: "🟡 Medium" },
+          { title: "RileyAI vs. TradingView AI Copilot: Mobile-First Wins", type: "Comparison", keyword: "tradingview AI copilot alternative mobile", stage: "Consideration", priority: "🔴 High" },
+        ],
+        shareable: [
+          { title: "I Let AI Watch Me Trade for 30 Days—Here's What It Found", type: "Case Study / Experiment", channel: "X, YouTube, TikTok", format: "Video Series" },
+          { title: "Demo: Riley Annotating a Live Chart in Real-Time", type: "Product Demo", channel: "X, TikTok, Instagram Reels", format: "Screen Recording + Voiceover" },
+          { title: "Why Your Trading App Doesn't Actually Know You", type: "Thought Leadership", channel: "X, Blog", format: "Essay / Thread" },
+        ],
+      },
+      {
+        id: "trade-school", icon: "📚", title: "Trade School", subtitle: "Education as Growth Engine",
+        rationale: "RileyAI already has 8 courses, 33 chapters, and 156 lessons built. This is a massive content moat—repurpose it into blog content, social clips, and SEO magnets. Education is the #1 reason beginners download trading apps.",
+        searchable: [
+          { title: "How to Read Candlestick Charts: The Only Guide You Need", type: "Hub / Comprehensive Guide", keyword: "how to read candlestick charts", stage: "Awareness", priority: "🔴 High" },
+          { title: "Support and Resistance Levels Explained (With Examples)", type: "Spoke / Tutorial", keyword: "support resistance levels trading", stage: "Awareness", priority: "🟡 Medium" },
+          { title: "Paper Trading vs. Live Trading: When to Make the Switch", type: "Spoke / Guide", keyword: "paper trading vs live trading", stage: "Consideration", priority: "🟡 Medium" },
+          { title: "The Complete Beginner's Guide to Technical Analysis", type: "Hub Page", keyword: "technical analysis beginners guide", stage: "Awareness", priority: "🔴 High" },
+        ],
+        shareable: [
+          { title: "60-Second Chart School: Daily Quick Lessons", type: "Educational Series", channel: "TikTok, Instagram Reels", format: "Short-form Video" },
+          { title: "Trade School Chapter Previews with Interactive Quizzes", type: "Product-Led Content", channel: "X, Blog", format: "Interactive Web Content" },
+          { title: "From Zero to First Trade: A Trade School Graduate Story", type: "Case Study", channel: "X, Blog, TikTok", format: "Narrative Thread" },
+        ],
+      },
+      {
+        id: "retail-vs-institutional", icon: "⚔️", title: "Retail vs. Institutional", subtitle: "The Underdog Narrative",
+        rationale: "Retail traders feel the game is rigged against them. This is RileyAI's brand narrative—giving retail traders institutional-grade tools. This pillar creates fierce loyalty and organic sharing through an us-vs-them identity.",
+        searchable: [
+          { title: "How Institutional Traders Use AI (And How You Can Too)", type: "Explainer", keyword: "institutional trading AI tools retail", stage: "Awareness", priority: "🟡 Medium" },
+          { title: "The Retail Trading Edge: What Wall Street Doesn't Want You to Know", type: "Thought Leadership", keyword: "retail trader edge over institutions", stage: "Awareness", priority: "🟡 Medium" },
+          { title: "Dark Pools Explained: How They Affect Your Trades", type: "Spoke / Explainer", keyword: "dark pools explained simple", stage: "Awareness", priority: "🟢 Low" },
+        ],
+        shareable: [
+          { title: "The Tools Wall Street Uses That Retail Traders Finally Have Access To", type: "Manifesto / Thread", channel: "X, Reddit", format: "Long Thread" },
+          { title: "Retail Trader of the Week: User Spotlight Series", type: "Community Content", channel: "X, Instagram, TikTok", format: "Short Profile" },
+          { title: "Why I Built RileyAI: A Solo Founder's Mission to Level the Playing Field", type: "Founder Story / Meta", channel: "X, Indie Hackers, Blog", format: "Long-form Essay" },
+        ],
+      },
+      {
+        id: "bootstrapping", icon: "🚀", title: "Building in Public", subtitle: "Founder & Startup Journey",
+        rationale: "Solo founder building a fintech app from scratch is a compelling story. The indie hacker / build-in-public community cross-pollinates with retail traders. This pillar builds Devon's personal brand alongside the product.",
+        searchable: [
+          { title: "How to Launch a Fintech App with No Funding in 2026", type: "Meta / How-To", keyword: "launch fintech app no funding bootstrapped", stage: "N/A (brand building)", priority: "🟢 Low" },
+          { title: "Forming a Delaware LLC for a Fintech Startup: Complete Guide", type: "Tutorial", keyword: "delaware LLC fintech startup", stage: "N/A (brand building)", priority: "🟢 Low" },
+        ],
+        shareable: [
+          { title: "Month 1 Revenue: $0. Here's Why I'm Not Worried.", type: "Build-in-Public Update", channel: "X, Indie Hackers", format: "Thread" },
+          { title: "Shipping a Feature Every Week as a Solo Dev", type: "Behind-the-Scenes", channel: "X, TikTok", format: "Time-lapse + Narration" },
+          { title: "My Tech Stack for Building an AI Trading App Solo", type: "Technical Deep-Dive", channel: "X, Dev.to, Hacker News", format: "Long Thread / Blog Post" },
+        ],
+      },
+    ];
+
+    const pillarColors = {
+      "behavioral-edge": "#00d4aa",
+      "ai-copilot": "#6366f1",
+      "trade-school": "#f59e0b",
+      "retail-vs-institutional": "#ef4444",
+      "bootstrapping": "#8b5cf6",
+    };
+
+    const calendarData = [
+      { week: "Week 1", pillar: "behavioral-edge", content: "Hub: Why 90% of Day Traders Lose Money", type: "Blog", channel: "Blog + X Thread" },
+      { week: "Week 1", pillar: "ai-copilot", content: "Demo: Riley Annotating a Chart", type: "Video", channel: "TikTok + Reels" },
+      { week: "Week 2", pillar: "trade-school", content: "Hub: Complete Beginner's Guide to Technical Analysis", type: "Blog", channel: "Blog + X Thread" },
+      { week: "Week 2", pillar: "behavioral-edge", content: "Thread: I Built an AI That Roasts Your Trading Habits", type: "Social", channel: "X" },
+      { week: "Week 3", pillar: "ai-copilot", content: "Comparison: Best AI Trading Apps 2026", type: "Blog", channel: "Blog (SEO)" },
+      { week: "Week 3", pillar: "retail-vs-institutional", content: "Thread: Tools Wall Street Uses", type: "Social", channel: "X + Reddit" },
+      { week: "Week 4", pillar: "trade-school", content: "60-Second Chart School #1–5", type: "Video", channel: "TikTok + Reels" },
+      { week: "Week 4", pillar: "bootstrapping", content: "Founder Story: Why I Built RileyAI", type: "Blog", channel: "Blog + Indie Hackers" },
+      { week: "Week 5", pillar: "behavioral-edge", content: "Spoke: 7 Anti-Patterns Destroying Your P&L", type: "Blog", channel: "Blog + X Thread" },
+      { week: "Week 5", pillar: "ai-copilot", content: "Video: I Let AI Watch Me Trade for 30 Days", type: "Video", channel: "X + TikTok" },
+      { week: "Week 6", pillar: "trade-school", content: "Spoke: How to Read Candlestick Charts", type: "Blog", channel: "Blog (SEO)" },
+      { week: "Week 6", pillar: "retail-vs-institutional", content: "Spotlight: Retail Trader of the Week #1", type: "Social", channel: "X + Instagram" },
+    ];
+
+    const competitors = [
+      { competitor: "TradingView AI Copilot", their: "Chart analysis, technical breakdowns", gap: "No behavioral intelligence, no mobile app, Chrome-only" },
+      { competitor: "Jenova", their: "Deep SEO content, multi-agent system", gap: "Enterprise-focused, no beginner education, no personality" },
+      { competitor: "BetterTrader", their: "Emotion control tools, analytics", gap: "Desktop-focused, no AI copilot persona, no community" },
+      { competitor: "Robinhood / Webull", their: "Social features, easy onboarding", gap: "No AI analysis, no trading education, no behavioral feedback" },
+    ];
+
+    const personas = [
+      { emoji: "👤", title: "The Aspiring Trader", desc: "18–35, mobile-first, watches trading TikToks, wants to learn but overwhelmed by complexity. Searches: 'how to start trading', 'best trading app for beginners'." },
+      { emoji: "📈", title: "The Struggling Trader", desc: "Has traded 6–18 months, inconsistent results, knows something is wrong but can't pinpoint it. Searches: 'why do I keep losing money trading', 'trading psychology tips'." },
+      { emoji: "🎯", title: "The Serious Retail Trader", desc: "1–3 years experience, uses TradingView, wants institutional-grade tools without institutional prices. Searches: 'AI trading copilot', 'trading journal app with AI'." },
+    ];
+
+    const channels = [
+      { channel: "X / Twitter", emoji: "𝕏", priority: "PRIMARY", tactics: [
+        "Daily: 1 insight or chart annotation from Riley (screenshot + commentary)",
+        "2x/week: Thread (repurposed from blog posts—behavioral tips, AI demos, lessons)",
+        "Weekly: 'Anti-Pattern of the Week'—name a common trading mistake, explain it, show how Riley catches it",
+        "Engage: Reply to FinTwit conversations, quote-tweet market moments with Riley's take",
+        "Format mix: 60% educational, 20% product demos, 15% founder story, 5% memes",
+      ]},
+      { channel: "TikTok / Instagram Reels", emoji: "🎬", priority: "PRIMARY", tactics: [
+        "'60-Second Chart School'—daily micro-lessons pulled from Trade School curriculum",
+        "Riley reacting to trades—screen recordings of the app annotating charts in real time",
+        "Before/After: 'My P&L before Riley vs. after' (using beta user data, anonymized)",
+        "Trending audio + trading insight overlays—ride trends while educating",
+        "Hook formula: 'This one pattern cost me $2,000...' → education → CTA to waitlist",
+      ]},
+      { channel: "Blog (askrileyai.com/blog)", emoji: "📝", priority: "FOUNDATION", tactics: [
+        "1 long-form post per week—alternating between Hub pages and Spoke articles",
+        "Every post targets a specific keyword + buyer stage",
+        "Internal linking strategy: Hub → Spokes, Blog → Trade School, Blog → Waitlist",
+        "Each post includes 1 clear CTA: join waitlist, download app, or start Trade School",
+        "Repurpose each post into: 1 X thread, 1 TikTok script, 3 social quotes",
+      ]},
+      { channel: "Reddit", emoji: "🗣️", priority: "SECONDARY", tactics: [
+        "Target: r/daytrading, r/stocks, r/wallstreetbets, r/algotrading, r/IndieHackers",
+        "Lead with value—share genuine insights, never self-promote directly",
+        "Monthly 'build-in-public' update on r/IndieHackers or r/SideProject",
+        "Answer questions using RileyAI's behavioral framework (builds authority organically)",
+        "Only link to blog when genuinely relevant to the discussion",
+      ]},
+      { channel: "Indie Hackers / Hacker News", emoji: "🛠️", priority: "SECONDARY", tactics: [
+        "Monthly progress update (MRR, users, lessons learned)",
+        "Technical deep-dives: 'How I built behavioral DNA profiling for traders'",
+        "Launch post when exiting beta—coordinate with Product Hunt",
+        "Engage authentically in comments on other founders' posts",
+      ]},
+    ];
+
+    const tabs = [
+      { id: "overview", label: "Strategy Overview" },
+      { id: "pillars", label: "Content Pillars" },
+      { id: "calendar", label: "90-Day Calendar" },
+      { id: "playbook", label: "Channel Playbook" },
+    ];
+
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+    function renderTabs() {
+      document.getElementById('tabs-inner').innerHTML = tabs.map(t =>
+        `<button class="tab-btn ${t.id === 'overview' ? 'active' : ''}" data-tab="${t.id}">${esc(t.label)}</button>`
+      ).join('');
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        });
+      });
+    }
+
+    function renderOverview() {
+      const stats = [
+        { label: "Content Pillars", value: "5", sub: "Core topics" },
+        { label: "Searchable Ideas", value: "17", sub: "SEO-driven articles" },
+        { label: "Shareable Ideas", value: "16", sub: "Social-first content" },
+        { label: "90-Day Plan", value: "12", sub: "Pieces scheduled" },
+      ];
+      document.getElementById('panel-overview').innerHTML = `
+        <div class="mission-card">
+          <div class="card-title">▸ Content Mission</div>
+          <div class="mission-headline">Position RileyAI as the only trading app that makes you a <span class="accent">better trader</span>—not just a faster one.</div>
+          <div class="mission-sub">Every competitor talks about speed, data, and automation. Riley talks about <em>you</em>—your patterns, your psychology, your growth. Content should make traders feel seen, educated, and empowered.</div>
+        </div>
+        <div class="stats-grid">
+          ${stats.map(s => `
+            <div class="stat">
+              <div class="stat-value">${esc(s.value)}</div>
+              <div class="stat-label">${esc(s.label)}</div>
+              <div class="stat-sub">${esc(s.sub)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="card">
+          <div class="card-title">▸ Competitive Content Landscape</div>
+          ${competitors.map(r => `
+            <div class="comp-row">
+              <div class="comp-name">${esc(r.competitor)}</div>
+              <div class="comp-their">${esc(r.their)}</div>
+              <div class="comp-gap">${esc(r.gap)}</div>
+            </div>
+          `).join('')}
+          <div class="comp-head">
+            <div>Competitor</div>
+            <div>Their Content Focus</div>
+            <div style="color: var(--cyan)">RileyAI's Gap to Exploit</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">▸ Ideal Content Consumer (ICP)</div>
+          <div class="personas">
+            ${personas.map(p => `
+              <div class="persona">
+                <div class="persona-emoji">${esc(p.emoji)}</div>
+                <div class="persona-title">${esc(p.title)}</div>
+                <div class="persona-desc">${esc(p.desc)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPillars() {
+      const el = document.getElementById('panel-pillars');
+      el.innerHTML = `
+        <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
+          Five content pillars, each with searchable (SEO) and shareable (social) content ideas. Click any pillar to expand its full content plan.
+        </div>
+        ${pillars.map(p => {
+          const color = pillarColors[p.id];
+          return `
+            <div class="pillar" data-pillar="${p.id}" style="--pillar-color:${color}">
+              <div class="pillar-header">
+                <div class="pillar-head-left">
+                  <span class="pillar-icon">${esc(p.icon)}</span>
+                  <div>
+                    <div class="pillar-title">${esc(p.title)}</div>
+                    <div class="pillar-subtitle">${esc(p.subtitle)}</div>
+                  </div>
+                </div>
+                <div class="pillar-chev" style="background:${color}26;color:${color}">▾</div>
+              </div>
+              <div class="pillar-body">
+                <div class="pillar-rationale" style="background:${color}14;border-left:3px solid ${color}">
+                  <div class="pillar-rationale-label" style="color:${color}">Strategic Rationale</div>
+                  <div class="pillar-rationale-text">${esc(p.rationale)}</div>
+                </div>
+                <div class="pillar-section-label" style="color:var(--cyan)">🔍 Searchable Content (${p.searchable.length})</div>
+                <div style="margin-bottom:28px">
+                  ${p.searchable.map(it => `
+                    <div class="pillar-item">
+                      <div class="pillar-item-head">
+                        <div class="pillar-item-title">${esc(it.title)}</div>
+                        <span class="pillar-item-priority" style="background:${color}33;color:${color}">${esc(it.priority)}</span>
+                      </div>
+                      <div class="pillar-item-meta">
+                        <span>📝 ${esc(it.type)}</span>
+                        <span>🔑 <span class="mono">${esc(it.keyword)}</span></span>
+                        <span>📊 ${esc(it.stage)}</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="pillar-section-label" style="color:#f59e0b">🚀 Shareable Content (${p.shareable.length})</div>
+                ${p.shareable.map(it => `
+                  <div class="pillar-item">
+                    <div class="pillar-item-title">${esc(it.title)}</div>
+                    <div class="pillar-item-meta">
+                      <span>📝 ${esc(it.type)}</span>
+                      <span>📢 ${esc(it.channel)}</span>
+                      <span>🎬 ${esc(it.format)}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      `;
+      el.querySelectorAll('.pillar').forEach(p => {
+        p.addEventListener('click', (e) => {
+          el.querySelectorAll('.pillar').forEach(x => { if (x !== p) x.classList.remove('expanded'); });
+          p.classList.toggle('expanded');
+        });
+      });
+    }
+
+    function renderCalendar() {
+      document.getElementById('panel-calendar').innerHTML = `
+        <div style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7;">
+          A cadence of 2 pieces per week—one searchable blog post and one shareable social piece—across the first 6 weeks. Scale up after validating what resonates.
+        </div>
+        ${calendarData.map(it => {
+          const color = pillarColors[it.pillar];
+          const pname = pillars.find(p => p.id === it.pillar)?.title || '';
+          return `
+            <div class="cal-item">
+              <div class="cal-week">${esc(it.week)}</div>
+              <div>
+                <div class="cal-content">${esc(it.content)}</div>
+                <div class="cal-meta">
+                  <span class="cal-pillar-pill" style="background:${color}33;color:${color}">${esc(pname)}</span>
+                  <span style="color:var(--muted)">📝 ${esc(it.type)}</span>
+                  <span style="color:var(--muted)">📢 ${esc(it.channel)}</span>
+                </div>
+              </div>
+              <div class="cal-dot" style="background:${color};box-shadow:0 0 8px ${color}99"></div>
+            </div>
+          `;
+        }).join('')}
+        <div class="cal-note">
+          <strong>Cadence recommendation:</strong> Start with 2 pieces/week (1 blog + 1 social). As a solo founder, consistency beats volume. Write the blog post first, then atomize it into X threads, TikTok scripts, and Reels. Every blog post should generate 3–5 social pieces.
+        </div>
+      `;
+    }
+
+    function renderPlaybook() {
+      document.getElementById('panel-playbook').innerHTML = `
+        ${channels.map(ch => `
+          <div class="channel">
+            <div class="channel-head">
+              <div class="channel-title">
+                <span class="channel-emoji">${esc(ch.emoji)}</span>
+                <span>${esc(ch.channel)}</span>
+              </div>
+              <span class="channel-priority ${ch.priority === 'PRIMARY' ? 'pri-primary' : ch.priority === 'FOUNDATION' ? 'pri-foundation' : 'pri-secondary'}">${esc(ch.priority)}</span>
+            </div>
+            ${ch.tactics.map(t => `<div class="tactic"><span class="tactic-mark">▸</span><span>${esc(t)}</span></div>`).join('')}
+          </div>
+        `).join('')}
+        <div class="cta">
+          <div class="card-title">The One Rule</div>
+          <div class="cta-headline">Every piece of content should make a trader think:<br><span class="accent">"This app actually gets me."</span></div>
+          <div class="cta-sub">That's the feeling no competitor is creating. Own it.</div>
+        </div>
+      `;
+    }
+
+    renderTabs();
+    renderOverview();
+    renderPillars();
+    renderCalendar();
+    renderPlaybook();
+  </script>
+</body>
+</html>
