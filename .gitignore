@@ -12,3 +12,13 @@ phonto.PNG
 
 # Local Netlify folder
 .netlify
+
+# Node deps (not used at runtime — Netlify serves static files)
+node_modules/
+
+# Local Claude Code settings
+.claude/
+
+# Local backups
+*.splash-backup
+*.bak
