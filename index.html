@@ -457,10 +457,13 @@
             .hero-panel .container {
                 width: 100%;
                 max-width: 100%;
-                height: 100%;
                 padding: 0 20px;
                 margin: 0 auto;
             }
+            /* Only the OLD panel needs the container to fill the viewport height
+               (so its flex-column children can use auto-margins). The NEW panel
+               aligns its content to flex-end and needs a natural-height container. */
+            .hero-panel--old .container { height: 100%; }
             /* Three-zone mobile layout:
                - Top: badge + Meet Riley + subtitle + tagline (sit near the top)
                - Middle: email input + Notify Me (auto-pushed from top)
@@ -512,26 +515,27 @@
                 margin: 0 auto !important;
                 text-align: center;
             }
-            /* Form (middle zone): auto-margin-top pushes it below the top group. */
-            .hero-panel--old .signup-form {
-                order: 6;
-                margin-top: auto !important;
-                width: 100%;
-            }
-            /* Form-note (bottom zone): brighter, larger, auto-margin-top pushes
-               it down so it sits at the bottom as a closing separator line. */
+            /* form-note ('Riley is launching soon') sits right above the email,
+               in a small bright font. Auto top margin pushes the whole group
+               down from the top zone so the form lands roughly mid-screen. */
             .hero-panel--old .form-note {
-                order: 7;
-                margin: auto auto 0 !important;
-                padding-top: 24px;
-                font-size: 14px !important;
+                order: 5;
+                margin: auto auto 8px !important;
+                padding: 0;
+                font-size: 12px !important;
                 font-weight: 500;
-                color: rgba(255, 255, 255, 0.92) !important;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.88) !important;
                 text-align: center;
-                letter-spacing: 0.01em;
             }
             .hero-panel--old .form-note span {
                 color: var(--accent-light);
+            }
+            .hero-panel--old .signup-form {
+                order: 6;
+                margin-bottom: auto !important; /* paired with form-note's auto top: centers the group */
+                width: 100%;
             }
             .hero-panel--old .desktop-notice,
             .hero-panel--old .signup-success { order: 8; }
