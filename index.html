@@ -288,7 +288,11 @@
             will-change: opacity, transform;
             z-index: 2;
         }
-        .hero-panel--old { opacity: 1; pointer-events: auto; }
+        .hero-panel--old {
+            opacity: 1;
+            pointer-events: auto;
+            padding: 200px 0 100px; /* desktop: top group sits below the nav; mobile @media overrides */
+        }
         .hero-panel .container { width: 100%; }
         .hero-panel--new { justify-content: center; text-align: center; }
         .hero-content--centered {
@@ -826,9 +830,28 @@
             letter-spacing: 0.18em;
             text-transform: uppercase;
             color: rgba(255, 255, 255, 0.78);
-            text-align: center;
-            margin-top: 18px;
+            text-align: left;
+            margin-top: 0;
         }
+
+        /* Shared OLD-panel layout: centered column with form-note above email.
+           Mobile @media adds height:100% + auto-margin spread for the three-
+           zone layout; desktop keeps the group tight under the heading. */
+        .hero-panel--old .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 0 auto;
+        }
+        .hero-panel--old .form-note {
+            order: 5;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+        .hero-panel--old .signup-form { order: 6; }
+        .hero-panel--old .desktop-notice,
+        .hero-panel--old .signup-success { order: 7; }
 
         .desktop-notice {
             display: none;
@@ -1986,7 +2009,7 @@
                 <div class="container">
                     <div class="hero-content">
                         <div class="hero-badge">Coming Soon — iOS & Android</div>
-                        <h1>Meet <span class="brand">Riley</span>.</h1>
+                        <h1>Meet <span class="brand">Riley.</span></h1>
                         <p class="hero-subtitle">
                             Your AI trading copilot — built to keep you disciplined when it matters most. Launching soon on iPhone and Android.
                         </p>
