@@ -817,6 +817,19 @@
             color: var(--gold);
         }
 
+        /* OLD-panel form-note ('Be the first to know.') — same small uppercase
+           tracker on desktop and mobile so the two breakpoints feel consistent.
+           Mobile adds layout overrides (order, auto-margin) inside its @media. */
+        .hero-panel--old .form-note {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.78);
+            text-align: center;
+            margin-top: 18px;
+        }
+
         .desktop-notice {
             display: none;
             margin-top: 24px;
