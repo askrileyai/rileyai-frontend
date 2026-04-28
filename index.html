@@ -429,7 +429,7 @@
 
         /* Mobile (<768px): keep the canvas cinema, tune text + scroll length */
         @media (max-width: 768px) {
-            .hero.hero-cinema { height: 240vh; }
+            .hero.hero-cinema { height: 360vh; }
             .hero-cinema .hero-stage {
                 position: sticky;
                 top: 0;
@@ -456,14 +456,14 @@
             .hero-panel--old {
                 opacity: 1;
                 pointer-events: auto;
-                align-items: flex-start;
-                padding-top: 88px;
+                align-items: center;
+                padding: 80px 0 60px;
             }
             .hero-panel--old::before {
-                background: linear-gradient(180deg,
-                    rgba(10, 10, 20, 0.92) 0%,
-                    rgba(10, 10, 20, 0.7) 55%,
-                    rgba(10, 10, 20, 0) 100%);
+                background: radial-gradient(ellipse at center,
+                    rgba(10, 10, 20, 0.82) 0%,
+                    rgba(10, 10, 20, 0.55) 60%,
+                    rgba(10, 10, 20, 0.25) 100%);
             }
             .hero-panel--old .hero-content {
                 max-width: 460px;
@@ -2504,8 +2504,13 @@
             const panelB = document.querySelector('.hero-panel--new');
             const hint   = document.querySelector('.hero-scroll-hint');
             const beats  = Array.from(document.querySelectorAll('.story-beat'));
-            // Each beat: [start, end] of scroll progress where it pulses in/out
-            const beatRanges = [[0.32, 0.48], [0.48, 0.64], [0.64, 0.80]];
+            // Each beat: [start, end] of scroll progress, plus per-beat fade width.
+            // Wider ranges (esp. beat 3) hold the text on screen longer while scrolling.
+            const beatRanges = [
+                [0.28, 0.48, 0.05],  // beat 1 — 20% range
+                [0.48, 0.66, 0.05],  // beat 2 — 18% range
+                [0.66, 0.88, 0.05]   // beat 3 — 22% range (holds longest, lands the message)
+            ];
             if (!stage || !canvas || !panelA || !panelB) return;
             if (!window.gsap || !window.ScrollTrigger) return;
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -2564,17 +2569,17 @@
                     scrub: 0.6,
                     onUpdate: self => {
                         const p = self.progress;
-                        // Frames: hold frame 0 for the first 18% (the "lingering desk" beat),
-                        // run the video between 18% and 92%, hold last frame at the end.
-                        const effP = Math.max(0, Math.min(1, (p - 0.18) / 0.74));
+                        // Frames: hold frame 0 for first 18% (lingering "Meet Riley" beat),
+                        // play through to 88% (phone fully revealed by beat 3), then hold.
+                        const effP = Math.max(0, Math.min(1, (p - 0.18) / 0.70));
                         const idx = Math.min(FRAME_COUNT - 1, Math.floor(effP * FRAME_COUNT));
                         if (idx !== currentFrame) {
                             requestAnimationFrame(() => drawFrame(idx));
                         }
-                        // OLD panel stays fully visible until 18%, then quick fade by 32%.
-                        // NEW panel begins fading in at 78%, fully in by 92%.
-                        const aOpacity = 1 - smoothstep(0.18, 0.32, p);
-                        const bOpacity = smoothstep(0.78, 0.92, p);
+                        // OLD stays fully visible until 18%, fades out by 28% (before beat 1).
+                        // NEW waits for beat 3 to finish: fades in 88%–96%.
+                        const aOpacity = 1 - smoothstep(0.18, 0.28, p);
+                        const bOpacity = smoothstep(0.88, 0.96, p);
                         panelA.style.opacity = aOpacity.toFixed(3);
                         panelA.style.pointerEvents = aOpacity > 0.1 ? 'auto' : 'none';
                         panelA.setAttribute('aria-hidden', aOpacity > 0.5 ? 'false' : 'true');
@@ -2582,10 +2587,11 @@
                         panelB.style.pointerEvents = bOpacity > 0.1 ? 'auto' : 'none';
                         panelB.setAttribute('aria-hidden', bOpacity > 0.5 ? 'false' : 'true');
                         if (hint) hint.style.opacity = (1 - smoothstep(0.0, 0.18, p)).toFixed(3);
-                        // Story beats: each pulses in over 4% then out over 4% within its range
+                        // Story beats: each fades in/out using its own fade width so wider
+                        // ranges naturally hold the text on screen longer.
                         for (let i = 0; i < beats.length; i++) {
-                            const [s, e] = beatRanges[i];
-                            const op = Math.max(0, smoothstep(s, s + 0.04, p) - smoothstep(e - 0.04, e, p));
+                            const [s, e, fade] = beatRanges[i];
+                            const op = Math.max(0, smoothstep(s, s + fade, p) - smoothstep(e - fade, e, p));
                             const yOff = (1 - op) * 24;
                             beats[i].style.opacity = op.toFixed(3);
                             beats[i].style.transform = 'translate(-50%, calc(-50% + ' + yOff.toFixed(1) + 'px))';
