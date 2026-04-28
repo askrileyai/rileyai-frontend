@@ -38,6 +38,10 @@
 
         html {
             scroll-behavior: smooth;
+            /* `clip` prevents horizontal scroll without creating a scroll container,
+               so position:sticky on the hero still works. Falls back to `hidden`. */
+            overflow-x: hidden;
+            overflow-x: clip;
         }
 
         body {
@@ -46,6 +50,7 @@
             color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
+            overflow-x: clip;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -736,7 +741,8 @@
         }
 
         .signup-form input::placeholder {
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.85);
+            opacity: 1; /* override Firefox default */
         }
 
         .signup-form input:focus {
