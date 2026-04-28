@@ -2370,6 +2370,29 @@
     </script>
 
     <script>
+        // Force body width to match the visible viewport. Some phones (and zoom states)
+        // keep the layout viewport narrower than the visual viewport, leaving a strip on
+        // the right of every non-fixed element. This widens body so anchored content fills.
+        // Throttled via rAF + lastApplied-guard to avoid a resize feedback loop.
+        (function syncBodyToVisualVp() {
+            let lastApplied = 0;
+            let raf = 0;
+            function apply() {
+                raf = 0;
+                const w = window.innerWidth;
+                if (Math.abs(w - lastApplied) < 2) return;
+                lastApplied = w;
+                document.body.style.minWidth = w + 'px';
+            }
+            function schedule() {
+                if (raf) return;
+                raf = requestAnimationFrame(apply);
+            }
+            apply();
+            window.addEventListener('resize', schedule);
+            window.addEventListener('orientationchange', schedule);
+        })();
+
         // Ambient 3D starfield — tinted with brand cyan, pauses on reduced-motion + when off-screen.
         (function () {
             const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
