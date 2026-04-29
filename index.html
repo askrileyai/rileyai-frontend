@@ -142,6 +142,11 @@
             width: 28px;
             height: 28px;
             flex-shrink: 0;
+            object-fit: contain;
+        }
+        @media (min-width: 769px) {
+            .logo-icon { width: 38px; height: 38px; }
+            .logo-text { font-size: 26px; }
         }
 
         .logo-text {
@@ -216,12 +221,12 @@
             background: var(--gold-soft);
             border: 1px solid rgba(255, 120, 80, 0.25);
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--gold);
-            margin-bottom: 40px;
+            margin-bottom: 24px;
             animation: fadeInUp 0.8s ease forwards;
         }
 
@@ -239,16 +244,54 @@
             50% { opacity: 0.4; transform: scale(1.3); }
         }
 
-        .hero h1 {
+        /* Screen 1 eyebrow line above the main headline -- orange uppercase tracker. */
+        .hero-eyebrow {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(15px, 1.25vw, 20px);
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin: 0 0 16px;
+            animation: fadeInUp 0.8s ease 0.05s forwards;
+            opacity: 0;
+        }
+        /* Screen 1 hero headline -- 'Chat with Riley.' is short, so slightly above
+           PDF mid-range but not oversized. */
+        .hero h1,
+        .hero-headline {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(40px, 5.5vw, 64px);
-            font-weight: 400;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 12px;
+            font-size: clamp(44px, 4.4vw, 64px);
+            font-weight: 600;
+            line-height: 1.08;
+            letter-spacing: -0.025em;
+            margin-bottom: 18px;
             animation: fadeInUp 0.8s ease 0.1s forwards;
             opacity: 0;
             text-wrap: balance;
+        }
+        /* Screen 1 micro line under the subtitle -- cyan accent tagline. */
+        .hero-micro {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-light);
+            line-height: 1.5;
+            margin: 0 0 28px; /* breathing room before the email form */
+            animation: fadeInUp 0.8s ease 0.25s forwards;
+            opacity: 0;
+        }
+        /* Screen 1 social-proof line (the 'add one' improvement from the PDF). */
+        .hero-social-proof {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            margin: 0 0 22px;
+            animation: fadeInUp 0.8s ease 0.32s forwards;
+            opacity: 0;
         }
 
         /* Cinematic scroll-scrubbed hero (canvas + dual text panels) */
@@ -291,7 +334,7 @@
         .hero-panel--old {
             opacity: 1;
             pointer-events: auto;
-            padding: 200px 0 100px; /* desktop: top group sits below the nav; mobile @media overrides */
+            padding: 60px 0 60px; /* desktop: lift content higher; mobile @media overrides */
         }
         .hero-panel .container { width: 100%; }
         .hero-panel--new { justify-content: center; text-align: center; }
@@ -304,13 +347,13 @@
         /* New panel typography matches the OLD hero h1 exactly so the crossfade feels seamless */
         .hero-headline-new {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(40px, 5.5vw, 64px);
-            font-weight: 400;
+            font-size: clamp(30px, 4.4vw, 56px); /* PDF Screen 5: 28-32 mobile, 52-64 desktop */
+            font-weight: 600;
             line-height: 1.15;
             letter-spacing: -0.02em;
             color: var(--text-primary);
             text-wrap: balance;
-            text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 6px 24px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.85);
             margin-bottom: 12px;
         }
         .hero-headline-new .brand {
@@ -348,12 +391,12 @@
             transform: translate(-50%, calc(-50% + 24px));
             text-align: center;
             font-family: 'Playfair Display', serif;
-            font-weight: 400;
-            font-size: clamp(36px, 5.6vw, 76px);
-            line-height: 1.12;
-            letter-spacing: -0.018em;
+            font-weight: 600; /* Bold per PDF */
+            font-size: clamp(34px, 4.6vw, 64px); /* PDF: 30-34 mobile, 56-72 desktop */
+            line-height: 1.14;
+            letter-spacing: -0.012em;
             color: var(--text-primary);
-            max-width: min(82vw, 1100px);
+            max-width: min(80vw, 960px);
             padding: 0 24px;
             opacity: 0;
             text-wrap: balance;
@@ -371,6 +414,39 @@
             color: var(--accent-light);
             letter-spacing: 0;
             text-transform: none;
+        }
+        .story-beat .brand {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            color: var(--accent-light);
+            letter-spacing: -0.01em;
+        }
+        /* Beat 3: each phrase on its own line via block-level spans, smaller font
+           on mobile so each segment fits on one line. */
+        .story-beat[data-beat="3"] .beat-line {
+            display: block;
+            white-space: nowrap; /* keep 'Real-time analysis.' / 'Every candle,' / 'any timeframe.' on one line each */
+        }
+        .story-beat[data-beat="3"] {
+            font-size: clamp(26px, 6vw, 56px);
+            line-height: 1.22;
+            text-wrap: nowrap;
+        }
+        .hero-headline .brand {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            color: var(--accent-light);
+            letter-spacing: -0.01em;
+        }
+        .hero-subtitle .brand {
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+        .hero-headline-new .brand {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            color: var(--accent-light);
+            letter-spacing: -0.01em;
         }
         @media (max-width: 768px) {
             .story-beat {
@@ -477,7 +553,7 @@
                 opacity: 1;
                 pointer-events: auto;
                 align-items: stretch;
-                padding: 90px 0 64px; /* extra breathing room below the fixed nav */
+                padding: 130px 0 64px; /* extra breathing room below the fixed nav */
             }
             .hero-panel--old::before {
                 background: radial-gradient(ellipse at center,
@@ -498,44 +574,74 @@
             }
             .hero-panel--old .hero-badge {
                 margin: 0 auto 14px;
-                font-size: 10px;
+                font-size: 12px;
                 padding: 6px 12px;
             }
-            .hero-panel--old h1 {
-                font-size: clamp(48px, 15vw, 76px) !important;
+            /* Screen 1 mobile -- 'Chat with Riley' lands BIG and bold. */
+            .hero-panel--old .hero-eyebrow {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.18em !important;
+                text-transform: uppercase !important;
+                color: var(--gold) !important;
+                margin: 0 auto 14px !important;
+                text-align: center;
+            }
+            .hero-panel--old h1,
+            .hero-panel--old .hero-headline {
+                font-size: clamp(48px, 13vw, 64px) !important;
+                font-weight: 600 !important;
                 line-height: 1.05 !important;
                 letter-spacing: -0.025em !important;
                 margin: 0 0 16px !important;
                 text-align: center;
+                white-space: nowrap; /* keep 'Ask Riley.' on a single line */
             }
             .hero-panel--old .hero-subtitle {
                 font-size: 16px !important;
+                font-weight: 500 !important;
                 line-height: 1.5 !important;
-                margin: 0 auto 14px !important;
+                margin: 0 auto 10px !important;
+                color: #9aa0aa !important;
                 text-align: center;
             }
-            .hero-panel--old .hero-tagline {
+            .hero-panel--old .hero-micro {
                 font-size: 13px !important;
-                margin: 0 auto !important;
+                font-weight: 600 !important;
+                line-height: 1.5 !important;
+                color: var(--accent-light) !important;
+                margin: 0 auto 8px !important;
                 text-align: center;
             }
-            /* 'Be the first to know.' — small uppercase tracker line right above
-               the email. Auto top margin pushes the form group to mid-screen. */
-            .hero-panel--old .form-note {
+            .hero-panel--old .hero-social-proof {
+                font-size: 12px !important;
+                font-weight: 500 !important;
+                letter-spacing: 0.18em !important;
+                text-transform: uppercase !important;
+                color: var(--accent-light) !important;
+                margin: 0 auto 22px !important;
+                text-align: center;
+            }
+            /* Mobile: signup-form sits mid-screen, form-note 'Join traders getting
+               early access.' sits BELOW the email + button as a closing cyan line. */
+            .hero-panel--old .signup-form {
                 order: 5;
-                margin: auto auto 10px !important;
+                margin-top: auto !important;
+                width: 100%;
+            }
+            .hero-panel--old .form-note {
+                order: 6;
+                margin: 14px auto auto !important;
                 padding: 0;
                 font-size: 11px !important;
                 font-weight: 500;
                 letter-spacing: 0.18em;
                 text-transform: uppercase;
-                color: rgba(255, 255, 255, 0.78) !important;
+                color: var(--accent-light) !important;
                 text-align: center;
             }
-            .hero-panel--old .signup-form {
-                order: 6;
-                margin-bottom: auto !important; /* paired with form-note's auto top: centers the group */
-                width: 100%;
+            .hero-panel--old .signup-form ~ .form-note {
+                margin-bottom: auto !important;
             }
             .hero-panel--old .desktop-notice,
             .hero-panel--old .signup-success { order: 8; }
@@ -548,8 +654,9 @@
             .hero-panel--old .signup-form input,
             .hero-panel--old .signup-form button {
                 width: 100%;
-                padding: 14px 18px;
-                font-size: 15px;
+                min-height: 50px; /* PDF: 48-52px mobile */
+                padding: 0 18px;
+                font-size: 16px;
             }
             .hero-panel--old .form-note {
                 font-size: 12px;
@@ -564,9 +671,10 @@
             }
             .hero-panel--new::before {
                 background: linear-gradient(0deg,
-                    rgba(10, 10, 20, 0.92) 0%,
-                    rgba(10, 10, 20, 0.7) 55%,
-                    rgba(10, 10, 20, 0) 100%);
+                    rgba(10, 10, 20, 0.96) 0%,
+                    rgba(10, 10, 20, 0.88) 35%,
+                    rgba(10, 10, 20, 0.55) 65%,
+                    rgba(10, 10, 20, 0.1) 100%);
             }
             .hero-content--centered {
                 max-width: 460px;
@@ -580,10 +688,10 @@
                 padding: 6px 12px;
             }
             .hero-headline-new {
-                font-size: clamp(42px, 14vw, 68px);
-                line-height: 1.06;
-                letter-spacing: -0.025em;
-                margin-bottom: 12px;
+                font-size: clamp(28px, 8vw, 32px); /* PDF Screen 5 mobile: 28-32px Bold */
+                line-height: 1.18;
+                letter-spacing: -0.015em;
+                margin-bottom: 14px;
             }
             .hero-subtitle-new {
                 font-size: 15px;
@@ -617,11 +725,14 @@
         }
 
         @media (max-width: 380px) {
-            .hero-panel--old h1 { font-size: 44px !important; }
-            .hero-panel--old .hero-subtitle { font-size: 14px !important; }
-            .hero-headline-new { font-size: 40px; }
+            .hero-panel--old .hero-eyebrow { font-size: 12px !important; letter-spacing: 0.14em !important; }
+            .hero-panel--old h1,
+            .hero-panel--old .hero-headline { font-size: 48px !important; } /* keep one line */
+            .hero-panel--old .hero-subtitle { font-size: 15px !important; }
+            .hero-panel--old .hero-micro { font-size: 13px !important; }
+            .hero-headline-new { font-size: 28px; }
             .hero-subtitle-new { font-size: 14px; }
-            .story-beat { font-size: 32px; }
+            .story-beat { font-size: 30px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -647,13 +758,14 @@
             background-clip: text;
         }
 
+        /* Screen 1 subtitle -- grey, slightly darker so it reads as a clear secondary line. */
         .hero-subtitle {
-            font-size: 17px;
-            color: var(--text-secondary);
-            max-width: 440px;
-            font-weight: 400;
-            line-height: 1.8;
-            margin-bottom: 32px;
+            font-size: clamp(16px, 1.4vw, 19px);
+            color: #9aa0aa;
+            max-width: 540px;
+            font-weight: 500;
+            line-height: 1.55;
+            margin-bottom: 8px;
             animation: fadeInUp 0.8s ease 0.2s forwards;
             opacity: 0;
         }
@@ -761,13 +873,16 @@
         .signup-form {
             display: flex;
             gap: 12px;
+            width: 100%;
+            max-width: 520px;
             animation: fadeInUp 0.8s ease 0.3s forwards;
             opacity: 0;
         }
 
         .signup-form input {
-            flex: 1;
-            padding: 20px 24px;
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 18px 22px;
             background: var(--bg-card);
             border: 1px solid var(--border-light);
             border-radius: 8px;
@@ -789,12 +904,15 @@
         }
 
         .signup-form button {
-            padding: 20px 40px;
+            padding: 0 28px;
+            min-height: 52px; /* shorter than the input so the CTA reads as a button, not a twin field */
+            flex: 0 0 auto;
+            white-space: nowrap;
             background: var(--accent);
             border: none;
             border-radius: 8px;
             color: white;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             font-family: 'Plus Jakarta Sans', sans-serif;
             letter-spacing: 0.02em;
@@ -844,14 +962,39 @@
             text-align: center;
             margin: 0 auto;
         }
+        .hero-panel--old .signup-form { order: 5; }
         .hero-panel--old .form-note {
-            order: 5;
-            margin-top: 18px;
-            margin-bottom: 8px;
+            order: 6;
+            margin-top: 14px;
+            margin-bottom: 0;
+            color: var(--accent-light);
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
         }
-        .hero-panel--old .signup-form { order: 6; }
         .hero-panel--old .desktop-notice,
         .hero-panel--old .signup-success { order: 7; }
+
+        /* Desktop only: Screen 1 left-aligned per PDF (mobile stays centered).
+           Constrains content to max-width 720px on the left side of the canvas. */
+        @media (min-width: 769px) {
+            .hero-panel--old { justify-content: flex-start; }
+            .hero-panel--old .hero-content {
+                align-items: flex-start;
+                text-align: left;
+                margin: 0;
+                max-width: 720px;
+            }
+            .hero-panel--old .hero-headline { text-wrap: balance; }
+            .hero-panel--old .hero-eyebrow,
+            .hero-panel--old .hero-subtitle,
+            .hero-panel--old .hero-micro,
+            .hero-panel--old .hero-social-proof,
+            .hero-panel--old .form-note {
+                text-align: left;
+            }
+            .hero-panel--old .signup-form { justify-content: flex-start; }
+        }
 
         .desktop-notice {
             display: none;
@@ -1603,7 +1746,7 @@
             }
 
             .phone-mockup {
-                max-width: 140px;
+                max-width: 220px;
             }
 
             .feature-info h3 {
@@ -1964,31 +2107,7 @@
     <nav id="nav">
         <div class="container">
             <a href="#" class="logo">
-                <svg class="logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="logoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stop-color="#22d3ee"/>
-                            <stop offset="100%" stop-color="#10b981"/>
-                        </linearGradient>
-                    </defs>
-                    <circle cx="32" cy="32" r="9" fill="url(#logoGrad)"/>
-                    <line x1="32" y1="18" x2="32" y2="10" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="32" cy="8" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="43.5" y1="20.5" x2="49.1" y2="14.9" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="51" cy="13" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="46" y1="32" x2="54" y2="32" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="56" cy="32" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="43.5" y1="43.5" x2="49.1" y2="49.1" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="51" cy="51" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="32" y1="46" x2="32" y2="54" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="32" cy="56" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="20.5" y1="43.5" x2="14.9" y2="49.1" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="13" cy="51" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="18" y1="32" x2="10" y2="32" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="8" cy="32" r="2.5" fill="url(#logoGrad)"/>
-                    <line x1="20.5" y1="20.5" x2="14.9" y2="14.9" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round"/>
-                    <circle cx="13" cy="13" r="2.5" fill="url(#logoGrad)"/>
-                </svg>
+                <img src="rileyai-logo-512.png" alt="RileyAI" class="logo-icon" loading="eager" decoding="async">
                 <span class="logo-text">RileyAI</span>
             </a>
             <a href="#signup" class="nav-cta">Get Early Access</a>
@@ -2000,26 +2119,24 @@
             <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
 
             <div class="story-beats" aria-hidden="true">
-                <p class="story-beat" data-beat="1">The trading desk promised you an edge.</p>
-                <p class="story-beat" data-beat="2">It still didn't catch your bad trades.</p>
-                <p class="story-beat" data-beat="3">Riley does <span class="story-em">— in real time, in your pocket.</span></p>
+                <p class="story-beat" data-beat="1">You knew it was a bad trade. You took it anyway.</p>
+                <p class="story-beat" data-beat="2">It's not your strategy. It's your <span class="brand">discipline</span>.</p>
+                <p class="story-beat" data-beat="3"><span class="beat-line">Real-time analysis.</span><span class="beat-line">Every <span class="brand">candle</span>,</span><span class="beat-line">any <span class="brand">timeframe</span>.</span></p>
             </div>
 
             <div class="hero-panel hero-panel--old" data-panel="old">
                 <div class="container">
                     <div class="hero-content">
-                        <div class="hero-badge">Coming Soon — iOS & Android</div>
-                        <h1>Meet <span class="brand">Riley.</span></h1>
-                        <p class="hero-subtitle">
-                            Your AI trading copilot — built to keep you disciplined when it matters most. Launching soon on iPhone and Android.
-                        </p>
-                        <p class="hero-tagline">No guesswork. No emotion. Just better execution.</p>
+                        <p class="hero-eyebrow">Trade with discipline. Not emotion.</p>
+                        <h1 class="hero-headline">Ask <span class="brand">Riley.</span></h1>
+                        <p class="hero-subtitle">Your AI trading copilot — built to keep you disciplined when it matters the most!</p>
+                        <p class="hero-micro">No guesswork. No emotion. Just better execution.</p>
 
                         <div class="signup-form" id="signupForm">
                             <input type="email" id="emailInput" placeholder="Enter your email" required>
-                            <button type="submit" onclick="handleSignup()">Notify Me</button>
+                            <button type="submit" onclick="handleSignup()">Get Early Access</button>
                         </div>
-                        <p class="form-note">Be the first to know.</p>
+                        <p class="form-note">Join over 1k traders.</p>
 
                         <div class="desktop-notice">
                             <p>
@@ -2047,11 +2164,10 @@
                 <div class="container">
                     <div class="hero-content--centered">
                         <div class="hero-badge">Coming Soon — iOS &amp; Android</div>
-                        <h2 class="hero-headline-new">Your edge, <span class="brand">in your pocket</span>.</h2>
-                        <p class="hero-subtitle-new">Riley launches soon. Drop your email and be first in line for early access.</p>
+                        <h2 class="hero-headline-new">Trade like you said you would. <span class="brand">Riley</span> makes sure you do.</h2>
                         <div class="signup-form" id="signupFormNew">
                             <input type="email" id="emailInputNew" placeholder="Enter your email" required>
-                            <button type="submit" onclick="handleSignupNew()">Notify Me</button>
+                            <button type="submit" onclick="handleSignupNew()">Get Early Access</button>
                         </div>
                         <p class="form-note">We'll email you the moment Riley goes live.</p>
                     </div>
@@ -2598,7 +2714,7 @@
 
             gsap.registerPlugin(ScrollTrigger);
 
-            const FRAME_COUNT = 161;
+            const FRAME_COUNT = 319;
             const FRAME_PATH  = i => `frames/frame_${String(i + 1).padStart(4, '0')}.webp`;
             const ctx = canvas.getContext('2d');
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
