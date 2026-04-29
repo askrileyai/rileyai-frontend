@@ -421,16 +421,10 @@
             color: var(--accent-light);
             letter-spacing: -0.01em;
         }
-        /* Beat 3: each phrase on its own line via block-level spans, smaller font
-           on mobile so each segment fits on one line. */
+        /* Beat 3: each phrase on its own line via block-level spans. Font size
+           matches Beats 1 and 2 (inherited from .story-beat). */
         .story-beat[data-beat="3"] .beat-line {
             display: block;
-            white-space: nowrap; /* keep 'Real-time analysis.' / 'Every candle,' / 'any timeframe.' on one line each */
-        }
-        .story-beat[data-beat="3"] {
-            font-size: clamp(26px, 6vw, 56px);
-            line-height: 1.22;
-            text-wrap: nowrap;
         }
         .hero-headline .brand {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -589,28 +583,28 @@
             }
             .hero-panel--old h1,
             .hero-panel--old .hero-headline {
-                font-size: clamp(48px, 13vw, 64px) !important;
+                font-size: clamp(56px, 15vw, 76px) !important;
                 font-weight: 600 !important;
                 line-height: 1.05 !important;
                 letter-spacing: -0.025em !important;
-                margin: 0 0 16px !important;
+                margin: 0 0 18px !important;
                 text-align: center;
                 white-space: nowrap; /* keep 'Ask Riley.' on a single line */
             }
             .hero-panel--old .hero-subtitle {
-                font-size: 16px !important;
+                font-size: 18px !important;
                 font-weight: 500 !important;
                 line-height: 1.5 !important;
-                margin: 0 auto 10px !important;
+                margin: 0 auto 12px !important;
                 color: #9aa0aa !important;
                 text-align: center;
             }
             .hero-panel--old .hero-micro {
-                font-size: 13px !important;
+                font-size: 15px !important;
                 font-weight: 600 !important;
                 line-height: 1.5 !important;
                 color: var(--accent-light) !important;
-                margin: 0 auto 8px !important;
+                margin: 0 auto 10px !important;
                 text-align: center;
             }
             .hero-panel--old .hero-social-proof {
@@ -727,9 +721,9 @@
         @media (max-width: 380px) {
             .hero-panel--old .hero-eyebrow { font-size: 12px !important; letter-spacing: 0.14em !important; }
             .hero-panel--old h1,
-            .hero-panel--old .hero-headline { font-size: 48px !important; } /* keep one line */
-            .hero-panel--old .hero-subtitle { font-size: 15px !important; }
-            .hero-panel--old .hero-micro { font-size: 13px !important; }
+            .hero-panel--old .hero-headline { font-size: 56px !important; } /* keep one line */
+            .hero-panel--old .hero-subtitle { font-size: 17px !important; }
+            .hero-panel--old .hero-micro { font-size: 14px !important; }
             .hero-headline-new { font-size: 28px; }
             .hero-subtitle-new { font-size: 14px; }
             .story-beat { font-size: 30px; }
