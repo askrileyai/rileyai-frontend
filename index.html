@@ -6,7 +6,7 @@
     <title>RileyAI — Stop Repeating Your Trading Mistakes | AI Trading Coach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
@@ -292,6 +292,330 @@
             margin: 0 0 22px;
             animation: fadeInUp 0.8s ease 0.32s forwards;
             opacity: 0;
+        }
+
+        /* === COSMIC HERO (Screen 1) — glass capsules + Inter typography === */
+        .hero-content.cosmic {
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            gap: 0;
+        }
+        .hero-content.cosmic .hero-headline {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: clamp(72px, 10vw, 130px);
+            line-height: 0.95;
+            letter-spacing: -0.045em;
+            text-align: center;
+            margin: 0;
+            text-wrap: nowrap;
+            white-space: nowrap;
+            animation: fadeInUp 1.1s ease-out both;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        .hero-content.cosmic .hero-headline .ask { color: #fff; font-weight: 600; }
+        .hero-content.cosmic .hero-headline .riley {
+            background: linear-gradient(180deg, #e0f2fe 0%, #7dd3fc 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .hero-content.cosmic .hero-headline .riley::after {
+            content: "";
+            position: absolute;
+            inset: -25% -15%;
+            background: radial-gradient(ellipse at center, rgba(125, 211, 252, 0.4), transparent 60%);
+            z-index: -1;
+            filter: blur(35px);
+            animation: riley-glow 4s ease-in-out infinite alternate;
+        }
+        .hero-content.cosmic .hero-headline .dot { color: #7dd3fc; }
+        @keyframes riley-glow { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Shared glass capsule */
+        .glass-capsule {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            position: relative;
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.06) inset,
+                0 8px 24px -8px rgba(0, 0, 0, 0.5);
+        }
+        .glass-capsule::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 15%; right: 15%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+        }
+
+        /* Subhead capsule */
+        .subhead-capsule {
+            margin-top: 18px;
+            padding: 20px 26px;
+            border-radius: 18px;
+            text-align: center;
+            max-width: 480px;
+            animation: fadeInUp 1.1s 0.2s ease-out both;
+        }
+        .subhead-capsule .subhead {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 16px;
+            color: #a4a8c7;
+            line-height: 1.5;
+            letter-spacing: -0.005em;
+        }
+        .subhead-capsule .subhead .lead {
+            color: #fff;
+            font-weight: 500;
+            display: block;
+            font-size: 17px;
+            margin-bottom: 6px;
+            letter-spacing: -0.015em;
+        }
+        .subhead-capsule .subhead .candle {
+            color: #7dd3fc;
+            font-weight: 500;
+        }
+
+        /* Guesswork capsule (orange ember pill) */
+        .guesswork-capsule {
+            margin-top: 28px;
+            padding: 14px 28px;
+            border-radius: 100px;
+            border-color: rgba(255, 139, 94, 0.28);
+            background: linear-gradient(180deg, rgba(255, 139, 94, 0.10), rgba(255, 139, 94, 0.03));
+            box-shadow:
+                0 1px 0 rgba(255, 180, 140, 0.15) inset,
+                0 8px 28px -10px rgba(255, 139, 94, 0.4),
+                0 0 40px -10px rgba(255, 139, 94, 0.25);
+            animation: fadeInUp 1.1s 0.35s ease-out both;
+        }
+        .guesswork-capsule::before {
+            background: linear-gradient(90deg, transparent, rgba(255, 180, 140, 0.5), transparent);
+        }
+        .guesswork-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #ff8b5e;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+            .guesswork-capsule { padding: 14px 20px; }
+            .guesswork-text {
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                gap: 8px;
+            }
+        }
+        .guesswork-text .sep { color: rgba(255, 139, 94, 0.45); font-size: 13px; line-height: 1; }
+        .guesswork-text .pulse {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #ff8b5e;
+            box-shadow: 0 0 10px #ff8b5e;
+            animation: pulseDot 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+
+        /* Form card */
+        .form-card {
+            width: 100%;
+            margin-top: 48px;
+            padding: 22px 20px 20px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(125, 211, 252, 0.05) 0%, rgba(14, 17, 40, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.05) inset,
+                0 -1px 0 rgba(125, 211, 252, 0.1) inset,
+                0 30px 80px -20px rgba(0, 0, 0, 0.6),
+                0 0 60px -20px rgba(125, 211, 252, 0.25);
+            position: relative;
+            overflow: hidden;
+            max-width: 460px;
+            animation: fadeInUp 1.1s 0.5s ease-out both;
+        }
+        .form-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 10%; right: 10%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.6), transparent);
+        }
+        .form-card .form-label {
+            display: flex; align-items: center; justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #6a6e8c;
+            margin-bottom: 14px;
+        }
+        .form-card .form-label .left { display: flex; align-items: center; gap: 8px; }
+        .form-card .form-label .left::before {
+            content: ""; width: 14px; height: 1px; background: #6a6e8c;
+        }
+        .form-card .form-label .badge {
+            color: #ff8b5e;
+            padding: 3px 8px;
+            border-radius: 100px;
+            background: rgba(255, 139, 94, 0.1);
+            border: 1px solid rgba(255, 139, 94, 0.25);
+            font-size: 9px;
+            letter-spacing: 0.15em;
+        }
+        /* Override the existing signup-form layout when inside form-card */
+        .form-card .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            animation: none;
+            opacity: 1;
+        }
+        .form-card .signup-form input {
+            background: rgba(0, 0, 0, 0.35) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 12px !important;
+            padding: 15px 18px !important;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            min-height: 52px;
+            width: 100%;
+        }
+        .form-card .signup-form input::placeholder { color: #6a6e8c !important; opacity: 1; }
+        .form-card .signup-form input:focus {
+            border-color: rgba(125, 211, 252, 0.5) !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.08) !important;
+        }
+        .form-card .signup-form button {
+            width: 100% !important;
+            padding: 15px !important;
+            min-height: 52px;
+            border: none;
+            border-radius: 12px !important;
+            background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 50%, #38bdf8 100%) !important;
+            color: #06142a !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.4) inset,
+                0 -1px 0 rgba(0, 0, 0, 0.15) inset,
+                0 12px 30px -8px rgba(125, 211, 252, 0.5) !important;
+        }
+        .form-card .signup-form button:hover {
+            transform: translateY(-1px);
+        }
+        .form-card .signup-form button .arrow {
+            display: inline-block;
+            margin-left: 6px;
+            transition: transform 0.25s ease;
+        }
+        .form-card .signup-form button:hover .arrow { transform: translateX(3px); }
+
+        /* Social proof avatars */
+        .social-proof {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            margin-top: 18px;
+        }
+        .avatars { display: flex; }
+        .avatars .av {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 1.5px solid #0a0b1f;
+            margin-left: -9px;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+        .avatars .av:first-child { margin-left: 0; }
+        .av.av1 { background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces'); }
+        .av.av2 { background-image: url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces'); }
+        .av.av3 { background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces'); }
+        .av.av4 { background-image: url('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces'); }
+        .av.count {
+            background: linear-gradient(135deg, #1a1d35, #0a0b1f);
+            color: #7dd3fc;
+            font-size: 9px;
+            font-weight: 600;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.05em;
+            border-color: rgba(125, 211, 252, 0.3);
+        }
+        .proof-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; font-weight: 500;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #a4a8c7;
+        }
+        .proof-text strong { color: #7dd3fc; font-weight: 600; }
+
+        @media (max-width: 480px) {
+            .guesswork-text { font-size: 10px; letter-spacing: 0.16em; }
+            .subhead-capsule .subhead { font-size: 15px; }
+            .subhead-capsule .subhead .lead { font-size: 16px; }
+        }
+
+        /* Cosmic uses natural top-down stacking, centered on the page. Override
+           the existing hero-panel--old auto-margin / left-align rules. */
+        .hero-panel--old:has(.hero-content.cosmic) {
+            justify-content: center !important;
+        }
+        .hero-panel--old .hero-content.cosmic {
+            height: auto !important;
+            justify-content: flex-start;
+            align-items: center !important;
+            text-align: center !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            max-width: 600px !important;
+        }
+        .hero-panel--old .hero-content.cosmic .signup-form {
+            margin: 0 !important;
+            order: 0 !important;
+            flex-direction: column;
+        }
+        /* Belt-and-suspenders: ensure cosmic ignores the left-aligned desktop rule
+           even on browsers that don't support :has(). */
+        @media (min-width: 769px) {
+            .hero-panel--old .hero-content.cosmic,
+            .hero-panel--old .hero-content.cosmic .hero-headline,
+            .hero-panel--old .hero-content.cosmic .subhead-capsule,
+            .hero-panel--old .hero-content.cosmic .guesswork-capsule,
+            .hero-panel--old .hero-content.cosmic .form-card {
+                text-align: center !important;
+                align-items: center !important;
+            }
+            .hero-panel--old .hero-content.cosmic { margin: 0 auto !important; }
         }
 
         /* Cinematic scroll-scrubbed hero (canvas + dual text panels) */
@@ -2101,9 +2425,8 @@
 
     <nav id="nav">
         <div class="container">
-            <a href="#" class="logo">
+            <a href="#" class="logo" aria-label="RileyAI">
                 <img src="rileyai-logo-512.png" alt="RileyAI" class="logo-icon" loading="eager" decoding="async">
-                <span class="logo-text">RileyAI</span>
             </a>
             <a href="#signup" class="nav-cta">Get Early Access</a>
         </div>
@@ -2121,17 +2444,45 @@
 
             <div class="hero-panel hero-panel--old" data-panel="old">
                 <div class="container">
-                    <div class="hero-content">
-                        <p class="hero-eyebrow">Trade with discipline. Not emotion.</p>
-                        <h1 class="hero-headline">Ask <span class="brand">Riley.</span></h1>
-                        <p class="hero-subtitle">Your AI trading copilot — built to keep you disciplined when it matters the most!</p>
-                        <p class="hero-micro">No guesswork. No emotion. Just better execution.</p>
+                    <div class="hero-content cosmic">
+                        <h1 class="hero-headline">
+                            <span class="ask">Ask</span> <span class="riley">Riley</span><span class="dot">.</span>
+                        </h1>
 
-                        <div class="signup-form" id="signupForm">
-                            <input type="email" id="emailInput" placeholder="Enter your email" required>
-                            <button type="submit" onclick="handleSignup()">Get Early Access</button>
+                        <div class="glass-capsule subhead-capsule">
+                            <p class="subhead">
+                                <span class="lead">Your live trading sidekick.</span>
+                                Ask any question, get real-time answers <span class="candle">before the candle closes.</span>
+                            </p>
                         </div>
-                        <p class="form-note">Join over 1k traders.</p>
+
+                        <div class="glass-capsule guesswork-capsule">
+                            <div class="guesswork-text">
+                                <span class="pulse"></span>
+                                No guesswork <span class="sep">·</span> No emotion <span class="sep">·</span> Just better execution
+                            </div>
+                        </div>
+
+                        <div class="form-card">
+                            <div class="form-label">
+                                <span class="left">Early Access</span>
+                                <span class="badge">Limited Spots</span>
+                            </div>
+                            <div class="signup-form" id="signupForm">
+                                <input type="email" id="emailInput" placeholder="your@email.com" required>
+                                <button type="submit" onclick="handleSignup()">Get Early Access<span class="arrow">→</span></button>
+                            </div>
+                            <div class="social-proof">
+                                <div class="avatars">
+                                    <div class="av av1"></div>
+                                    <div class="av av2"></div>
+                                    <div class="av av3"></div>
+                                    <div class="av av4"></div>
+                                    <div class="av count">+1K</div>
+                                </div>
+                                <div class="proof-text">JOINED BY <strong>1,000+</strong> TRADERS</div>
+                            </div>
+                        </div>
 
                         <div class="desktop-notice">
                             <p>
