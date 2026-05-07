@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact RileyAI</title>
+<meta name="description" content="Get in touch with the RileyAI team.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep: #05060f;
+    --ink: #e9ecff;
+    --ink-dim: #a4a8c7;
+    --ink-mute: #6a6e8c;
+    --accent: #7dd3fc;
+    --accent-glow: #38bdf8;
+    --ember: #ff8b5e;
+    --line: rgba(255,255,255,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    background: #000;
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Cosmic background — same vibe as the main site */
+.cosmos {
+    position: fixed; inset: 0; z-index: -2;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(125, 211, 252, 0.18), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 20% 30%, rgba(139, 125, 255, 0.15), transparent 60%),
+        radial-gradient(ellipse 50% 50% at 80% 20%, rgba(255, 139, 94, 0.08), transparent 60%),
+        linear-gradient(180deg, #05060f 0%, #0a0b1f 40%, #050714 100%);
+}
+.stars {
+    position: fixed; inset: 0; z-index: -1;
+    background-image:
+        radial-gradient(1px 1px at 23% 14%, #fff, transparent),
+        radial-gradient(1px 1px at 67% 31%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 12% 47%, #c4b5fd, transparent),
+        radial-gradient(1px 1px at 84% 62%, #fff, transparent),
+        radial-gradient(1px 1px at 39% 78%, #7dd3fc, transparent),
+        radial-gradient(1.5px 1.5px at 54% 22%, #fff, transparent),
+        radial-gradient(1px 1px at 91% 88%, #fff, transparent),
+        radial-gradient(1px 1px at 7% 91%, #fff, transparent),
+        radial-gradient(1px 1px at 71% 8%, #fff, transparent),
+        radial-gradient(1px 1px at 33% 55%, #fff, transparent),
+        radial-gradient(1px 1px at 49% 43%, #c4b5fd, transparent),
+        radial-gradient(1px 1px at 18% 73%, #fff, transparent);
+    opacity: 0.55;
+    animation: drift 120s linear infinite;
+}
+@keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-50px)} }
+
+.aurora {
+    position: fixed; top: 10%; left: -20%;
+    width: 140%; height: 50%;
+    background: conic-gradient(from 180deg at 50% 50%,
+        transparent 0deg,
+        rgba(125, 211, 252, 0.08) 60deg,
+        rgba(139, 125, 255, 0.06) 120deg,
+        transparent 180deg,
+        rgba(255, 139, 94, 0.04) 240deg,
+        transparent 360deg);
+    filter: blur(60px);
+    z-index: -1;
+    animation: aurora-spin 30s linear infinite;
+    pointer-events: none;
+}
+@keyframes aurora-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+/* Nav */
+nav {
+    position: relative;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 22px;
+    z-index: 10;
+    max-width: 1240px;
+    margin: 0 auto;
+}
+.logo {
+    display: inline-flex; align-items: center;
+    text-decoration: none;
+    gap: 10px;
+}
+.logo img { width: 32px; height: 32px; object-fit: contain; }
+.back-link {
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.back-link:hover {
+    border-color: rgba(125, 211, 252, 0.4);
+    background: rgba(125, 211, 252, 0.06);
+}
+
+/* Page layout */
+main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 48px 22px 80px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+}
+
+.eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+}
+
+h1 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: clamp(40px, 6vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-bottom: 14px;
+}
+h1 .accent {
+    background: linear-gradient(180deg, #e0f2fe 0%, var(--accent) 50%, var(--accent-glow) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 500;
+}
+
+.lede {
+    font-size: 17px;
+    color: var(--ink-dim);
+    line-height: 1.55;
+    max-width: 480px;
+    margin-bottom: 40px;
+}
+
+/* Form card */
+.form-card {
+    width: 100%;
+    padding: 28px 26px 26px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.05) 0%, rgba(14, 17, 40, 0.6) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 -1px 0 rgba(125, 211, 252, 0.1) inset,
+        0 30px 80px -20px rgba(0, 0, 0, 0.6),
+        0 0 60px -20px rgba(125, 211, 252, 0.25);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+.form-card::before {
+    content: "";
+    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.6), transparent);
+}
+
+.field {
+    margin-bottom: 14px;
+}
+.field label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+}
+.field input,
+.field textarea {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    transition: all 0.25s ease;
+    outline: none;
+    resize: none;
+}
+.field textarea {
+    min-height: 140px;
+    resize: vertical;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+    color: var(--ink-mute);
+}
+.field input:focus,
+.field textarea:focus {
+    border-color: rgba(125, 211, 252, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.08);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #bae6fd 0%, var(--accent) 50%, #38bdf8 100%);
+    color: #06142a;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.4) inset,
+        0 -1px 0 rgba(0, 0, 0, 0.15) inset,
+        0 12px 30px -8px rgba(125, 211, 252, 0.5);
+    transition: all 0.25s ease;
+}
+.submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.5) inset,
+        0 -1px 0 rgba(0, 0, 0, 0.15) inset,
+        0 16px 40px -8px rgba(125, 211, 252, 0.65);
+}
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
+
+.success-state {
+    display: none;
+    text-align: center;
+    padding: 32px 16px;
+}
+.success-state.show { display: block; }
+.success-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(125, 211, 252, 0.2), rgba(56, 189, 248, 0.1));
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+}
+.success-state h3 {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+.success-state p { color: var(--ink-dim); font-size: 15px; line-height: 1.5; }
+
+.error-msg {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(255, 82, 82, 0.1);
+    border: 1px solid rgba(255, 82, 82, 0.25);
+    color: #ff8888;
+    font-size: 13px;
+}
+.error-msg.show { display: block; }
+
+.contact-meta {
+    margin-top: 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+}
+.contact-meta a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.3);
+    padding-bottom: 1px;
+}
+.contact-meta a:hover { color: #fff; border-color: var(--accent); }
+
+@media (max-width: 480px) {
+    main { padding: 32px 16px 60px; }
+    h1 { font-size: 38px; }
+    .lede { font-size: 15px; margin-bottom: 28px; }
+    .form-card { padding: 22px 18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="cosmos"></div>
+<div class="stars"></div>
+<div class="aurora"></div>
+
+<nav>
+    <a href="/" class="logo" aria-label="RileyAI">
+        <img src="rileyai-logo-512.png" alt="RileyAI">
+    </a>
+    <a href="/" class="back-link">← Back</a>
+</nav>
+
+<main>
+    <p class="eyebrow">Get in touch</p>
+    <h1>Talk to <span class="accent">Riley</span>'s team.</h1>
+    <p class="lede">Questions, partnership ideas, or want to be considered for early access? Drop us a line — we read every message.</p>
+
+    <div class="form-card">
+        <!-- Netlify Forms: this form is captured automatically when deployed.
+             Configure the destination email (info@askrileyai.com) under
+             Netlify dashboard -> Forms -> [contact] -> Settings -> Form notifications. -->
+        <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/contact?sent=1" id="contactForm">
+            <input type="hidden" name="form-name" value="contact">
+            <p hidden><label>Don't fill this out: <input name="bot-field"></label></p>
+
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your name" required>
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="field">
+                <label for="subject">Subject</label>
+                <input type="text" id="subject" name="subject" placeholder="What's this about?" required>
+            </div>
+
+            <div class="field">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+            <div class="error-msg" id="errorMsg"></div>
+        </form>
+
+        <div class="success-state" id="successState">
+            <div class="success-icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                </svg>
+            </div>
+            <h3>Message received.</h3>
+            <p>Thanks — we'll get back to you within a couple of business days.</p>
+        </div>
+    </div>
+
+    <p class="contact-meta">Or email <a href="mailto:info@askrileyai.com">info@askrileyai.com</a></p>
+</main>
+
+<script>
+(function () {
+    const form = document.getElementById('contactForm');
+    const success = document.getElementById('successState');
+    const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // If the user just submitted (Netlify redirected with ?sent=1), show the success state.
+    if (new URLSearchParams(window.location.search).get('sent') === '1') {
+        form.style.display = 'none';
+        success.classList.add('show');
+    }
+
+    form.addEventListener('submit', async (e) => {
+        // Let Netlify Forms handle the submit normally on production. If the page is
+        // running off file:// or localhost without Netlify, fall back to mailto.
+        if (window.location.hostname === 'localhost' || window.location.protocol === 'file:') {
+            e.preventDefault();
+            const data = new FormData(form);
+            const subject = encodeURIComponent('[Contact] ' + (data.get('subject') || '').trim());
+            const body = encodeURIComponent(
+                'Name: ' + data.get('name') + '\n' +
+                'Email: ' + data.get('email') + '\n\n' +
+                data.get('message')
+            );
+            window.location.href = 'mailto:info@askrileyai.com?subject=' + subject + '&body=' + body;
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        errorMsg.classList.remove('show');
+
+        try {
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+            for (const [k, v] of formData) params.append(k, v);
+
+            const response = await fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            });
+
+            if (response.ok) {
+                e.preventDefault();
+                form.style.display = 'none';
+                success.classList.add('show');
+                window.history.replaceState({}, '', '/contact?sent=1');
+            } else {
+                throw new Error('HTTP ' + response.status);
+            }
+        } catch (err) {
+            e.preventDefault();
+            console.error('Contact submit failed:', err);
+            errorMsg.textContent = "Couldn't send the message. Please email info@askrileyai.com directly.";
+            errorMsg.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Message';
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
