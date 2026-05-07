@@ -361,8 +361,8 @@
 
         /* Subhead capsule */
         .subhead-capsule {
-            margin-top: 18px;
-            padding: 20px 26px;
+            margin-top: 8px;
+            padding: 18px 26px;
             border-radius: 18px;
             text-align: center;
             max-width: 480px;
@@ -371,61 +371,75 @@
         .subhead-capsule .subhead {
             font-family: 'Inter', sans-serif;
             font-weight: 400;
-            font-size: 16px;
-            color: #a4a8c7;
+            font-size: 19px;
+            color: #c8ccdf;
             line-height: 1.5;
-            letter-spacing: -0.005em;
+            letter-spacing: -0.012em;
         }
         .subhead-capsule .subhead .lead {
             color: #fff;
-            font-weight: 500;
+            font-weight: 600;
             display: block;
-            font-size: 17px;
-            margin-bottom: 6px;
-            letter-spacing: -0.015em;
+            font-size: 22px;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
         }
         .subhead-capsule .subhead .candle {
             color: #7dd3fc;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        /* Guesswork capsule (orange ember pill) */
-        .guesswork-capsule {
-            margin-top: 28px;
-            padding: 14px 28px;
-            border-radius: 100px;
-            border-color: rgba(255, 139, 94, 0.28);
-            background: linear-gradient(180deg, rgba(255, 139, 94, 0.10), rgba(255, 139, 94, 0.03));
-            box-shadow:
-                0 1px 0 rgba(255, 180, 140, 0.15) inset,
-                0 8px 28px -10px rgba(255, 139, 94, 0.4),
-                0 0 40px -10px rgba(255, 139, 94, 0.25);
+        /* Creed line — bigger, no pill background. Three statements separated by
+           soft dots; the third ('Just better execution') is the cyan punchline. */
+        .creed {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 6px 22px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 21px;
+            line-height: 1.3;
+            letter-spacing: -0.012em;
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
             animation: fadeInUp 1.1s 0.35s ease-out both;
         }
-        .guesswork-capsule::before {
-            background: linear-gradient(90deg, transparent, rgba(255, 180, 140, 0.5), transparent);
-        }
-        .guesswork-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 500;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #ff8b5e;
-            text-align: center;
-            display: flex;
+        .creed-item {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            flex-wrap: wrap;
+            white-space: nowrap;
         }
-        @media (max-width: 480px) {
-            .guesswork-capsule { padding: 14px 20px; }
-            .guesswork-text {
-                font-size: 11px;
-                letter-spacing: 0.14em;
-                gap: 8px;
+        .creed-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #ff8b5e;
+            box-shadow: 0 0 12px rgba(255, 139, 94, 0.7);
+            flex-shrink: 0;
+        }
+        .creed-dot--accent {
+            background: #ff8b5e;
+            box-shadow: 0 0 14px rgba(255, 139, 94, 0.75);
+            animation: creedPulse 2.4s ease-in-out infinite;
+        }
+        .creed-item--accent {
+            color: #ffffff;
+            font-weight: 700;
+        }
+        @keyframes creedPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.5; transform: scale(0.7); }
+        }
+        @media (max-width: 600px) {
+            .creed {
+                font-size: 18px;
+                gap: 8px 0;
+                flex-direction: column;
             }
+            .creed-item { font-size: 18px; }
         }
         .guesswork-text .sep { color: rgba(255, 139, 94, 0.45); font-size: 13px; line-height: 1; }
         .guesswork-text .pulse {
@@ -441,7 +455,7 @@
         /* Form card */
         .form-card {
             width: 100%;
-            margin-top: 48px;
+            margin-top: 32px;
             padding: 22px 20px 20px;
             border-radius: 24px;
             background: linear-gradient(180deg, rgba(125, 211, 252, 0.05) 0%, rgba(14, 17, 40, 0.6) 100%);
@@ -2456,11 +2470,10 @@
                             </p>
                         </div>
 
-                        <div class="glass-capsule guesswork-capsule">
-                            <div class="guesswork-text">
-                                <span class="pulse"></span>
-                                No guesswork <span class="sep">·</span> No emotion <span class="sep">·</span> Just better execution
-                            </div>
+                        <div class="creed">
+                            <span class="creed-item"><span class="creed-dot"></span>No guesswork.</span>
+                            <span class="creed-item"><span class="creed-dot"></span>No emotion.</span>
+                            <span class="creed-item creed-item--accent"><span class="creed-dot creed-dot--accent"></span>Just better execution.</span>
                         </div>
 
                         <div class="form-card">
