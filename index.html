@@ -1073,13 +1073,17 @@
             }
 
             .hero-scroll-hint {
-                bottom: 18px;
+                bottom: max(72px, env(safe-area-inset-bottom, 0px) + 60px);
                 font-size: 10px;
                 letter-spacing: 0.3em;
                 gap: 4px;
+                color: #fff;
+                text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95), 0 0 24px rgba(125, 211, 252, 0.4);
             }
             .hero-scroll-hint::after {
-                width: 10px; height: 10px;
+                width: 11px; height: 11px;
+                border-right-width: 2.5px;
+                border-bottom-width: 2.5px;
             }
         }
 
