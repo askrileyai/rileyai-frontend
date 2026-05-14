@@ -1140,7 +1140,7 @@
 
     <script>
         const API_URL = 'https://rileyai-backend-production.up.railway.app/api';
-        const ADMIN_KEY = 'riley-admin-2024';
+        const ADMIN_KEY = 'Logitech#100';
 
         let dashboardData = null;
         let allUsers = [];
@@ -1831,7 +1831,7 @@
         }
 
         function exportWaitlist() {
-            window.open(`${API_URL}/beta/export?key=${ADMIN_KEY}`, '_blank');
+            window.open(`${API_URL}/beta/export?key=${encodeURIComponent(ADMIN_KEY)}`, '_blank');
             // Note: GET endpoint requires admin key header — fall back to fetch + download
             fetch(`${API_URL}/beta/export`, { headers: { 'X-Admin-Key': ADMIN_KEY } })
                 .then(r => r.blob())
