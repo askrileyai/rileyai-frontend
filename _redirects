@@ -1,0 +1,8 @@
+# Legacy static dashboards → new Command Center (askrileyai.com/command)
+# Forced (!) so they win even though social.html/admin.html/marketing.html still exist.
+/social          /command            301!
+/social.html     /command            301!
+/admin           /command/admin      301!
+/admin.html      /command/admin      301!
+/marketing       /command/strategy   301!
+/marketing.html  /command/strategy   301!
