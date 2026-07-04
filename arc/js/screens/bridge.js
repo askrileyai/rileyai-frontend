@@ -4,12 +4,12 @@
 // live decision ticker, and the kill switch. No reactor — this is a terminal.
 
 import * as bus from '../bus.js';
-import { state, thoughtRate, winRate, openPnl } from '../store.js';
+import { state, thoughtRate, winRate, openPnl, hydrate, applyAlertTheme } from '../store.js';
 import { drawSparkline } from '../components/sparkline.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
-import { simResume } from '../sim.js';
+import { simResume, simKill } from '../sim.js';
 
 let unsubs = [];
 let equityPoints = [];
@@ -56,9 +56,16 @@ export function mount(host) {
         </div>
       </div>
 
-      <div class="bridge-killrow">
-        <span class="kill-hint" id="d-killhint">Hold to arm · escalation L1/L2/L3</span>
-        <span id="d-kill"></span>
+      <div class="panel engine-ctl" style="overflow:hidden">
+        <div class="panel-head">Engine Control <span id="d-eng-chip" class="chip">—</span></div>
+        <div class="panel-body">
+          <div id="d-eng-actions" class="eng-actions"></div>
+          <div id="d-eng-stats" class="eng-stats"></div>
+          <div class="bridge-killrow">
+            <span class="kill-hint" id="d-killhint">Hold to arm · L1 pause · L2 cancel orders · L3 flatten all</span>
+            <span id="d-kill"></span>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -106,7 +113,66 @@ function currentEquity() {
   return base == null ? null : Number(base) + Number(state.unrealized || 0);
 }
 
-function paint() { paintMandate(); paintReadout(); paintRecord(); paintRead(); paintPositions(); paintStrats(); }
+function paint() { paintMandate(); paintReadout(); paintRecord(); paintRead(); paintPositions(); paintStrats(); paintEngine(); }
+
+// Engine control — current state + the right action (Start / Pause / Resume) +
+// a live session-stats line so stopping ALWAYS shows where the engine stands.
+function paintEngine() {
+  const chip = document.querySelector('#d-eng-chip');
+  const actions = document.querySelector('#d-eng-actions');
+  const statsEl = document.querySelector('#d-eng-stats');
+  if (!chip || !actions || !statsEl) return;
+  const s = state.engine.state || 'OFF';
+  chip.className = 'chip ' + (s === 'RUNNING' ? 'live' : s.startsWith('HALTED') ? 'halted' : 'off');
+  chip.textContent = { OFF: 'OFFLINE', RUNNING: 'RUNNING', HALTED_MANUAL: 'PAUSED', HALTED_RISK: 'RISK-HALTED' }[s] || s;
+
+  let btn;
+  if (s === 'OFF') btn = `<button class="btn" data-eng="start">▶ Start engine</button>`;
+  else if (s === 'RUNNING') btn = `<button class="btn ghost" data-eng="pause">⏸ Pause · halt new entries</button>`;
+  else btn = `<button class="btn" data-eng="resume">▶ Resume engine</button>`;
+  const reason = s.startsWith('HALTED') && state.engine.state_reason ? `<span class="eng-reason">${esc(state.engine.state_reason)}</span>` : '';
+  actions.innerHTML = btn + reason;
+  actions.querySelector('[data-eng]')?.addEventListener('click', (e) => engineAction(e.currentTarget.getAttribute('data-eng')));
+
+  const wr = winRate();
+  const rec = state.record || { wins: 0, losses: 0, closedPnl: 0 };
+  const sess = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
+  statsEl.innerHTML = `${s.startsWith('HALTED') ? '<span class="eng-lbl">Stopped at</span> ' : ''}` +
+    `<span class="${pnlClass(sess)}">${money(sess, { sign: true })}</span> session · ` +
+    `<b class="gain">${rec.wins || 0}</b>W / <b class="loss">${rec.losses || 0}</b>L${wr != null ? ` · ${Math.round(wr * 100)}% win` : ''} · ` +
+    `realized <span class="${pnlClass(rec.closedPnl)}">${money(rec.closedPnl || 0, { sign: true, dp: 0 })}</span> · ${state.positions.length} open`;
+}
+
+async function engineAction(kind) {
+  if (isSim()) {
+    if (kind === 'pause') { simKill(1, 'manual pause (hud)'); toast(sessionLine('Paused')); }
+    else { state.engine.state = 'RUNNING'; state.engine.state_reason = null; applyAlertTheme(); bus.emit('state', state); toast(kind === 'start' ? 'Engine started.' : 'Engine resumed.'); }
+    return;
+  }
+  try {
+    if (kind === 'start') { await api.start(); toast('Engine started.'); }
+    else if (kind === 'resume') { await api.resume(); toast('Engine resumed.'); }
+    else if (kind === 'pause') { await api.kill(1, 'pause (hud)'); toast(sessionLine('Paused')); }
+    await hydrate();
+  } catch (e) { toast(`Action failed: ${e.message}`); }
+}
+
+function sessionLine(prefix) {
+  const rec = state.record || {};
+  const sess = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
+  const wr = winRate();
+  return `${prefix} · ${money(sess, { sign: true })} session · ${rec.wins || 0}W/${rec.losses || 0}L${wr != null ? ` (${Math.round(wr * 100)}%)` : ''} · ${state.positions.length} open`;
+}
+
+let toastT = null;
+function toast(msg) {
+  let el = document.getElementById('d-toast');
+  if (!el) { el = document.createElement('div'); el.id = 'd-toast'; el.className = 'set-toast'; document.body.appendChild(el); }
+  el.textContent = msg;
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 4200);
+}
 
 // Mandate banner — the goal Riley is trading toward, always visible on home.
 function paintMandate() {

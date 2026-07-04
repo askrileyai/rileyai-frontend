@@ -39,6 +39,7 @@ export const RISK_PRESETS = {
 };
 
 const RING = 500;
+let lastAppliedId = 0; // high-water mark so SSE replays (last 100 on reconnect) don't re-apply
 
 /** Live track-record helpers — everything connected. */
 export function winRate() {
@@ -64,6 +65,12 @@ export function applyAlertTheme() {
 
 /** Ingest one decision event (from SSE, replay, or the simulator). */
 export function applyEvent(evt) {
+  // SSE replays the last 100 events on every (re)connect; skip ones already
+  // applied so the feed doesn't duplicate and stats can't be re-counted.
+  if (evt.id != null) {
+    if (evt.id <= lastAppliedId) return;
+    lastAppliedId = evt.id;
+  }
   state.events.push(evt);
   if (state.events.length > RING) state.events.shift();
   state.eventTimes.push(Date.now());
@@ -76,14 +83,18 @@ export function applyEvent(evt) {
       if (d.toState) state.engine.state = d.toState;
       if (d.reason !== undefined) state.engine.state_reason = d.reason;
       applyAlertTheme();
+      bus.emit('state', state);
       break;
     case 'kill.activated':
       state.engine.state = 'HALTED_MANUAL';
+      if (d.reason) state.engine.state_reason = d.reason;
       applyAlertTheme();
+      bus.emit('state', state);
       break;
     case 'kill.resumed':
       state.engine.state = 'RUNNING';
       applyAlertTheme();
+      bus.emit('state', state);
       break;
     case 'position.mark':
       if (Array.isArray(d.marks)) {
@@ -93,15 +104,20 @@ export function applyEvent(evt) {
       break;
     case 'position.opened':
       refreshPositions();
+      scheduleHydrate();     // refresh balance/ledger after a fill
       break;
     case 'position.closed':
       state.positions = state.positions.filter((p) => p.id !== d.positionId);
       delete state.marks[d.positionId];
+      // Optimistic instant feedback; scheduleHydrate() then corrects to the
+      // backend's authoritative ledger so wins/losses/realized are exact.
       if (typeof d.pnl === 'number') {
         state.todayPnl += d.pnl;
         state.record.closedPnl += d.pnl;
         if (d.pnl > 0) state.record.wins++; else if (d.pnl < 0) state.record.losses++;
       }
+      bus.emit('state', state);
+      scheduleHydrate();     // pull real win/loss + realized P&L for every closed trade
       break;
     case 'arbiter.update':
       if (d.weights) {
@@ -118,6 +134,16 @@ export function applyEvent(evt) {
 
 export function thoughtRate() {
   return state.eventTimes.length; // events in the last 60s
+}
+
+// Debounced authoritative resync — after any fill/close, pull the backend's
+// real ledger + record so win/loss and realized P&L reflect every trade
+// (instead of drifting on a flaky mobile stream).
+let hydrateT = null;
+export function scheduleHydrate(delay = 600) {
+  if (state.simulated) return;
+  clearTimeout(hydrateT);
+  hydrateT = setTimeout(() => hydrate().catch(() => {}), delay);
 }
 
 let refreshingPos = false;

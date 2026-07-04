@@ -12,6 +12,7 @@ let abort = null;
 let backoff = 1000;
 let watchdog = null;
 let hiddenTimer = null;
+let poll = null;
 let wanted = false;
 
 function setLink(status) { bus.emit('link', status); }
@@ -86,6 +87,10 @@ export function start() {
   if (wanted) return;
   wanted = true;
   document.addEventListener('visibilitychange', onVisibility);
+  // Authoritative resync every 20s — keeps stats/ledger/balance correct even if
+  // the stream silently drops (common on mobile) or an event is missed.
+  clearInterval(poll);
+  poll = setInterval(() => { if (wanted && !isSim() && !document.hidden) hydrate().catch(() => {}); }, 20000);
   connect();
 }
 
@@ -93,6 +98,7 @@ export function stop() {
   wanted = false;
   clearTimeout(watchdog);
   clearTimeout(hiddenTimer);
+  clearInterval(poll);
   if (abort) abort.abort();
   setLink('offline');
 }
