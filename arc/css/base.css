@@ -87,6 +87,22 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
   #screen { grid-area: main; }
 }
 @media (max-width: 899px) {
+  /* iOS-safe shell: unlock the body and let the whole document scroll
+     naturally. A fixed 100dvh grid with an inner overflow scroller does NOT
+     reliably scroll on iOS Safari (the locked body can't collapse the toolbar
+     and the inner scroller often won't take touch), and its single implicit
+     `auto` grid column blows out to the widest child (a nowrap data table),
+     rendering the whole app at ~2× viewport width. On mobile #app becomes a
+     normal block; the status bar + mode strip stick to the top; nav stays a
+     fixed bottom bar; the document is the one scroll container. */
+  html, body { height: auto; overflow: visible; }
+  #app { display: block; height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; }
+  #statusbar { position: sticky; top: 0; }
+  #modestrip { position: sticky; top: var(--sb-h); z-index: 49; }
+  #screen {
+    overflow-x: hidden; overflow-y: visible; height: auto; min-width: 0; max-width: 100%;
+    padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
+  }
   #nav {
     position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--nav-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
@@ -95,7 +111,6 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
   }
   #nav a { flex-direction: column; gap: 3px; flex: 1; justify-content: center; font-size: 10px; }
   #nav a span:last-child { font-weight: 500; }
-  #screen { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px) !important; }
 }
 
 /* The single vertical scroll container. */

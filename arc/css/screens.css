@@ -181,3 +181,25 @@
 .chat-suggests { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 2px; }
 .chat-typing { align-self: flex-start; color: var(--text-faint); font-size: 13px; font-style: italic; }
 @media (max-width: 899px) { .msg { max-width: 88%; } }
+
+/* ============================================================
+   MOBILE (≤899px) — no screen grid or table may exceed the
+   viewport width, and the full-height screens get a bounded
+   height so their inner scrollers keep working inside the
+   document-scroll shell (see base.css). This is what makes the
+   phone layout stop rendering ~2× wide and start scrolling.
+   ============================================================ */
+@media (max-width: 899px) {
+  /* single-column stacks: clamp the implicit track to the container so a wide
+     child (e.g. a nowrap data table) can't stretch it past the viewport */
+  .bridge, .bridge-col, .bridge-grid, .positions, .performance,
+  .settings, .research, .mind, .chat { grid-template-columns: minmax(0, 1fr); }
+  /* let grid cells shrink below their content — kills the max-content blowout */
+  .deck-readout > *, .track-record > *, .perf-pods > *, .rs-dims > *, .ideas-grid > *,
+  .bridge > *, .bridge-col > *, .bridge-grid > *, .positions > *, .performance > *,
+  .settings > *, .research > *, .panel, .holo { min-width: 0; }
+  /* data tables scroll horizontally inside their card instead of forcing width */
+  .dtable { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* chat + activity feed: bounded viewport height → inner scroll + pinned input */
+  .chat, .mind { height: calc(100dvh - 168px); min-height: 420px; }
+}
