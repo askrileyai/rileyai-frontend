@@ -1,0 +1,67 @@
+/* A.R.C. — design tokens matched to the RileyAI app (dark zinc + cyan).
+   Components are built from these tokens; the data-alert swap at the bottom
+   shifts the CHROME (accent + borders) to red on halt while P&L colors stay. */
+:root {
+  /* SURFACES — zinc, layered by elevation (matches app) */
+  --bg:       #09090b;   /* page */
+  --bg-2:     #18181b;   /* card */
+  --bg-3:     #1f1f23;   /* inset / hover */
+  --bg-4:     #27272a;   /* active / raised */
+  --border:      #27272a;
+  --border-lo:   #1c1c1f;
+  --border-hi:   #3f3f46;
+
+  /* CYAN — the brand accent */
+  --accent:      #00b4d8;   /* brand */
+  --accent-hi:   #22d3ee;   /* bright — highlights, hovers */
+  --accent-dim:  #0e7490;   /* muted labels */
+  --accent-faint:#155e66;   /* faint rules */
+  --accent-glow: rgba(34, 211, 238, 0.16);
+
+  /* P&L — stable, never themed */
+  --up:        #22c55e;
+  --up-dim:    #15803d;
+  --down:      #ef4444;
+  --down-dim:  #991b1b;
+
+  /* ALERT — halt state */
+  --alert:     #ef4444;
+  --alert-dim: #7f1d1d;
+  --alert-bg:  #1a0a0a;
+
+  /* SHADOW / caution indicator (app amber) */
+  --shadow-c:  #eab308;
+
+  /* TEXT */
+  --text:      #fafafa;
+  --text-dim:  #a1a1aa;
+  --text-faint:#71717a;
+
+  /* TYPE — app uses system sans; mono only for numbers/data */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* MOTION */
+  --snap: 120ms ease;
+
+  /* CHROME — rounded, roomy */
+  --radius:    12px;   /* cards */
+  --radius-sm: 8px;    /* chips, buttons, inputs */
+  --radius-lg: 16px;   /* large surfaces */
+  --tap: 44px;
+  --sb-h: 52px;
+  --cmd-h: 30px;
+  --nav-h: 60px;
+  --rail-w: 200px;
+}
+
+/* HALTED — kill switch / risk halt. Chrome → red; P&L colors untouched. */
+html[data-alert="halted"] {
+  --accent:      #f87171;
+  --accent-hi:   #fca5a5;
+  --accent-dim:  #b91c1c;
+  --accent-faint:#7f1d1d;
+  --accent-glow: rgba(239, 68, 68, 0.16);
+  --border:      #3a1a1a;
+  --border-hi:   #5a2626;
+}
