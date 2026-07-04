@@ -84,7 +84,6 @@ function render() {
         <button class="btn ghost" id="adv-toggle" style="margin-top:12px; min-height:34px">Advanced ▾</button>
         <div id="adv" hidden style="margin-top:12px">
           ${ADVANCED.map(([k, l]) => `<div class="risk-row"><label>${l}</label><input id="rk-${k}" type="number" value="${rc[k] ?? ''}"></div>`).join('')}
-          <div class="risk-row"><label>PDT protection (under $25k)</label><label class="switch"><input type="checkbox" id="rk-pdt" ${rc.pdtProtection !== false ? 'checked' : ''}><span class="track"></span><span class="thumb"></span></label></div>
           <button class="btn" id="adv-save" style="margin-top:10px">Save advanced limits</button>
         </div>
       </div>
@@ -158,7 +157,6 @@ function wire(box) {
   });
   box.querySelector('#adv-save')?.addEventListener('click', () => {
     for (const [k] of ADVANCED) { const v = Number(box.querySelector(`#rk-${k}`)?.value); if (Number.isFinite(v)) state.engine.risk_config[k] = v; }
-    state.engine.risk_config.pdtProtection = box.querySelector('#rk-pdt').checked;
     persist(); toast('Advanced limits saved.');
   });
   box.querySelector('#fund-dep').addEventListener('click', () => toast('Deposit opens your Alpaca funding (wired in live mode).'));
