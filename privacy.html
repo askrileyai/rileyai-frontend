@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy — RileyAI</title>
+    <link rel="icon" type="image/png" href="/rileyai-logo-512.png">
+    <link rel="apple-touch-icon" href="/rileyai-logo-512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -69,7 +71,16 @@
         }
 
         .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             text-decoration: none;
+        }
+
+        .logo-img {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
         }
 
         .logo-text {
@@ -231,6 +242,7 @@
     <nav>
         <div class="container">
             <a href="/" class="logo">
+                <img src="/rileyai-logo-512.png" alt="RileyAI logo" class="logo-img">
                 <span class="logo-text">RileyAI</span>
             </a>
             <a href="/" class="nav-cta">Back to Home</a>
@@ -313,6 +325,19 @@
                 <li>Prevent fraud and ensure security</li>
                 <li>Comply with legal obligations</li>
             </ul>
+
+            <h3>2.1 AI Processing and Third-Party AI Providers</h3>
+            <p>RileyAI's assistant ("Riley") is powered by third-party artificial-intelligence providers. To generate Riley's chat and voice responses, we send the following to these providers:</p>
+            <ul>
+                <li>The messages you type or speak to Riley</li>
+                <li>The market and chart context of your trading session (e.g., the symbol and price data you are viewing)</li>
+            </ul>
+            <p>The third-party AI providers we share this data with are:</p>
+            <ul>
+                <li><strong>Anthropic, PBC</strong> — powers Riley's text chat and analysis (<a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic Privacy Policy</a>).</li>
+                <li><strong>OpenAI, L.L.C.</strong> — powers Riley's real-time voice conversations (<a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener">OpenAI Privacy Policy</a>).</li>
+            </ul>
+            <p>We do <strong>NOT</strong> send your name, email address, password, or any bank or brokerage account details to these AI providers. Data shared with them is used solely to generate Riley's responses to you; it is transmitted securely, is not sold, and — under the API terms we use — is not used to train their models. These providers are contractually bound to protect your data under privacy and security terms that provide equivalent protection. We ask for your explicit consent to this AI processing before you first use Riley, and you may withdraw it at any time by discontinuing use of the assistant.</p>
 
             <h2>3. Data Storage and Security</h2>
 
