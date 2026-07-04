@@ -14,7 +14,9 @@ const STRATS = [
   { strategy_key: 'momentum_breakout', name: 'Momentum Breakout', thesis: 'Buy 20-bar highs broken on ≥1.5× volume; stop under the shelf, 2R target.', tickClass: 'intraday', enabled: true, mode: 'SHADOW', arbiter_weight: 0.85, stats: { pnl: 238.1, winRate: 0.54, trades: 31 } },
   { strategy_key: 'credit_spread_theta', name: 'Credit Spread · Theta', thesis: '25-30Δ put credit spreads, 30-45 DTE, in bull/sideways regimes.', tickClass: 'scheduled', enabled: false, mode: 'SHADOW', arbiter_weight: 1, stats: { pnl: 0, winRate: 0, trades: 0 } },
   { strategy_key: 'zero_dte_momentum', name: '0DTE Momentum', thesis: 'SPY/QQQ same-day options momentum bursts; hard time-stop, flat by 15:45.', tickClass: 'fast', enabled: false, mode: 'SHADOW', arbiter_weight: 1, stats: { pnl: 0, winRate: 0, trades: 0 } },
+  { strategy_key: 'crypto_momentum', name: 'Crypto Momentum · 24/7', thesis: 'Rides confirmed breakouts on major coins around the clock — buys strength on volume, ATR stop, 2R target. The one market open nights & weekends.', tickClass: 'crypto', enabled: true, mode: 'SHADOW', arbiter_weight: 1, stats: { pnl: 291.4, winRate: 0.58, trades: 19 } },
 ];
+const CRYPTO_SYMS = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'AVAX/USD', 'LINK/USD'];
 
 // Market situations → which strategies fit. This is "the best strategy for any
 // situation": Riley rotates the arsenal as conditions change. favors/standsDown
@@ -76,14 +78,16 @@ function ev(type, summary, { severity = 'info', strategyKey = null, symbol = nul
   applyEvent({ id: ++evtSeq, ts: new Date().toISOString(), type, severity, strategyKey, symbol, summary, data });
 }
 
+const CRYPTO_PX = { 'BTC/USD': 61000, 'ETH/USD': 3400, 'SOL/USD': 165, 'AVAX/USD': 38, 'LINK/USD': 18 };
 function mkPosition(strategyKey, symbol) {
-  const entry = +rnd(80, 480).toFixed(2);
+  const base = CRYPTO_PX[symbol] || rnd(80, 480);
+  const entry = +(base * (CRYPTO_PX[symbol] ? rnd(0.99, 1.01) : 1)).toFixed(2);
   const stop = +(entry * rnd(0.985, 0.995)).toFixed(2);
   const target = +(entry * rnd(1.01, 1.025)).toFixed(2);
   return {
     id: ++posSeq, strategy_key: strategyKey, mode: 'SHADOW', symbol, occ_symbol: null,
-    instrument_type: 'equity', direction: 'long',
-    quantity: Math.max(1, Math.floor(100 / (entry - stop))),
+    instrument_type: CRYPTO_PX[symbol] ? 'crypto' : 'equity', direction: 'long',
+    quantity: CRYPTO_PX[symbol] ? +(100 / (entry - stop)).toFixed(4) : Math.max(1, Math.floor(100 / (entry - stop))),
     entry_price: entry, entry_at: new Date().toISOString(),
     stop_loss: stop, target, status: 'open', max_loss_usd: 100,
     thesis: `${symbol} simulated setup — synthetic conviction, real aesthetics.`,
@@ -131,8 +135,8 @@ export function startSim() {
     marks: {},
     record: { wins: 47, losses: 21, closedPnl: 1306.05 },
     mandate: { goal: 'Grow the account steadily with options income — aim for ~$400/week', autonomy: 'guided', riskAppetite: 'balanced' },
-    permissions: { stocks: true, options: true, crypto: false, zerodte: false, optionLevel: 2, marketWide: false },
-    watchlist: ['SPY', 'QQQ', 'NVDA', 'TSLA', 'AAPL'],
+    permissions: { stocks: true, options: true, crypto: true, zerodte: false, optionLevel: 2, marketWide: false },
+    watchlist: ['SPY', 'QQQ', 'NVDA', 'TSLA', 'AAPL', 'BTC/USD', 'ETH/USD'],
     connection: { connected: true, brokerageName: 'Alpaca Paper (SIM)', lastSyncAt: new Date().toISOString() },
     equityCurve: seedEquityDay(),
   });
@@ -173,7 +177,7 @@ export function startSim() {
   timers.push(setInterval(() => {
     const act = activeStrategies(); if (!act.length) return;
     const s = pick(act);
-    const sym = pick(universe());
+    const sym = s.strategy_key === 'crypto_momentum' ? pick(CRYPTO_SYMS) : pick(universe());
     const conf = +rnd(0.55, 0.9).toFixed(2);
     ev('signal.new', `${s.strategy_key} spotted ${sym} long (confidence ${conf})`, { strategyKey: s.strategy_key, symbol: sym, data: { confidence: conf } });
     setTimeout(() => {
