@@ -6,6 +6,8 @@ import { api, isSim } from '../api.js';
 import { money, esc } from '../components/fmt.js';
 
 let plots = [];
+let calData = new Map();   // 'YYYY-MM-DD' -> { pnl, trades, wins, losses }
+let calCursor = null;      // Date at the 1st of the displayed month
 
 export function mount(host) {
   host.innerHTML = `
@@ -17,6 +19,10 @@ export function mount(host) {
         </div>
       </div>
       <div class="perf-pods" id="pf-pods"></div>
+      <div class="holo">
+        <div class="holo-label">Daily P&L Calendar</div>
+        <div id="pf-calendar" class="calendar"></div>
+      </div>
       <div class="holo"><div class="holo-label">Equity Curve</div><div class="uplot-wrap" id="pf-equity"></div></div>
       <div class="holo"><div class="holo-label">Daily P&L</div><div class="uplot-wrap" id="pf-daily"></div></div>
       <div class="holo">
@@ -33,6 +39,7 @@ export function mount(host) {
     });
   });
   load('1w');
+  loadCalendar();
 }
 
 export function unmount() { plots.forEach((p) => p.destroy()); plots = []; }
@@ -110,6 +117,81 @@ function paintCharts(days) {
       stroke: css('--up'),
     }],
   }, [x, daily], dEl));
+}
+
+// ── Daily P&L calendar ─────────────────────────────────────────────────────
+function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+async function loadCalendar() {
+  let days;
+  if (isSim()) days = simCalendar();
+  else { try { days = (await api.calendar(180)).days || []; } catch (_) { days = []; } }
+  calData = new Map(days.map((d) => [String(d.trading_day).slice(0, 10), {
+    pnl: Number(d.realized_pnl || 0), trades: Number(d.trades_closed || 0),
+    wins: Number(d.wins || 0), losses: Number(d.losses || 0),
+  }]));
+  const now = new Date();
+  calCursor = new Date(now.getFullYear(), now.getMonth(), 1);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const host = document.getElementById('pf-calendar');
+  if (!host || !calCursor) return;
+  const year = calCursor.getFullYear(), month = calCursor.getMonth();
+  const startDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = calCursor.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const todayStr = ymd(new Date());
+
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += `<div class="cal-cell blank"></div>`;
+  let monthPnl = 0, tradeDays = 0, winDays = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const rec = calData.get(ymd(new Date(year, month, day)));
+    const today = ymd(new Date(year, month, day)) === todayStr ? ' today' : '';
+    if (rec && rec.trades > 0) {
+      monthPnl += rec.pnl; tradeDays++; if (rec.pnl > 0) winDays++;
+      const cls = rec.pnl > 0 ? 'gain' : rec.pnl < 0 ? 'loss' : 'flat';
+      cells += `<div class="cal-cell ${cls}${today}">
+        <span class="cal-day">${day}</span>
+        <span class="cal-pnl mono">${money(rec.pnl, { sign: true, dp: 0 })}</span>
+        <span class="cal-trades">${rec.trades} trade${rec.trades === 1 ? '' : 's'}</span>
+      </div>`;
+    } else {
+      cells += `<div class="cal-cell empty${today}"><span class="cal-day">${day}</span></div>`;
+    }
+  }
+
+  const dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => `<div class="cal-dow">${d}</div>`).join('');
+  host.innerHTML = `
+    <div class="cal-head">
+      <button class="cal-nav" data-cal="prev" aria-label="Previous month">&lsaquo;</button>
+      <div class="cal-title">${monthName}</div>
+      <button class="cal-nav" data-cal="next" aria-label="Next month">&rsaquo;</button>
+    </div>
+    <div class="cal-grid cal-dows">${dows}</div>
+    <div class="cal-grid cal-days">${cells}</div>
+    <div class="cal-foot">
+      <span>Month <b class="mono ${monthPnl >= 0 ? 'gain' : 'loss'}">${money(monthPnl, { sign: true, dp: 0 })}</b></span>
+      <span>Green days <b>${winDays}/${tradeDays}</b></span>
+    </div>`;
+  host.querySelectorAll('[data-cal]').forEach((b) => b.addEventListener('click', () => {
+    calCursor.setMonth(calCursor.getMonth() + (b.getAttribute('data-cal') === 'next' ? 1 : -1));
+    renderCalendar();
+  }));
+}
+
+function simCalendar() {
+  const days = [], today = new Date();
+  for (let i = 75; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const pnl = +(Math.random() * 340 - 130).toFixed(2);
+    const trades = 2 + Math.floor(Math.random() * 6);
+    days.push({ trading_day: ymd(d), realized_pnl: pnl, trades_closed: trades, wins: pnl > 0 ? Math.ceil(trades * 0.7) : Math.floor(trades * 0.3), losses: 0 });
+  }
+  return days;
 }
 
 // Synthetic 3 weeks of performance for simulation mode.
