@@ -20,6 +20,10 @@ export function mount(host) {
       </div>
       <div class="perf-pods" id="pf-pods"></div>
       <div class="holo">
+        <div class="holo-label">Account · where every dollar is</div>
+        <div id="pf-account" class="acct-recon"><div class="empty-note">Reconciling against the broker…</div></div>
+      </div>
+      <div class="holo">
         <div class="holo-label">Daily P&L Calendar</div>
         <div id="pf-calendar" class="calendar"></div>
       </div>
@@ -40,6 +44,7 @@ export function mount(host) {
   });
   load('1w');
   loadCalendar();
+  loadAccount();
 }
 
 export function unmount() { plots.forEach((p) => p.destroy()); plots = []; }
@@ -117,6 +122,35 @@ function paintCharts(days) {
       stroke: css('--up'),
     }],
   }, [x, daily], dEl));
+}
+
+// ── Account reconciliation ─────────────────────────────────────────────────
+// Walks inception → live broker equity so tracked stats and account reality
+// can't silently diverge: the calendar/stats only sum TRACKED trades; losses
+// from the July drift era (positions the broker held that ARC never booked,
+// flattened during resets, plus crypto in-kind fees) live in "legacy".
+async function loadAccount() {
+  const host = document.getElementById('pf-account');
+  if (!host) return;
+  let a;
+  if (isSim()) {
+    a = { account: { equity: 24862.4 }, inception: 25000, sinceInception: -137.6, trackedRealizedTotal: 412.4, unrealizedOpen: 36, untrackedGap: -586 };
+  } else {
+    try { a = await api.pnlAudit(); }
+    catch (_) { host.innerHTML = `<div class="empty-note">Reconciliation unavailable.</div>`; return; }
+  }
+  const row = (label, val, opts = {}) => {
+    const cls = opts.neutral ? '' : (val >= 0 ? 'gain' : 'loss');
+    return `<div class="acct-row${opts.big ? ' big' : ''}"><span>${label}</span><b class="mono ${cls}">${money(val, { sign: !opts.neutral, dp: 0 })}</b></div>`;
+  };
+  host.innerHTML = `
+    ${row('Account equity (broker)', Number(a.account.equity), { neutral: true, big: true })}
+    ${row(`Since inception (${money(a.inception, { dp: 0 })})`, Number(a.sinceInception), { big: true })}
+    <div class="acct-split"></div>
+    ${row('Trading P&L — tracked trades', Number(a.trackedRealizedTotal))}
+    ${row('Open positions (mark to market)', Number(a.unrealizedOpen))}
+    ${row('Legacy — July drift/reset era + crypto fees (not in trade stats)', Number(a.untrackedGap))}
+    <div class="acct-note">Calendar &amp; strategy stats count tracked trades only. The legacy line is frozen history — drift is now auto-reconciled every 3 min.</div>`;
 }
 
 // ── Daily P&L calendar ─────────────────────────────────────────────────────

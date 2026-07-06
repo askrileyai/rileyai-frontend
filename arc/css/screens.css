@@ -129,6 +129,17 @@
   .cal-trades { display: none; }
 }
 
+/* ---- ACCOUNT RECONCILIATION ---- */
+.acct-recon { display: grid; gap: 6px; }
+.acct-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; color: var(--text-dim); }
+.acct-row b { font-size: 14px; color: var(--text); }
+.acct-row.big { font-size: 14px; color: var(--text); }
+.acct-row.big b { font-size: 18px; }
+.acct-row .gain { color: var(--up); }
+.acct-row .loss { color: var(--down); }
+.acct-split { border-top: 1px solid var(--border, #27272a); margin: 4px 0; }
+.acct-note { font-size: 11px; color: var(--text-faint); padding-top: 4px; line-height: 1.5; }
+
 /* ---- SETTINGS ---- */
 .settings { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); align-items: start; }
 .settings .set-wide { grid-column: 1 / -1; }
