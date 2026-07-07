@@ -59,6 +59,7 @@ export const api = {
   calendar: (days = 180) => req(`/calendar?days=${days}`),
   pnlAudit: () => req('/pnl-audit'),
   review: (hours = 24, book = null) => req(`/review?hours=${hours}&ai=0${book ? `&book=${book}` : ''}`),
+  analyze: (symbols) => req(`/analyze?symbols=${encodeURIComponent(symbols.join(','))}`),
   connection: () => req('/connection'),
   exitPosition: (id) => req(`/positions/${id}/exit`, { method: 'POST', body: JSON.stringify({}) }),
 };

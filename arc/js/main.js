@@ -14,14 +14,16 @@ import { engineStateLabel } from './components/killswitch.js';
 
 import * as bridge from './screens/bridge.js';
 import * as riley from './screens/riley.js';
-import * as research from './screens/research.js';
 import * as mind from './screens/mind.js';
 import * as playbook from './screens/playbook.js';
 import * as positions from './screens/positions.js';
 import * as performance from './screens/performance.js';
 import * as armory from './screens/armory.js';
 
-const SCREENS = { bridge, riley, research, mind, playbook, positions, performance, armory };
+// Research retired (2026-07-07): it was the last screen on the synthetic data
+// generator (rendered SPY "$474" while it traded $745) and duplicated what the
+// Riley tab already does on real data. Old #/research links land on Riley.
+const SCREENS = { bridge, riley, research: riley, mind, playbook, positions, performance, armory };
 let current = null;
 let currentName = '';
 

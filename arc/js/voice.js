@@ -17,16 +17,19 @@ function line() {
 
   const active = state.strategies.filter((x) => x.enabled).length;
   const open = state.positions.length;
-  const day = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
   const rate = thoughtRate();
-  const closed = state.market?.status && state.market.status !== 'open';
+  // canTrade is the truth; the old status!=='open' check never matched the real
+  // RTH value ('market_hours') and showed MKT CLOSED all day. Crypto trades
+  // around the clock, so a closed equity market still reads SCANNING · 24/7.
+  const equitiesClosed = state.market ? state.market.canTrade !== true : false;
+  const today = state.hero?.dayChangeUsd;
   return [
-    closed ? 'MKT CLOSED' : 'SCANNING',
+    equitiesClosed ? 'SCANNING · CRYPTO 24/7' : 'MKT OPEN · SCANNING',
     `${active} STRAT`,
     `${open} OPEN`,
     `${rate}/min`,
-    `SESSION ${money(day, { sign: true, dp: 0 })}`,
-  ].join('  ·  ');
+    today != null ? `TODAY ${money(today, { sign: true, dp: 0 })}` : '',
+  ].filter(Boolean).join('  ·  ');
 }
 
 export function speak() {
