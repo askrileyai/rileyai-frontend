@@ -9,6 +9,30 @@ import { money, pnlClass, esc } from '../components/fmt.js';
 let unsubs = [];
 let orders = [];
 
+// OCC option symbol → human-readable contract: "SPY260707C00620000" →
+// { type:'CALL', strike:620, exp:'Jul 7', dte:0 }. Options positions must be
+// unmistakable: strike + expiration, never a raw OCC blob.
+function parseOcc(occ) {
+  const m = /^([A-Z]{1,6})(\d{2})(\d{2})(\d{2})([CP])(\d{8})$/.exec(String(occ || '').toUpperCase());
+  if (!m) return null;
+  const exp = new Date(Date.UTC(2000 + +m[2], +m[3] - 1, +m[4]));
+  const dte = Math.ceil((exp.getTime() - Date.now()) / 86400000);
+  return {
+    type: m[5] === 'C' ? 'CALL' : 'PUT',
+    strike: +m[6] / 1000,
+    expLabel: exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+    dte: Math.max(0, dte),
+  };
+}
+
+// "2 × $620 CALL · exp Jul 7 (0DTE)" — the line under an option position's symbol.
+function contractLabel(p) {
+  const c = parseOcc(p.occ_symbol);
+  if (!c) return p.occ_symbol ? esc(p.occ_symbol) : '';
+  const dteTxt = c.dte === 0 ? '0DTE — closes today' : `${c.dte}d`;
+  return `<span class="opt-badge ${c.type === 'CALL' ? 'call' : 'put'}">${c.type}</span> $${c.strike} · exp ${c.expLabel} (${dteTxt})`;
+}
+
 export function mount(host) {
   host.innerHTML = `
     <div class="positions">
@@ -56,7 +80,7 @@ function paint() {
   body.innerHTML = state.positions.map((p) => {
     const m = state.marks[p.id] || {};
     return `<tr>
-      <td><b>${esc(p.symbol)}</b>${p.occ_symbol ? `<div class="faint" style="font-size:.65rem">${esc(p.occ_symbol)}</div>` : ''}</td>
+      <td><b>${esc(p.symbol)}</b>${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : ''}</td>
       <td class="dim">${esc(p.strategy_key)}</td>
       <td>${esc(p.direction).toUpperCase()}</td>
       <td>${p.quantity}</td>
@@ -72,6 +96,7 @@ function paint() {
     const m = state.marks[p.id] || {};
     return `<div class="holo pm-card">
       <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
+      ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
       <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">stop ${p.stop_loss ? money(p.stop_loss) : '—'} · tgt ${p.target ? money(p.target) : '—'}</span></div>
       <button class="btn ghost" style="min-height:38px;font-size:.62rem" data-exit="${p.id}">EXIT POSITION</button>

@@ -19,6 +19,10 @@ export function mount(host) {
         </div>
       </div>
       <div class="perf-pods" id="pf-pods"></div>
+      <div class="holo book-card">
+        <div class="holo-label">$1k Small-Account Book · the real-money rehearsal</div>
+        <div id="pf-book" class="acct-recon"><div class="empty-note">Loading the book…</div></div>
+      </div>
       <div class="holo">
         <div class="holo-label">Account · where every dollar is</div>
         <div id="pf-account" class="acct-recon"><div class="empty-note">Reconciling against the broker…</div></div>
@@ -30,7 +34,14 @@ export function mount(host) {
       <div class="holo"><div class="holo-label">Equity Curve</div><div class="uplot-wrap" id="pf-equity"></div></div>
       <div class="holo"><div class="holo-label">Daily P&L</div><div class="uplot-wrap" id="pf-daily"></div></div>
       <div class="holo">
-        <div class="holo-label">Strategy Attribution</div>
+        <div class="row spread">
+          <div class="holo-label">Strategy Attribution</div>
+          <div class="filters" id="pf-books">
+            <button class="fchip on" data-book="all">All</button>
+            <button class="fchip" data-book="small">$1k Book</button>
+            <button class="fchip" data-book="lab">Lab</button>
+          </div>
+        </div>
         <table class="dtable"><thead><tr><th>Strategy</th><th>Trades</th><th>Win %</th><th>Avg R</th><th>P&L</th></tr></thead><tbody id="pf-attr"></tbody></table>
       </div>
     </div>
@@ -42,9 +53,52 @@ export function mount(host) {
       load(chip.getAttribute('data-w'));
     });
   });
+  host.querySelectorAll('#pf-books .fchip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      host.querySelectorAll('#pf-books .fchip').forEach((c) => c.classList.remove('on'));
+      chip.classList.add('on');
+      loadBookAttribution(chip.getAttribute('data-book'));
+    });
+  });
   load('1w');
   loadCalendar();
   loadAccount();
+  loadBook();
+}
+
+// ── $1k small-account book card ────────────────────────────────────────────
+async function loadBook() {
+  const host = document.getElementById('pf-book');
+  if (!host) return;
+  let r;
+  if (isSim()) {
+    r = { virtualEquity: { startUsd: 1000, equity: 1078.4, realizedPnl: 78.4, trades: 9, sinceDate: '2026-07-07' }, overall: { trades: 4, winRate: 0.75, pnl: 31.2 } };
+  } else {
+    try { r = (await api.review(24, 'small')).review; }
+    catch (_) { host.innerHTML = `<div class="empty-note">Book report unavailable.</div>`; return; }
+  }
+  const ve = r.virtualEquity, o = r.overall || {};
+  if (!ve) { host.innerHTML = `<div class="empty-note">Small book not configured yet.</div>`; return; }
+  const up = ve.realizedPnl >= 0;
+  host.innerHTML = `
+    <div class="acct-row big"><span>Book equity (started ${money(ve.startUsd, { dp: 0 })} on ${esc(ve.sinceDate)})</span><b class="mono ${up ? 'gain' : 'loss'}">${money(ve.equity, { dp: 2 })}</b></div>
+    <div class="acct-row"><span>Compounded P&L · ${ve.trades} trade${ve.trades === 1 ? '' : 's'}</span><b class="mono ${up ? 'gain' : 'loss'}">${money(ve.realizedPnl, { sign: true, dp: 2 })}</b></div>
+    <div class="acct-row"><span>Last 24h</span><b class="mono ${(o.pnl || 0) >= 0 ? 'gain' : 'loss'}">${o.trades || 0} trades · ${o.winRate != null ? Math.round(o.winRate * 100) + '% win · ' : ''}${money(o.pnl || 0, { sign: true, dp: 2 })}</b></div>
+    <div class="acct-note">SPY/QQQ 0DTE calls &amp; puts (min 2 contracts, cap 30% of book, conviction-scaled) + crypto trend + equity scalps. All options flat by the close. Contracts grow as the book grows — this equity curve is the $1k real-account preview.</div>`;
+}
+
+async function loadBookAttribution(book) {
+  const tbody = document.getElementById('pf-attr');
+  if (!tbody) return;
+  if (book === 'all') { load(document.querySelector('#pf-windows .fchip.on')?.getAttribute('data-w') || '1w'); return; }
+  let r;
+  if (isSim()) { r = { byStrategy: [{ key: 'zero_dte_momentum', trades: 6, winRate: 0.67, avgR: 0.8, pnl: 84.2 }] }; }
+  else {
+    try { r = (await api.review(168, book)).review; }
+    catch (_) { tbody.innerHTML = `<tr><td colspan="5" class="empty-note">Report unavailable.</td></tr>`; return; }
+  }
+  const rows = (r.byStrategy || []).map((s) => ({ strategy_key: s.key, trades: s.trades, winRate: s.winRate, avgR: s.avgR, pnl: s.pnl }));
+  paintAttribution(rows);
 }
 
 export function unmount() { plots.forEach((p) => p.destroy()); plots = []; }

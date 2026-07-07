@@ -58,6 +58,7 @@ export const api = {
   performance: (window = '1w') => req(`/performance?window=${window}`),
   calendar: (days = 180) => req(`/calendar?days=${days}`),
   pnlAudit: () => req('/pnl-audit'),
+  review: (hours = 24, book = null) => req(`/review?hours=${hours}&ai=0${book ? `&book=${book}` : ''}`),
   connection: () => req('/connection'),
   exitPosition: (id) => req(`/positions/${id}/exit`, { method: 'POST', body: JSON.stringify({}) }),
 };
