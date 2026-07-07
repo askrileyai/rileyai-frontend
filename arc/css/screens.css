@@ -143,6 +143,13 @@
 .hero-chg.loss { color: var(--down); }
 .hero-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 .chip.book { border: 1px solid rgba(34,211,238,.4); color: var(--accent-hi); text-decoration: none; }
+/* $1k book sub-hero — same value+change language as the account, one glance */
+.hero-book { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; padding: 8px 12px; border: 1px solid rgba(34,211,238,.35); border-radius: 10px; text-decoration: none; width: fit-content; max-width: 100%; flex-wrap: wrap; }
+.hero-book .hb-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--accent-hi); }
+.hero-book .hb-val { font-size: 20px; font-weight: 700; color: var(--text); }
+.hero-book .hb-chg { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+.hero-book .hb-chg.gain { color: var(--up); }
+.hero-book .hb-chg.loss { color: var(--down); }
 @media (max-width: 760px) { .hero-eq { font-size: 34px; } }
 
 /* ---- DAILY REPORTS ---- */

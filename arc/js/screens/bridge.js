@@ -224,12 +224,19 @@ function paintReadout() {
   const engChip = s === 'RUNNING' ? `<span class="chip live">RUNNING · ${mode}</span>`
     : s.startsWith('HALTED') ? `<span class="chip halted">${s === 'HALTED_MANUAL' ? 'PAUSED' : 'RISK-HALTED'}</span>`
     : `<span class="chip off">OFFLINE</span>`;
+  const bookVal = h.bookValue ?? h.bookEquity;
+  const bChg = h.bookDayChangeUsd, bPct = h.bookDayChangePct;
   box.innerHTML = `
     <div class="hero-eq mono">${eq != null ? money(eq, { dp: 2 }) : '—'}</div>
     <div class="hero-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : 'today — pending first mark'}</div>
+    ${bookVal != null ? `
+    <a class="hero-book" href="#/performance">
+      <span class="hb-label">$1k BOOK</span>
+      <span class="hb-val mono">${money(bookVal, { dp: 2 })}</span>
+      <span class="hb-chg ${pnlClass(bChg)}">${bChg != null ? `${money(bChg, { sign: true, dp: 2 })}${bPct != null ? ` (${bPct >= 0 ? '+' : ''}${bPct}%)` : ''} today` : ''}</span>
+    </a>` : ''}
     <div class="hero-chips">
       ${engChip}
-      ${h.bookEquity != null ? `<a class="chip book" href="#/performance">$1k Book ${money(h.bookEquity, { dp: 0 })}</a>` : ''}
       <span class="chip off">${state.positions.length} open</span>
     </div>`;
 }
