@@ -25,6 +25,17 @@ function parseOcc(occ) {
   };
 }
 
+// Max drawdown (max adverse excursion) — the worst the position has been
+// against us since entry, from the persisted trough/peak marks. True risk
+// data, not just the current P&L snapshot.
+function maxDD(p) {
+  const worst = p.direction === 'long' ? p.trough_mark : p.peak_mark;
+  if (worst == null) return null;
+  const mult = p.instrument_type === 'option' ? 100 : 1;
+  const dir = p.direction === 'long' ? 1 : -1;
+  return Math.min(0, (Number(worst) - Number(p.entry_price)) * Number(p.quantity) * mult * dir);
+}
+
 // "2 × $620 CALL · exp Jul 7 (0DTE)" — the line under an option position's symbol.
 function contractLabel(p) {
   const c = parseOcc(p.occ_symbol);
@@ -40,7 +51,7 @@ export function mount(host) {
       <div class="holo">
         <div class="holo-label">Open — Engine-Owned</div>
         <table class="dtable hide-mobile">
-          <thead><tr><th>Symbol</th><th>Strategy</th><th>Dir</th><th>Qty</th><th>Entry</th><th>Mark</th><th>Stop / Target</th><th>P&L</th><th></th></tr></thead>
+          <thead><tr><th>Symbol</th><th>Strategy</th><th>Dir</th><th>Qty</th><th>Entry</th><th>Mark</th><th>Stop / Target</th><th>P&L</th><th>Max DD</th><th></th></tr></thead>
           <tbody id="p-body"></tbody>
         </table>
         <div class="pos-mobile" id="p-mobile"></div>
@@ -88,6 +99,7 @@ function paint() {
       <td>${m.mark != null ? money(m.mark) : '—'}</td>
       <td class="dim">${p.stop_loss ? money(p.stop_loss) : '—'} / ${p.target ? money(p.target) : '—'}</td>
       <td class="${pnlClass(m.pnl)}">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</td>
+      <td class="loss dim">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</td>
       <td><button class="btn ghost" style="min-height:32px;padding:2px 12px;font-size:.6rem" data-exit="${p.id}">EXIT</button></td>
     </tr>`;
   }).join('');
@@ -99,6 +111,7 @@ function paint() {
       ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
       <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">stop ${p.stop_loss ? money(p.stop_loss) : '—'} · tgt ${p.target ? money(p.target) : '—'}</span></div>
+      <div class="pm-detail"><span class="faint">max drawdown</span><span class="loss">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</span></div>
       <button class="btn ghost" style="min-height:38px;font-size:.62rem" data-exit="${p.id}">EXIT POSITION</button>
     </div>`;
   }).join('');
