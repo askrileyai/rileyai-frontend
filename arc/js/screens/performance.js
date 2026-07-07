@@ -19,6 +19,10 @@ export function mount(host) {
         </div>
       </div>
       <div class="perf-pods" id="pf-pods"></div>
+      <div class="holo">
+        <div class="holo-label">Daily Reports · 8:00 AM ET</div>
+        <div id="pf-daily-reports" class="reports"><div class="empty-note">Loading reports…</div></div>
+      </div>
       <div class="holo book-card">
         <div class="holo-label">$1k Small-Account Book · the real-money rehearsal</div>
         <div id="pf-book" class="acct-recon"><div class="empty-note">Loading the book…</div></div>
@@ -64,6 +68,49 @@ export function mount(host) {
   loadCalendar();
   loadAccount();
   loadBook();
+  loadDailyReports();
+}
+
+// ── Daily 8:00 AM ET reports ($1k book + lab) ──────────────────────────────
+// Renders the persisted review.daily events so the morning report is a fixture
+// on this screen, not a line that scrolls out of the live feed. Falls back to
+// a live-computed preview before the first scheduled run.
+async function loadDailyReports() {
+  const host = document.getElementById('pf-daily-reports');
+  if (!host) return;
+  const strat = (r) => (r.byStrategy || []).slice(0, 6).map((s) =>
+    `<tr><td>${esc(s.key)}</td><td>${s.trades}</td><td>${s.winRate != null ? Math.round(s.winRate * 100) + '%' : '—'}</td><td class="${(s.pnl || 0) >= 0 ? 'gain' : 'loss'}">${money(s.pnl || 0, { sign: true, dp: 0 })}</td></tr>`).join('');
+  const block = (title, ts, summary, review, ai) => `
+    <div class="report-block">
+      <div class="report-head"><b>${esc(title)}</b><span class="faint">${ts ? new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'live preview'}</span></div>
+      ${summary ? `<div class="report-summary">${esc(summary)}</div>` : ''}
+      ${review && (review.byStrategy || []).length ? `<table class="dtable report-table"><thead><tr><th>Strategy</th><th>Tr</th><th>Win</th><th>P&L</th></tr></thead><tbody>${strat(review)}</tbody></table>` : `<div class="empty-note">No closed trades in the window yet.</div>`}
+      ${ai?.recommendations?.length ? `<div class="report-recs">${ai.recommendations.slice(0, 3).map((x) => `<div>→ ${esc(x.change || x)}</div>`).join('')}</div>` : ''}
+    </div>`;
+
+  if (isSim()) {
+    host.innerHTML = block('$1k BOOK', Date.now(), 'equity $1,042 (+$42) · 5 trades, 60% win', { byStrategy: [{ key: 'zero_dte_momentum', trades: 4, winRate: 0.75, pnl: 38 }] }, null)
+      + block('LAB', Date.now(), '31 trades, 42% win, +$212', { byStrategy: [{ key: 'scalp_equity', trades: 8, winRate: 0.88, pnl: 64 }] }, null);
+    return;
+  }
+  try {
+    const evs = (await api.log('?limit=10&type=review.daily')).events || [];
+    const latestSmall = [...evs].reverse().find((e) => (e.summary || '').startsWith('$1k BOOK'));
+    const latestLab = [...evs].reverse().find((e) => (e.summary || '').startsWith('LAB'));
+    if (latestSmall || latestLab) {
+      host.innerHTML =
+        (latestSmall ? block('$1k BOOK', latestSmall.ts || latestSmall.created_at, latestSmall.summary, latestSmall.data?.review, latestSmall.data?.ai) : '')
+        + (latestLab ? block('LAB', latestLab.ts || latestLab.created_at, latestLab.summary, latestLab.data?.review, latestLab.data?.ai) : '');
+      return;
+    }
+    // No scheduled report yet (first cron runs tomorrow 8:00 ET) → live preview.
+    const [small, lab] = await Promise.all([api.review(24, 'small'), api.review(24, 'lab')]);
+    const sv = small.review?.virtualEquity;
+    host.innerHTML =
+      block('$1k BOOK', null, sv ? `equity ${money(sv.equity, { dp: 2 })} (${sv.realizedPnl >= 0 ? '+' : ''}${money(sv.realizedPnl, { dp: 2 })} since ${sv.sinceDate})` : 'no data yet', small.review, null)
+      + block('LAB', null, `${lab.review?.overall?.trades || 0} trades in 24h`, lab.review, null)
+      + `<div class="acct-note">Live preview — the first scheduled report lands 8:00 AM ET and will persist here.</div>`;
+  } catch (_) { host.innerHTML = `<div class="empty-note">Reports unavailable.</div>`; }
 }
 
 // ── $1k small-account book card ────────────────────────────────────────────
