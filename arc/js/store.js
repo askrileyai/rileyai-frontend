@@ -168,6 +168,7 @@ export async function hydrate() {
     market: status.market || state.market,
     balance: status.balance || null,
     equity: status.equity ?? null,
+    hero: status.hero || null,
     todayPnl: Number(status.todayPnl) || 0,
     unrealized: Number(status.unrealized) || 0,
     ledger: status.ledger || null,

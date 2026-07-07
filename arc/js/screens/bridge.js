@@ -4,7 +4,7 @@
 // live decision ticker, and the kill switch. No reactor — this is a terminal.
 
 import * as bus from '../bus.js';
-import { state, thoughtRate, winRate, openPnl, hydrate, applyAlertTheme } from '../store.js';
+import { state, thoughtRate, winRate, hydrate, applyAlertTheme } from '../store.js';
 import { drawSparkline } from '../components/sparkline.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
@@ -19,9 +19,7 @@ export function mount(host) {
     <div class="bridge">
       <div class="mandate-banner" id="d-mandate"></div>
 
-      <div class="deck-readout" id="d-readout"></div>
-
-      <div class="track-record" id="d-record"></div>
+      <div class="hero" id="d-readout"></div>
 
       <div class="panel" style="overflow:hidden">
         <div class="panel-head">Riley's Read <a href="#/riley" style="font-weight:500;font-size:12px">Ask Riley ›</a></div>
@@ -99,7 +97,7 @@ function onEvt(evt) {
   if (evt.type === 'position.mark') {
     const eq = currentEquity();
     if (eq != null) { equityPoints.push(eq); if (equityPoints.length > 240) equityPoints.shift(); drawSpark(); }
-    paintReadout(); paintRecord(); paintPositions();
+    paintReadout(); paintPositions();
   } else if (['position.opened', 'position.closed', 'engine.state', 'kill.activated', 'kill.resumed', 'arbiter.update', 'arbiter.read', 'regime.update'].includes(evt.type)) {
     if (evt.type === 'arbiter.read') lastRead = evt.summary;
     paint();
@@ -113,7 +111,7 @@ function currentEquity() {
   return base == null ? null : Number(base) + Number(state.unrealized || 0);
 }
 
-function paint() { paintMandate(); paintReadout(); paintRecord(); paintRead(); paintPositions(); paintStrats(); paintEngine(); }
+function paint() { paintMandate(); paintReadout(); paintRead(); paintPositions(); paintStrats(); paintEngine(); }
 
 // Engine control — current state + the right action (Start / Pause / Resume) +
 // a live session-stats line so stopping ALWAYS shows where the engine stands.
@@ -135,12 +133,9 @@ function paintEngine() {
   actions.querySelector('[data-eng]')?.addEventListener('click', (e) => engineAction(e.currentTarget.getAttribute('data-eng')));
 
   const wr = winRate();
-  const rec = state.record || { wins: 0, losses: 0, closedPnl: 0 };
-  const sess = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
+  const rec = state.record || { wins: 0, losses: 0 };
   statsEl.innerHTML = `${s.startsWith('HALTED') ? '<span class="eng-lbl">Stopped at</span> ' : ''}` +
-    `<span class="${pnlClass(sess)}">${money(sess, { sign: true })}</span> session · ` +
-    `<b class="gain">${rec.wins || 0}</b>W / <b class="loss">${rec.losses || 0}</b>L${wr != null ? ` · ${Math.round(wr * 100)}% win` : ''} · ` +
-    `realized <span class="${pnlClass(rec.closedPnl)}">${money(rec.closedPnl || 0, { sign: true, dp: 0 })}</span> · ${state.positions.length} open`;
+    `<b class="gain">${rec.wins || 0}</b>W / <b class="loss">${rec.losses || 0}</b>L${wr != null ? ` · ${Math.round(wr * 100)}% win` : ''} · ${state.positions.length} open`;
 }
 
 async function engineAction(kind) {
@@ -159,9 +154,8 @@ async function engineAction(kind) {
 
 function sessionLine(prefix) {
   const rec = state.record || {};
-  const sess = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
   const wr = winRate();
-  return `${prefix} · ${money(sess, { sign: true })} session · ${rec.wins || 0}W/${rec.losses || 0}L${wr != null ? ` (${Math.round(wr * 100)}%)` : ''} · ${state.positions.length} open`;
+  return `${prefix} · ${rec.wins || 0}W/${rec.losses || 0}L${wr != null ? ` (${Math.round(wr * 100)}%)` : ''} · ${state.positions.length} open`;
 }
 
 let toastT = null;
@@ -188,26 +182,7 @@ function paintMandate() {
   box.innerHTML = `<span class="mb-icon">◎</span><span class="mb-text"><b>Goal:</b> ${esc(m.goal)}</span><span class="mb-tags"><span class="chip live">${auto}</span><span class="chip off" style="text-transform:capitalize">${esc(appetite)}</span></span><a href="#/armory" class="mb-cta">Adjust ›</a>`;
 }
 
-// Track record — win %, winning, losing, current trades with +/- (all connected).
-function paintRecord() {
-  const box = document.querySelector('#d-record');
-  if (!box) return;
-  const wr = winRate();
-  const rec = state.record || { wins: 0, losses: 0, closedPnl: 0 };
-  const open = state.positions.length;
-  const openP = openPnl();
-  const cells = [
-    ['Win Rate', wr != null ? Math.round(wr * 100) + '%' : '—', wr != null && wr >= 0.5 ? 'up' : ''],
-    ['Winning Trades', String(rec.wins), 'up'],
-    ['Losing Trades', String(rec.losses), 'down'],
-    ['Open Now', `${open}`, ''],
-    ['Open P&L', money(openP, { sign: true }), pnlClass(openP)],
-    ['Realized', money(rec.closedPnl, { sign: true, dp: 0 }), pnlClass(rec.closedPnl)],
-  ];
-  box.innerHTML = cells.map(([l, v, c]) =>
-    `<div class="tr-cell"><div class="tr-val ${c || ''}">${v}</div><div class="tr-lbl">${l}</div></div>`
-  ).join('');
-}
+// (Old track-record grid removed — the hero + P&L tab carry the numbers now.)
 
 // "Riley's Read": which strategy is favored now + why (plain language).
 // Real mode fills from the latest arbiter.read decision event; sim uses a
@@ -231,22 +206,32 @@ function paintRead() {
   box.innerHTML = `${situation}<div class="rr-line">${esc(readLine)}</div>${(favChips || stoodChips) ? `<div class="rr-fav">${favChips}${stoodChips}</div>` : ''}`;
 }
 
+// Robinhood-style hero: ONE number (account value) + ONE change (today, $ and %).
+// "Today" = equity vs this morning's open, so it already includes closed trades
+// AND open positions moving — nothing to reconcile across session/open/realized.
 function paintReadout() {
   const box = document.querySelector('#d-readout');
   if (!box) return;
+  const h = state.hero || {};
+  const eq = h.equity ?? currentEquity();
+  let chg = h.dayChangeUsd, pct = h.dayChangePct;
+  if (chg == null && equityPoints.length > 1) {           // sim / pre-hero fallback
+    chg = eq - equityPoints[0];
+    pct = equityPoints[0] ? +((chg / equityPoints[0]) * 100).toFixed(2) : null;
+  }
   const s = state.engine.state;
-  const pnl = Number(state.todayPnl || 0) + Number(state.unrealized || 0);
-  const stateCls = s === 'RUNNING' ? 'state-running' : s.startsWith('HALTED') ? 'state-halted' : '';
-  const mode = s === 'RUNNING' ? (isLive() ? 'LIVE' : 'SHADOW') : '—';
-  const cells = [
-    ['Engine', `<span class="ro-value ${stateCls}">${esc(s)}</span>`],
-    ['Mode', `<span class="ro-value">${mode}</span>`],
-    ['Session P&L', `<span class="ro-value big ${pnlClass(pnl)}">${money(pnl, { sign: true })}</span>`],
-    ['Equity', `<span class="ro-value">${money(currentEquity(), { dp: 0 })}</span>`],
-    ['Buying Power', `<span class="ro-value">${money(state.balance?.buyingPower, { dp: 0 })}</span>`],
-    ['Strategies', `<span class="ro-value">${state.strategies.filter((x) => x.enabled).length} <span class="faint" style="font-size:13px">/ ${state.strategies.length}</span></span>`],
-  ];
-  box.innerHTML = cells.map(([l, v]) => `<div class="ro"><div class="ro-label">${l}</div>${v}</div>`).join('');
+  const mode = s === 'RUNNING' ? (isLive() ? 'LIVE' : 'SHADOW') : 'OFF';
+  const engChip = s === 'RUNNING' ? `<span class="chip live">RUNNING · ${mode}</span>`
+    : s.startsWith('HALTED') ? `<span class="chip halted">${s === 'HALTED_MANUAL' ? 'PAUSED' : 'RISK-HALTED'}</span>`
+    : `<span class="chip off">OFFLINE</span>`;
+  box.innerHTML = `
+    <div class="hero-eq mono">${eq != null ? money(eq, { dp: 2 }) : '—'}</div>
+    <div class="hero-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : 'today — pending first mark'}</div>
+    <div class="hero-chips">
+      ${engChip}
+      ${h.bookEquity != null ? `<a class="chip book" href="#/performance">$1k Book ${money(h.bookEquity, { dp: 0 })}</a>` : ''}
+      <span class="chip off">${state.positions.length} open</span>
+    </div>`;
 }
 
 function isLive() { return state.engine?.risk_config?.liveTradingEnabled && state.strategies.some((s) => s.enabled && s.mode === 'LIVE'); }

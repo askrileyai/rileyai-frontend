@@ -157,23 +157,28 @@ async function load(windowKey) {
     try { perf = await api.performance(windowKey); }
     catch (_) { perf = { days: [], totals: {}, attribution: [] }; }
   }
-  paintPods(perf.totals || {});
+  paintPods(perf.totals || {}, windowKey);
   paintAttribution(perf.attribution || []);
   paintCharts(perf.days || []);
 }
 
-function paintPods(t) {
+// Three numbers, each labeled by WHAT it measures — no ambiguous P&L soup:
+//   1. Account value (the truth, from the broker)
+//   2. Today (equity vs this morning — includes open positions moving)
+//   3. Closed trades in the selected window (why "performance" can differ from today)
+function paintPods(t, windowKey = '1w') {
   const pods = document.getElementById('pf-pods');
-  const wr = t.winRate != null ? Math.round(t.winRate * 100) : null;
+  const h = state.hero || {};
+  const chg = h.dayChangeUsd, pct = h.dayChangePct;
+  const wr = t.winRate != null ? ` · ${Math.round(t.winRate * 100)}% win` : '';
   pods.innerHTML = [
-    ['Net P&L', money(t.pnl || 0, { sign: true, dp: 0 }), (t.pnl || 0) >= 0 ? 'gain' : 'loss'],
-    ['Win Rate', wr != null ? wr + '%' : '—', ''],
-    ['Trades', t.trades ?? '—', ''],
-    ['Max Drawdown', t.maxDrawdown != null ? money(-Math.abs(t.maxDrawdown), { dp: 0 }) : '—', 'loss'],
-    ['Profit Factor', t.profitFactor != null ? Number(t.profitFactor).toFixed(2) : '—', ''],
+    ['Account value', h.equity != null ? money(h.equity, { dp: 0 }) : '—', ''],
+    ['Today (incl. open positions)', chg != null ? `${money(chg, { sign: true, dp: 0 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''}` : '—', pnlClassSafe(chg)],
+    [`Closed trades · ${windowKey}${t.trades != null ? ` · ${t.trades} trades${wr}` : ''}`, money(t.pnl || 0, { sign: true, dp: 0 }), pnlClassSafe(t.pnl)],
   ].map(([label, val, cls]) => `
     <div class="holo pod"><div class="pod-value mono ${cls}">${val}</div><div class="pod-sub">${label}</div></div>`).join('');
 }
+function pnlClassSafe(v) { return v == null ? '' : v >= 0 ? 'gain' : 'loss'; }
 
 function paintAttribution(rows) {
   document.getElementById('pf-attr').innerHTML = rows.length ? rows.map((r) => `
