@@ -95,8 +95,13 @@ async function loadDailyReports() {
   }
   try {
     const evs = (await api.log('?limit=10&type=review.daily')).events || [];
-    const latestSmall = [...evs].reverse().find((e) => (e.summary || '').startsWith('$1k BOOK'));
-    const latestLab = [...evs].reverse().find((e) => (e.summary || '').startsWith('LAB'));
+    // Only pin TODAY'S report (ET) — a stale one measures a dead window and
+    // contradicts the live book number right below it. Otherwise show the
+    // live-computed preview until the 5pm run lands.
+    const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const isToday = (e) => new Date(e.ts || e.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === todayET;
+    const latestSmall = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('$1k BOOK'));
+    const latestLab = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('LAB'));
     if (latestSmall || latestLab) {
       host.innerHTML =
         (latestSmall ? block('$1k BOOK', latestSmall.ts || latestSmall.created_at, latestSmall.summary, latestSmall.data?.review, latestSmall.data?.ai) : '')
