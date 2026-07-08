@@ -14,6 +14,8 @@ export const state = {
   todayPnl: 0,
   unrealized: 0,
   ledger: null,
+  hero: null,                  // /status hero: equity + dayChange + book value/change
+  today: null,                 // /status today: {wins, losses, realizedPnl, book, account, byStrategy}
   positions: [],               // open arc positions
   strategies: [],              // merged registry + config
   events: [],                  // ring buffer (max 500)
@@ -172,6 +174,7 @@ export async function hydrate() {
     todayPnl: Number(status.todayPnl) || 0,
     unrealized: Number(status.unrealized) || 0,
     ledger: status.ledger || null,
+    today: status.today || null,
     positions: status.positions || [],
     record: status.record || state.record,
     regime: status.regime || null,

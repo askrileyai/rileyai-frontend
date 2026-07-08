@@ -62,4 +62,6 @@ export const api = {
   analyze: (symbols) => req(`/analyze?symbols=${encodeURIComponent(symbols.join(','))}`),
   connection: () => req('/connection'),
   exitPosition: (id) => req(`/positions/${id}/exit`, { method: 'POST', body: JSON.stringify({}) }),
+  equitySeries: (range = '1d') => req(`/equity-series?range=${range}`),
+  activity: (hours = 24) => req(`/activity?hours=${hours}`),
 };

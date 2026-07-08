@@ -11,8 +11,9 @@ let orders = [];
 
 // OCC option symbol → human-readable contract: "SPY260707C00620000" →
 // { type:'CALL', strike:620, exp:'Jul 7', dte:0 }. Options positions must be
-// unmistakable: strike + expiration, never a raw OCC blob.
-function parseOcc(occ) {
+// unmistakable: strike + expiration, never a raw OCC blob. (Exported — the
+// Overview's position groups render the same badges.)
+export function parseOcc(occ) {
   const m = /^([A-Z]{1,6})(\d{2})(\d{2})(\d{2})([CP])(\d{8})$/.exec(String(occ || '').toUpperCase());
   if (!m) return null;
   const exp = new Date(Date.UTC(2000 + +m[2], +m[3] - 1, +m[4]));
@@ -37,7 +38,7 @@ function maxDD(p) {
 }
 
 // "2 × $620 CALL · exp Jul 7 (0DTE)" — the line under an option position's symbol.
-function contractLabel(p) {
+export function contractLabel(p) {
   const c = parseOcc(p.occ_symbol);
   if (!c) return p.occ_symbol ? esc(p.occ_symbol) : '';
   const dteTxt = c.dte === 0 ? '0DTE — closes today' : `${c.dte}d`;

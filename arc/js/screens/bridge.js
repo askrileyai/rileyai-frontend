@@ -1,51 +1,85 @@
 // @ts-check
-// DECK — the command deck. A dense institutional readout: engine/mode/P&L/
-// equity/BP/strategies strip, positions blotter, active-strategies table, a
-// live decision ticker, and the kill switch. No reactor — this is a terminal.
+// OVERVIEW v2 — two accounts, one honest chart, today's record, and a
+// scoreboard that means something. Layout: mandate → account cards (Main /
+// $1k Book, tappable) → interactive equity chart (uPlot, 1D/1W/1M, series
+// follows the selected card, 1D anchored at the midnight equity_open so the
+// chart's move EQUALS the card's Today ±) → Riley's Read → positions split by
+// book → Working-today scoreboard + systems strip + live feed → engine control.
 
 import * as bus from '../bus.js';
-import { state, thoughtRate, winRate, hydrate, applyAlertTheme } from '../store.js';
-import { drawSparkline } from '../components/sparkline.js';
+import { state, winRate, hydrate, applyAlertTheme } from '../store.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
 import { simResume, simKill } from '../sim.js';
+import { contractLabel } from './positions.js';
 
 let unsubs = [];
-let equityPoints = [];
+let selCard = 'book';                 // 'book' | 'account' — survives repaints (module scope)
+let range = '1d';                     // '1d' | '1w' | '1m'
+let chart = null;
+const seriesCache = {};               // range -> /equity-series payload
+let activity = null;                  // /activity payload for the systems strip
+let refreshT = null;
 
 export function mount(host) {
   host.innerHTML = `
     <div class="bridge">
       <div class="mandate-banner" id="d-mandate"></div>
 
-      <div class="hero" id="d-readout"></div>
+      <div class="acct-cards" id="d-cards"></div>
+
+      <div class="panel" style="overflow:hidden">
+        <div class="panel-head">
+          <span id="d-chart-title">Equity · Today</span>
+          <span class="row" style="gap:8px;align-items:center">
+            <span id="d-chart-tag" class="faint" style="letter-spacing:0;text-transform:none"></span>
+            <span class="fchips" id="d-ranges">
+              <button class="fchip on" data-range="1d">1D</button>
+              <button class="fchip" data-range="1w">1W</button>
+              <button class="fchip" data-range="1m">1M</button>
+            </span>
+          </span>
+        </div>
+        <div class="panel-body" style="padding:8px 10px">
+          <div id="d-chart-wrap" class="uplot-wrap" style="touch-action:pan-y"></div>
+          <div id="d-chart-note" class="empty-note" hidden></div>
+        </div>
+      </div>
 
       <div class="panel" style="overflow:hidden">
         <div class="panel-head">Riley's Read <a href="#/riley" style="font-weight:500;font-size:12px">Ask Riley ›</a></div>
         <div class="panel-body riley-read" id="d-read"></div>
       </div>
 
-      <div class="panel" style="overflow:hidden">
-        <div class="panel-head">Equity · Session <span class="row" style="gap:12px"><span id="d-spark-tag" class="faint"></span><a href="#/performance" style="font-weight:500;font-size:12px">Performance ›</a></span></div>
-        <div class="panel-body" style="padding:10px 14px"><canvas id="d-spark" style="width:100%;height:56px;display:block"></canvas></div>
-      </div>
-
       <div class="bridge-grid">
-        <div class="panel" style="overflow:hidden">
-          <div class="panel-head">Open Positions <span id="d-poscount" class="faint" style="letter-spacing:0"></span></div>
-          <div style="overflow-x:auto">
-            <table class="dtable"><thead><tr><th>Sym</th><th>Strat</th><th>Dir</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-positions"></tbody></table>
+        <div class="bridge-col">
+          <div class="panel" style="overflow:hidden" id="d-panel-book">
+            <div class="panel-head">$1k Book — positions <span id="d-poscount-book" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-book"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-book-empty" hidden>Book is flat — hunting for setups.</div>
           </div>
-          <div class="empty-note" id="d-pos-empty" hidden>No open positions.</div>
+          <div class="panel" style="overflow:hidden" id="d-panel-acct">
+            <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-acct"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-acct-empty" hidden>No open account positions.</div>
+          </div>
         </div>
         <div class="bridge-col">
           <div class="panel" style="overflow:hidden">
-            <div class="panel-head">Active Strategies</div>
+            <div class="panel-head">Working Today <a href="#/playbook" style="font-weight:500;font-size:12px;text-transform:none;letter-spacing:0" id="d-armed-link"></a></div>
             <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Strategy</th><th>Mode</th><th class="num">W</th></tr></thead><tbody id="d-strats"></tbody></table>
+              <table class="dtable"><thead><tr><th>Strategy</th><th class="num">Tr</th><th class="num">W–L</th><th class="num">P&L</th></tr></thead><tbody id="d-today"></tbody></table>
             </div>
-            <div class="empty-note" id="d-strat-empty" hidden>None armed. See Playbook.</div>
+            <div class="empty-note" id="d-today-empty" hidden>No closed trades yet today.</div>
+          </div>
+          <div class="panel" style="overflow:hidden">
+            <div class="panel-head">Systems</div>
+            <div class="panel-body sys-chips" id="d-systems"></div>
           </div>
           <div class="panel deck-ticker" style="overflow:hidden">
             <div class="panel-head">Live Feed <a href="#/mind" class="faint" style="text-transform:none;letter-spacing:0">open ›</a></div>
@@ -73,31 +107,47 @@ export function mount(host) {
     if (!state.engine.state.startsWith('HALTED')) return;
     if (isSim()) simResume(); else await api.resume().catch(() => {});
   });
+  // One delegated listener each — survives every repaint.
+  host.querySelector('#d-cards').addEventListener('click', (e) => {
+    const card = e.target.closest('[data-card]');
+    if (!card) return;
+    selCard = card.getAttribute('data-card');
+    paintCards(); drawChart(); highlightGroups();
+  });
+  host.querySelector('#d-ranges').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-range]');
+    if (!chip) return;
+    range = chip.getAttribute('data-range');
+    host.querySelectorAll('#d-ranges .fchip').forEach((c) => c.classList.toggle('on', c === chip));
+    loadSeries();
+  });
 
-  equityPoints = state.equityCurve ? [...state.equityCurve] : [];
   paint();
+  highlightGroups();
   paintTicker(host.querySelector('#d-ticker'));
-  drawSpark();
+  loadSeries();
+  loadActivity();
+  refreshT = setInterval(() => { if (!document.hidden) { loadSeries(true); loadActivity(); } }, 120000);
 
   unsubs = [
     bus.on('state', paint),
     bus.on('alert', paint),
     bus.on('evt', onEvt),
   ];
-  window.addEventListener('resize', drawSpark);
+  window.addEventListener('resize', drawChart);
 }
 
 export function unmount() {
   unsubs.forEach((u) => u());
   unsubs = [];
-  window.removeEventListener('resize', drawSpark);
+  window.removeEventListener('resize', drawChart);
+  clearInterval(refreshT);
+  if (chart) { chart.destroy(); chart = null; }
 }
 
 function onEvt(evt) {
   if (evt.type === 'position.mark') {
-    const eq = currentEquity();
-    if (eq != null) { equityPoints.push(eq); if (equityPoints.length > 240) equityPoints.shift(); drawSpark(); }
-    paintReadout(); paintPositions();
+    paintCards(); paintPositions();     // live P&L between hydrates
   } else if (['position.opened', 'position.closed', 'engine.state', 'kill.activated', 'kill.resumed', 'arbiter.update', 'arbiter.read', 'regime.update'].includes(evt.type)) {
     if (evt.type === 'arbiter.read') lastRead = evt.summary;
     paint();
@@ -106,69 +156,228 @@ function onEvt(evt) {
   if (term) appendTickerRow(term, evt);
 }
 
-function currentEquity() {
-  const base = state.equity ?? state.balance?.cash;
-  return base == null ? null : Number(base) + Number(state.unrealized || 0);
+function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); paintToday(); paintSystems(); paintEngine(); }
+
+// ── Account cards — the two books, separately, with today's record ─────────
+function bookOpenPnl(which) {
+  return state.positions.reduce((s, p) => {
+    if ((p.book || 'account') !== which) return s;
+    const m = state.marks[p.id] || {};
+    return s + Number(m.pnl ?? p.pnl ?? 0);
+  }, 0);
 }
 
-function paint() { paintMandate(); paintReadout(); paintRead(); paintPositions(); paintStrats(); paintEngine(); }
+function paintCards() {
+  const box = document.querySelector('#d-cards');
+  if (!box) return;
+  const h = state.hero || {};
+  const t = state.today || {};
+  const openBook = state.positions.filter((p) => p.book === 'book').length;
+  const openAcct = state.positions.length - openBook;
 
-// Engine control — current state + the right action (Start / Pause / Resume) +
-// a live session-stats line so stopping ALWAYS shows where the engine stands.
-function paintEngine() {
-  const chip = document.querySelector('#d-eng-chip');
-  const actions = document.querySelector('#d-eng-actions');
-  const statsEl = document.querySelector('#d-eng-stats');
-  if (!chip || !actions || !statsEl) return;
-  const s = state.engine.state || 'OFF';
-  chip.className = 'chip ' + (s === 'RUNNING' ? 'live' : s.startsWith('HALTED') ? 'halted' : 'off');
-  chip.textContent = { OFF: 'OFFLINE', RUNNING: 'RUNNING', HALTED_MANUAL: 'PAUSED', HALTED_RISK: 'RISK-HALTED' }[s] || s;
+  const bookVal = h.bookValue ?? h.bookEquity;
+  const acctVal = h.equity != null && bookVal != null ? h.equity - bookVal : h.equity;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) : null;
+  const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
+  const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
 
-  let btn;
-  if (s === 'OFF') btn = `<button class="btn" data-eng="start">▶ Start engine</button>`;
-  else if (s === 'RUNNING') btn = `<button class="btn ghost" data-eng="pause">⏸ Pause · halt new entries</button>`;
-  else btn = `<button class="btn" data-eng="resume">▶ Resume engine</button>`;
-  const reason = s.startsWith('HALTED') && state.engine.state_reason ? `<span class="eng-reason">${esc(state.engine.state_reason)}</span>` : '';
-  actions.innerHTML = btn + reason;
-  actions.querySelector('[data-eng]')?.addEventListener('click', (e) => engineAction(e.currentTarget.getAttribute('data-eng')));
+  const rec = (r) => r ? `<span class="ac-rec"><b class="gain">${r.wins || 0}W</b> · <b class="loss">${r.losses || 0}L</b> today</span>` : '';
+  const card = (key, label, val, chg, pct, r, open, accent) => `
+    <div class="acct-card${accent ? ' book' : ''}${selCard === key ? ' sel' : ''}" data-card="${key}" role="button">
+      <div class="ac-label">${label}</div>
+      <div class="ac-val mono">${val != null ? money(val, { dp: 2 }) : '—'}</div>
+      <div class="ac-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : '—'}</div>
+      <div class="ac-foot">${rec(r)}<span class="ac-open">${open} open</span></div>
+    </div>`;
 
-  const wr = winRate();
-  const rec = state.record || { wins: 0, losses: 0 };
-  statsEl.innerHTML = `${s.startsWith('HALTED') ? '<span class="eng-lbl">Stopped at</span> ' : ''}` +
-    `<b class="gain">${rec.wins || 0}</b>W / <b class="loss">${rec.losses || 0}</b>L${wr != null ? ` · ${Math.round(wr * 100)}% win` : ''} · ${state.positions.length} open`;
+  const s = state.engine.state;
+  const engChip = s === 'RUNNING' ? `<span class="chip live">RUNNING · ${isLive() ? 'LIVE' : 'SHADOW'}</span>`
+    : s.startsWith('HALTED') ? `<span class="chip halted">${s === 'HALTED_MANUAL' ? 'PAUSED' : 'RISK-HALTED'}</span>`
+    : `<span class="chip off">OFFLINE</span>`;
+
+  box.innerHTML =
+    `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
+    + `<div class="acct-row">`
+    + card('book', '$1K BOOK — real-money rehearsal', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, true)
+    + card('account', 'MAIN ACCOUNT — strategy lab', acctVal, acctChg, acctPct, t.account, openAcct, false)
+    + `</div>`;
 }
 
-async function engineAction(kind) {
-  if (isSim()) {
-    if (kind === 'pause') { simKill(1, 'manual pause (hud)'); toast(sessionLine('Paused')); }
-    else { state.engine.state = 'RUNNING'; state.engine.state_reason = null; applyAlertTheme(); bus.emit('state', state); toast(kind === 'start' ? 'Engine started.' : 'Engine resumed.'); }
+function isLive() { return state.engine?.risk_config?.liveTradingEnabled && state.strategies.some((s) => s.enabled && s.mode === 'LIVE'); }
+
+// ── The chart — real equity, the selected card's line ──────────────────────
+function midnightETms() {
+  const now = new Date();
+  const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const drift = now.getTime() - etNow.getTime();
+  const etMid = new Date(etNow); etMid.setHours(0, 0, 0, 0);
+  return etMid.getTime() + drift;
+}
+
+async function loadSeries(force = false) {
+  if (isSim()) { seriesCache[range] = simSeries(); drawChart(); return; }
+  if (!seriesCache[range] || force) {
+    try { seriesCache[range] = await api.equitySeries(range); } catch (_) { seriesCache[range] = null; }
+  }
+  drawChart();
+}
+
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawChart() {
+  const wrap = document.querySelector('#d-chart-wrap');
+  const note = document.querySelector('#d-chart-note');
+  const title = document.querySelector('#d-chart-title');
+  if (!wrap || typeof window.uPlot !== 'function') return;
+  if (title) title.textContent = `${selCard === 'book' ? '$1k Book' : 'Main Account'} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
+
+  const data = seriesCache[range];
+  let pts = (data && (selCard === 'book' ? data.book : data.account)) || [];
+  pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+
+  const h = state.hero || {};
+  if (range === '1d') {
+    // Anchor at the day open + live tail, so the visual change equals the card.
+    if (selCard === 'account') {
+      const open = Number(state.ledger?.equity_open);
+      if (open > 0) pts = [[midnightETms(), open], ...pts];
+      if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
+    } else {
+      const bookVal = h.bookValue ?? h.bookEquity;
+      const dayStart = bookVal != null && h.bookDayChangeUsd != null ? bookVal - h.bookDayChangeUsd : null;
+      if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
+      if (bookVal != null) pts = [...pts, [Date.now(), bookVal]];
+    }
+    pts.sort((a, b) => a[0] - b[0]);
+  }
+
+  if (chart) { chart.destroy(); chart = null; }
+  if (pts.length < 2) {
+    if (note) {
+      note.hidden = false;
+      note.textContent = range === '1d'
+        ? 'Collecting today’s samples — one lands every ~3 minutes.'
+        : 'Not enough daily history yet — this fills as trading days close.';
+    }
     return;
   }
-  try {
-    if (kind === 'start') { await api.start(); toast('Engine started.'); }
-    else if (kind === 'resume') { await api.resume(); toast('Engine resumed.'); }
-    else if (kind === 'pause') { await api.kill(1, 'pause (hud)'); toast(sessionLine('Paused')); }
-    await hydrate();
-  } catch (e) { toast(`Action failed: ${e.message}`); }
+  if (note) note.hidden = true;
+
+  const xs = pts.map((p) => p[0] / 1000);
+  const ys = pts.map((p) => p[1]);
+  const up = ys[ys.length - 1] >= ys[0];
+  const color = selCard === 'book' ? css('--accent-hi') : (up ? css('--up') : css('--down'));
+  const axisStyle = {
+    stroke: css('--text-faint'),
+    grid: { stroke: 'rgba(63,63,70,.35)' },
+    ticks: { stroke: 'rgba(63,63,70,.5)' },
+    font: '11px "IBM Plex Mono"',
+  };
+  const tag = document.querySelector('#d-chart-tag');
+  chart = new window.uPlot({
+    width: Math.max(wrap.clientWidth || 320, 280),
+    height: 180,
+    legend: { show: false },
+    cursor: { drag: { x: false, y: false }, y: false },
+    scales: { x: { time: true } },
+    axes: [axisStyle, { ...axisStyle, size: 64 }],
+    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
+    hooks: {
+      setCursor: [(u) => {
+        if (!tag) return;
+        const i = u.cursor.idx;
+        if (i == null || u.data[1][i] == null) { tag.textContent = ''; return; }
+        const when = new Date(u.data[0][i] * 1000);
+        const lbl = range === '1d'
+          ? when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })
+          : when.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        tag.textContent = `${lbl} · ${money(u.data[1][i], { dp: 2 })}`;
+      }],
+    },
+  }, [xs, ys], wrap);
 }
 
-function sessionLine(prefix) {
-  const rec = state.record || {};
-  const wr = winRate();
-  return `${prefix} · ${rec.wins || 0}W/${rec.losses || 0}L${wr != null ? ` (${Math.round(wr * 100)}%)` : ''} · ${state.positions.length} open`;
+// ── Positions, split by book ────────────────────────────────────────────────
+function posRow(p) {
+  const m = state.marks[p.id] || {};
+  const pnl = m.pnl ?? p.pnl;
+  const mark = m.mark ?? p.mark;
+  const mult = p.instrument_type === 'option' ? 100 : 1;
+  const basis = Number(p.entry_price) * Number(p.quantity) * mult;
+  const pct = pnl != null && basis > 0 ? (pnl / basis) * 100 : null;
+  const contract = p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : '';
+  const dir = p.direction === 'short' ? ' <span class="chip off" style="padding:0 5px">SHORT</span>' : '';
+  return `<tr onclick="location.hash='#/positions'" style="cursor:pointer">
+    <td><span class="sym">${esc(p.symbol)}</span>${dir}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
+    <td class="num">${Number(p.quantity)}</td>
+    <td class="num">${money(p.entry_price)}</td>
+    <td class="num">${mark != null ? money(mark) : '—'}</td>
+    <td class="num ${pnlClass(pnl)}">${pnl != null ? money(pnl, { sign: true }) : '—'}${pct != null ? `<div style="font-size:10.5px">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</div>` : ''}</td>
+  </tr>`;
 }
 
-let toastT = null;
-function toast(msg) {
-  let el = document.getElementById('d-toast');
-  if (!el) { el = document.createElement('div'); el.id = 'd-toast'; el.className = 'set-toast'; document.body.appendChild(el); }
-  el.textContent = msg;
-  requestAnimationFrame(() => el.classList.add('show'));
-  clearTimeout(toastT);
-  toastT = setTimeout(() => el.classList.remove('show'), 4200);
+function paintPositions() {
+  const groups = [
+    { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
+    { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
+  ];
+  for (const g of groups) {
+    const body = document.querySelector(g.body);
+    if (!body) continue;
+    const rows = state.positions.filter((p) => (p.book || 'account') === g.which);
+    document.querySelector(g.empty).hidden = rows.length > 0;
+    const count = document.querySelector(g.count);
+    if (count) count.textContent = rows.length ? `(${rows.length})` : '';
+    body.innerHTML = rows.map(posRow).join('');
+  }
 }
 
-// Mandate banner — the goal Riley is trading toward, always visible on home.
+function highlightGroups() {
+  document.querySelector('#d-panel-book')?.classList.toggle('focus', selCard === 'book');
+  document.querySelector('#d-panel-acct')?.classList.toggle('focus', selCard === 'account');
+}
+
+// ── Working today — per-strategy scoreboard (replaces arbiter weights) ─────
+function paintToday() {
+  const body = document.querySelector('#d-today');
+  const empty = document.querySelector('#d-today-empty');
+  const link = document.querySelector('#d-armed-link');
+  if (!body) return;
+  const rows = (state.today?.byStrategy || []).slice(0, 6);
+  if (empty) empty.hidden = rows.length > 0;
+  if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
+  body.innerHTML = rows.map((r) => `
+    <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">$1k</span>' : ''}</td>
+      <td class="num">${r.trades}</td>
+      <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
+      <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
+    </tr>`).join('');
+}
+
+// ── Systems strip — what the protective layers did today ───────────────────
+async function loadActivity() {
+  if (isSim()) { activity = { tapeGate: [{ gate: 'counter_tape', distinct_signals: 3 }], riskGateRejects: 5, scratches: { n: 1, pnl: -21 }, tapeFlipTightens: 2, rileyRides: 1 }; paintSystems(); return; }
+  try { activity = await api.activity(24); } catch (_) { activity = null; }
+  paintSystems();
+}
+
+function paintSystems() {
+  const box = document.querySelector('#d-systems');
+  if (!box) return;
+  const a = activity || {};
+  const chips = [];
+  const gated = (a.tapeGate || []).reduce((s, g) => s + Number(g.distinct_signals || 0), 0);
+  if (gated) chips.push(`<span class="chip off">Tape gate blocked <b>${gated}</b></span>`);
+  if (a.riskGateRejects) chips.push(`<span class="chip off">Risk gates <b>${a.riskGateRejects}</b></span>`);
+  if (a.scratches?.n) chips.push(`<span class="chip off">Scratches <b>${a.scratches.n}</b> (${money(a.scratches.pnl, { sign: true, dp: 0 })})</span>`);
+  if (a.tapeFlipTightens) chips.push(`<span class="chip off">Tape-flip tightens <b>${a.tapeFlipTightens}</b></span>`);
+  if (a.rileyRides) chips.push(`<span class="chip live">Rides <b>${a.rileyRides}</b></span>`);
+  chips.push(`<span class="chip off">Daily report · 5:00 PM ET</span>`);
+  box.innerHTML = chips.join('');
+}
+
+// ── Mandate banner (unchanged) ──────────────────────────────────────────────
 function paintMandate() {
   const box = document.querySelector('#d-mandate');
   if (!box) return;
@@ -182,11 +391,7 @@ function paintMandate() {
   box.innerHTML = `<span class="mb-icon">◎</span><span class="mb-text"><b>Goal:</b> ${esc(m.goal)}</span><span class="mb-tags"><span class="chip live">${auto}</span><span class="chip off" style="text-transform:capitalize">${esc(appetite)}</span></span><a href="#/armory" class="mb-cta">Adjust ›</a>`;
 }
 
-// (Old track-record grid removed — the hero + P&L tab carry the numbers now.)
-
-// "Riley's Read": which strategy is favored now + why (plain language).
-// Real mode fills from the latest arbiter.read decision event; sim uses a
-// sensible default keyed to the enabled strategies.
+// ── Riley's Read (unchanged) ────────────────────────────────────────────────
 let lastRead = null;
 function paintRead() {
   const box = document.querySelector('#d-read');
@@ -206,81 +411,62 @@ function paintRead() {
   box.innerHTML = `${situation}<div class="rr-line">${esc(readLine)}</div>${(favChips || stoodChips) ? `<div class="rr-fav">${favChips}${stoodChips}</div>` : ''}`;
 }
 
-// Robinhood-style hero: ONE number (account value) + ONE change (today, $ and %).
-// "Today" = equity vs this morning's open, so it already includes closed trades
-// AND open positions moving — nothing to reconcile across session/open/realized.
-function paintReadout() {
-  const box = document.querySelector('#d-readout');
-  if (!box) return;
-  const h = state.hero || {};
-  const eq = h.equity ?? currentEquity();
-  let chg = h.dayChangeUsd, pct = h.dayChangePct;
-  if (chg == null && equityPoints.length > 1) {           // sim / pre-hero fallback
-    chg = eq - equityPoints[0];
-    pct = equityPoints[0] ? +((chg / equityPoints[0]) * 100).toFixed(2) : null;
+// ── Engine control (unchanged) ──────────────────────────────────────────────
+function paintEngine() {
+  const chip = document.querySelector('#d-eng-chip');
+  const actions = document.querySelector('#d-eng-actions');
+  const statsEl = document.querySelector('#d-eng-stats');
+  if (!chip || !actions || !statsEl) return;
+  const s = state.engine.state || 'OFF';
+  chip.className = 'chip ' + (s === 'RUNNING' ? 'live' : s.startsWith('HALTED') ? 'halted' : 'off');
+  chip.textContent = { OFF: 'OFFLINE', RUNNING: 'RUNNING', HALTED_MANUAL: 'PAUSED', HALTED_RISK: 'RISK-HALTED' }[s] || s;
+
+  let btn;
+  if (s === 'OFF') btn = `<button class="btn" data-eng="start">▶ Start engine</button>`;
+  else if (s === 'RUNNING') btn = `<button class="btn ghost" data-eng="pause">⏸ Pause · halt new entries</button>`;
+  else btn = `<button class="btn" data-eng="resume">▶ Resume engine</button>`;
+  const reason = s.startsWith('HALTED') && state.engine.state_reason ? `<span class="eng-reason">${esc(state.engine.state_reason)}</span>` : '';
+  actions.innerHTML = btn + reason;
+  actions.querySelector('[data-eng]')?.addEventListener('click', (e) => engineAction(e.currentTarget.getAttribute('data-eng')));
+
+  const t = state.today || {};
+  const wr = t.wins + t.losses > 0 ? t.wins / (t.wins + t.losses) : winRate();
+  statsEl.innerHTML = `${s.startsWith('HALTED') ? '<span class="eng-lbl">Stopped at</span> ' : ''}` +
+    `Today <b class="gain">${t.wins || 0}</b>W / <b class="loss">${t.losses || 0}</b>L${wr != null ? ` · ${Math.round(wr * 100)}% win` : ''} · ${state.positions.length} open`;
+}
+
+async function engineAction(kind) {
+  if (isSim()) {
+    if (kind === 'pause') { simKill(1, 'manual pause (hud)'); toast(sessionLine('Paused')); }
+    else { state.engine.state = 'RUNNING'; state.engine.state_reason = null; applyAlertTheme(); bus.emit('state', state); toast(kind === 'start' ? 'Engine started.' : 'Engine resumed.'); }
+    return;
   }
-  const s = state.engine.state;
-  const mode = s === 'RUNNING' ? (isLive() ? 'LIVE' : 'SHADOW') : 'OFF';
-  const engChip = s === 'RUNNING' ? `<span class="chip live">RUNNING · ${mode}</span>`
-    : s.startsWith('HALTED') ? `<span class="chip halted">${s === 'HALTED_MANUAL' ? 'PAUSED' : 'RISK-HALTED'}</span>`
-    : `<span class="chip off">OFFLINE</span>`;
-  const bookVal = h.bookValue ?? h.bookEquity;
-  const bChg = h.bookDayChangeUsd, bPct = h.bookDayChangePct;
-  box.innerHTML = `
-    <div class="hero-eq mono">${eq != null ? money(eq, { dp: 2 }) : '—'}</div>
-    <div class="hero-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : 'today — pending first mark'}</div>
-    ${bookVal != null ? `
-    <a class="hero-book" href="#/performance">
-      <span class="hb-label">$1k BOOK</span>
-      <span class="hb-val mono">${money(bookVal, { dp: 2 })}</span>
-      <span class="hb-chg ${pnlClass(bChg)}">${bChg != null ? `${money(bChg, { sign: true, dp: 2 })}${bPct != null ? ` (${bPct >= 0 ? '+' : ''}${bPct}%)` : ''} today` : ''}</span>
-    </a>` : ''}
-    <div class="hero-chips">
-      ${engChip}
-      <span class="chip off">${state.positions.length} open</span>
-    </div>`;
+  try {
+    if (kind === 'start') { await api.start(); toast('Engine started.'); }
+    else if (kind === 'resume') { await api.resume(); toast('Engine resumed.'); }
+    else if (kind === 'pause') { await api.kill(1, 'pause (hud)'); toast(sessionLine('Paused')); }
+    await hydrate();
+  } catch (e) { toast(`Action failed: ${e.message}`); }
 }
 
-function isLive() { return state.engine?.risk_config?.liveTradingEnabled && state.strategies.some((s) => s.enabled && s.mode === 'LIVE'); }
-
-function paintPositions() {
-  const body = document.querySelector('#d-positions');
-  const empty = document.querySelector('#d-pos-empty');
-  const count = document.querySelector('#d-poscount');
-  if (!body) return;
-  empty.hidden = state.positions.length > 0;
-  if (count) count.textContent = state.positions.length ? `(${state.positions.length})` : '';
-  body.innerHTML = state.positions.map((p) => {
-    const m = state.marks[p.id] || {};
-    return `<tr onclick="location.hash='#/positions'" style="cursor:pointer">
-      <td><span class="sym">${esc(p.symbol)}</span></td>
-      <td class="dim">${esc(p.strategy_key)}</td>
-      <td>${esc(p.direction).toUpperCase()}</td>
-      <td class="num">${p.quantity}</td>
-      <td class="num">${money(p.entry_price)}</td>
-      <td class="num">${m.mark != null ? money(m.mark) : '—'}</td>
-      <td class="num ${pnlClass(m.pnl)}">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</td>
-    </tr>`;
-  }).join('');
+function sessionLine(prefix) {
+  const t = state.today || {};
+  return `${prefix} · today ${t.wins || 0}W/${t.losses || 0}L · ${state.positions.length} open`;
 }
 
-function paintStrats() {
-  const body = document.querySelector('#d-strats');
-  const empty = document.querySelector('#d-strat-empty');
-  if (!body) return;
-  const enabled = state.strategies.filter((s) => s.enabled);
-  empty.hidden = enabled.length > 0;
-  body.innerHTML = enabled.map((s) => `
-    <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(s.name || s.strategy_key)}</span></td>
-      <td><span class="chip ${s.mode === 'LIVE' ? 'live' : 'shadow'}">${s.mode}</span></td>
-      <td class="num">${Number(s.arbiter_weight ?? 1).toFixed(2)}</td>
-    </tr>`).join('');
+let toastT = null;
+function toast(msg) {
+  let el = document.getElementById('d-toast');
+  if (!el) { el = document.createElement('div'); el.id = 'd-toast'; el.className = 'set-toast'; document.body.appendChild(el); }
+  el.textContent = msg;
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 4200);
 }
 
-// ---- live ticker (compact tail of the decision feed) ----
+// ── Live ticker (unchanged) ─────────────────────────────────────────────────
 const TICK_CLASS = (t) =>
-  /^signal\.rejected/.test(t) ? 't-veto' :
+  /^signal\.rejected|^signal\.gated/.test(t) ? 't-veto' :
   /^signal\./.test(t) ? 't-signal' :
   /^order\.filled|^position\.opened/.test(t) ? 't-fill' :
   /^kill\.|^risk\.halt/.test(t) ? 't-halt' :
@@ -305,14 +491,21 @@ function appendTickerRow(term, evt) {
   if (atEnd) term.scrollTop = term.scrollHeight;
 }
 
-function drawSpark() {
-  const canvas = document.querySelector('#d-spark');
-  if (!canvas) return;
-  if (equityPoints.length < 2) { const eq = currentEquity(); if (eq != null) equityPoints = [eq, eq]; else return; }
-  drawSparkline(canvas, equityPoints);
-  const tag = document.querySelector('#d-spark-tag');
-  if (tag && equityPoints.length > 1) {
-    const chg = equityPoints[equityPoints.length - 1] - equityPoints[0];
-    tag.textContent = `${chg >= 0 ? '+' : ''}${money(chg, { dp: 0 })} session`;
+// ── Sim fixtures ────────────────────────────────────────────────────────────
+function simSeries() {
+  const now = Date.now(), mid = midnightETms();
+  const mk = (start, base, vol) => {
+    const out = []; let v = base;
+    for (let t = start; t <= now; t += 300000) { v += (Math.random() - 0.48) * vol; out.push([t, +v.toFixed(2)]); }
+    return out;
+  };
+  if (range === '1d') return { account: mk(mid + 34200000, 93500, 60), book: mk(mid + 34200000, 1000, 6) };
+  const days = range === '1w' ? 7 : 30;
+  const acct = [], book = [];
+  let a = 95000, b = 1000;
+  for (let i = days; i >= 0; i--) {
+    a += (Math.random() - 0.45) * 800; b += (Math.random() - 0.42) * 40;
+    acct.push([now - i * 86400000, +a.toFixed(0)]); book.push([now - i * 86400000, +b.toFixed(0)]);
   }
+  return { account: acct, book };
 }
