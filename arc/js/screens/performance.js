@@ -20,7 +20,7 @@ export function mount(host) {
       </div>
       <div class="perf-pods" id="pf-pods"></div>
       <div class="holo">
-        <div class="holo-label">Daily Reports · 8:00 AM ET</div>
+        <div class="holo-label">Daily Report · 5:00 PM ET · graded, with actions</div>
         <div id="pf-daily-reports" class="reports"><div class="empty-note">Loading reports…</div></div>
       </div>
       <div class="holo book-card">
@@ -71,35 +71,78 @@ export function mount(host) {
   loadDailyReports();
 }
 
-// ── Daily 8:00 AM ET reports ($1k book + lab) ──────────────────────────────
-// Renders the persisted review.daily events so the morning report is a fixture
-// on this screen, not a line that scrolls out of the live feed. Falls back to
-// a live-computed preview before the first scheduled run.
+// ── The 5:00 PM ET DAILY REPORT — the desk's daily improvement engine ──────
+// One unified end-of-day read: both books, the shadow book's verdict on every
+// gate ("did declining those trades save or cost money"), system activity, a
+// process grade, and explicit improve / steady / delete / add actions. Renders
+// the persisted review.daily event; live preview before the 5pm run lands.
 async function loadDailyReports() {
   const host = document.getElementById('pf-daily-reports');
   if (!host) return;
-  const strat = (r) => (r.byStrategy || []).slice(0, 6).map((s) =>
+  const strat = (r) => ((r && r.byStrategy) || []).slice(0, 6).map((s) =>
     `<tr><td>${esc(s.key)}</td><td>${s.trades}</td><td>${s.winRate != null ? Math.round(s.winRate * 100) + '%' : '—'}</td><td class="${(s.pnl || 0) >= 0 ? 'gain' : 'loss'}">${money(s.pnl || 0, { sign: true, dp: 0 })}</td></tr>`).join('');
+  const stratTable = (review) => review && (review.byStrategy || []).length
+    ? `<table class="dtable report-table"><thead><tr><th>Strategy</th><th>Tr</th><th>Win</th><th>P&L</th></tr></thead><tbody>${strat(review)}</tbody></table>`
+    : `<div class="empty-note">No closed trades in the window.</div>`;
+
+  const ACTION_COLORS = { improve: '#22d3ee', steady: '#a1a1aa', delete: '#ef4444', add: '#22c55e' };
+  const chip = (t) => `<span style="display:inline-block;padding:1px 8px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.04em;color:#09090b;background:${ACTION_COLORS[t] || '#a1a1aa'}">${esc((t || '').toUpperCase())}</span>`;
+  const gradeBadge = (g) => g ? `<span style="display:inline-block;min-width:34px;text-align:center;padding:2px 8px;border-radius:9px;font-weight:800;font-size:15px;background:${/^A/.test(g) ? '#22c55e' : /^B/.test(g) ? '#22d3ee' : /^C/.test(g) ? '#eab308' : '#ef4444'};color:#09090b">${esc(g)}</span>` : '';
+
+  const shadowLine = (sh) => {
+    if (!sh || !sh.overall || !sh.overall.blocked) return '';
+    const o = sh.overall;
+    const saved = Number(o.savedUsdPerContract || 0);
+    return `<div class="report-summary">Declined trades: <b>${o.blocked}</b> tracked — ${o.wouldWin} would have won (${Math.round((o.wouldWinRate || 0) * 100)}%) · gates ${saved >= 0 ? `<span class="gain">saved ${money(saved, { dp: 0 })}</span>` : `<span class="loss">cost ${money(-saved, { dp: 0 })}</span>`}/contract</div>`;
+  };
+
+  // The unified report event (5pm cron or on-demand run)
+  const unified = (ev) => {
+    const d = ev.data || {}, ai = d.report || {}, small = d.small, lab = d.lab, gates = d.gates || {};
+    const ve = small?.virtualEquity;
+    const acts = (ai.actions || []).slice(0, 6).map((a) =>
+      `<div style="margin:4px 0">${chip(a.type)} <b>${esc(a.target || '')}</b> — ${esc(a.action || '')}${a.evidence ? ` <span class="faint">(${esc(a.evidence)}${a.confidence ? ` · ${esc(a.confidence)}` : ''})</span>` : ''}</div>`).join('');
+    const gateBits = [];
+    if ((gates.tapeGate || []).length) gateBits.push(`tape gate blocked ${gates.tapeGate.reduce((s, g) => s + (g.distinct_signals || 0), 0)} signal(s)`);
+    if (gates.scratches?.n) gateBits.push(`${gates.scratches.n} scratch(es) ${money(gates.scratches.pnl, { sign: true, dp: 0 })}`);
+    if (gates.tapeFlipTightens) gateBits.push(`${gates.tapeFlipTightens} tape-flip tighten(s)`);
+    if (gates.rileyRides) gateBits.push(`${gates.rileyRides} ride(s)`);
+    return `
+    <div class="report-block">
+      <div class="report-head"><b>DAILY REPORT ${gradeBadge(ai.grade)}</b><span class="faint">${new Date(ev.ts || ev.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></div>
+      ${ai.headline ? `<div class="report-summary"><b>${esc(ai.headline)}</b></div>` : ''}
+      <div class="report-summary">$1k BOOK — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
+      ${stratTable(small)}
+      <div class="report-summary" style="margin-top:8px">LAB — ${lab?.overall ? `${lab.overall.trades} trades, ${lab.overall.winRate != null ? Math.round(lab.overall.winRate * 100) + '% win' : '—'}, ${money(lab.overall.pnl || 0, { sign: true, dp: 0 })}` : ''}${ai.labRead ? ` · ${esc(ai.labRead)}` : ''}</div>
+      ${stratTable(lab)}
+      ${shadowLine(small?.shadow) || shadowLine(lab?.shadow)}
+      ${ai.systemsRead ? `<div class="report-summary">${gateBits.length ? esc(gateBits.join(' · ')) + ' — ' : ''}${esc(ai.systemsRead)}</div>` : ''}
+      ${acts ? `<div class="report-recs" style="margin-top:8px"><div class="faint" style="margin-bottom:2px">ACTIONS — improve · steady · delete · add</div>${acts}</div>` : ''}
+      ${(ai.tomorrowFocus || []).length ? `<div class="report-recs">${ai.tomorrowFocus.slice(0, 3).map((x) => `<div>→ ${esc(x)}</div>`).join('')}</div>` : ''}
+    </div>`;
+  };
+
+  // Legacy two-block rendering (pre-unified events)
   const block = (title, ts, summary, review, ai) => `
     <div class="report-block">
       <div class="report-head"><b>${esc(title)}</b><span class="faint">${ts ? new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'live preview'}</span></div>
       ${summary ? `<div class="report-summary">${esc(summary)}</div>` : ''}
-      ${review && (review.byStrategy || []).length ? `<table class="dtable report-table"><thead><tr><th>Strategy</th><th>Tr</th><th>Win</th><th>P&L</th></tr></thead><tbody>${strat(review)}</tbody></table>` : `<div class="empty-note">No closed trades in the window yet.</div>`}
+      ${stratTable(review)}
       ${ai?.recommendations?.length ? `<div class="report-recs">${ai.recommendations.slice(0, 3).map((x) => `<div>→ ${esc(x.change || x)}</div>`).join('')}</div>` : ''}
     </div>`;
 
   if (isSim()) {
-    host.innerHTML = block('$1k BOOK', Date.now(), 'equity $1,042 (+$42) · 5 trades, 60% win', { byStrategy: [{ key: 'zero_dte_momentum', trades: 4, winRate: 0.75, pnl: 38 }] }, null)
-      + block('LAB', Date.now(), '31 trades, 42% win, +$212', { byStrategy: [{ key: 'scalp_equity', trades: 8, winRate: 0.88, pnl: 64 }] }, null);
+    host.innerHTML = unified({ ts: Date.now(), data: { report: { headline: 'Disciplined day on a hard tape — gates earned their keep.', grade: 'B', bookRead: 'Two clean wins, one scratch.', labRead: 'Shorts carried the day.', systemsRead: 'Tape gate blocked 4 longs; 3 would have lost.', actions: [{ type: 'steady', target: 'zero_dte_7d', action: 'hold as-is', evidence: '2/3 today', confidence: 'medium' }, { type: 'improve', target: 'counter_tape gate', action: 'keep 0.72 bar', evidence: 'blocks 75% would-lose', confidence: 'medium' }], tomorrowFocus: ['Watch ORB with the real 9:30 range'] }, small: { virtualEquity: { equity: 1042, realizedPnl: 42 }, overall: { trades: 5 }, byStrategy: [{ key: 'zero_dte_momentum', trades: 4, winRate: 0.75, pnl: 38 }], shadow: { overall: { blocked: 4, wouldWin: 1, wouldWinRate: 0.25, savedUsdPerContract: 96 } } }, lab: { overall: { trades: 31, winRate: 0.42, pnl: 212 }, byStrategy: [{ key: 'scalp_equity', trades: 8, winRate: 0.88, pnl: 64 }] }, gates: { tapeGate: [{ gate: 'counter_tape', distinct_signals: 4 }], scratches: { n: 1, pnl: -22 }, tapeFlipTightens: 2, rileyRides: 1 } } });
     return;
   }
   try {
     const evs = (await api.log('?limit=10&type=review.daily')).events || [];
     // Only pin TODAY'S report (ET) — a stale one measures a dead window and
-    // contradicts the live book number right below it. Otherwise show the
-    // live-computed preview until the 5pm run lands.
+    // contradicts the live book number right below it.
     const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const isToday = (e) => new Date(e.ts || e.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === todayET;
+    const latestUnified = [...evs].reverse().find((e) => isToday(e) && e.data?.report);
+    if (latestUnified) { host.innerHTML = unified(latestUnified); return; }
     const latestSmall = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('$1k BOOK'));
     const latestLab = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('LAB'));
     if (latestSmall || latestLab) {
@@ -108,13 +151,13 @@ async function loadDailyReports() {
         + (latestLab ? block('LAB', latestLab.ts || latestLab.created_at, latestLab.summary, latestLab.data?.review, latestLab.data?.ai) : '');
       return;
     }
-    // No scheduled report yet (first cron runs tomorrow 8:00 ET) → live preview.
+    // No report yet today → live preview until the 5pm run lands.
     const [small, lab] = await Promise.all([api.review(24, 'small'), api.review(24, 'lab')]);
     const sv = small.review?.virtualEquity;
     host.innerHTML =
       block('$1k BOOK', null, sv ? `equity ${money(sv.equity, { dp: 2 })} (${sv.realizedPnl >= 0 ? '+' : ''}${money(sv.realizedPnl, { dp: 2 })} since ${sv.sinceDate})` : 'no data yet', small.review, null)
       + block('LAB', null, `${lab.review?.overall?.trades || 0} trades in 24h`, lab.review, null)
-      + `<div class="acct-note">Live preview — the first scheduled report lands 8:00 AM ET and will persist here.</div>`;
+      + `<div class="acct-note">Live preview — the full graded report (with actions) lands at 5:00 PM ET.</div>`;
   } catch (_) { host.innerHTML = `<div class="empty-note">Reports unavailable.</div>`; }
 }
 
