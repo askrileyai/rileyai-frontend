@@ -20,7 +20,7 @@ export function mount(host) {
       </div>
       <div class="perf-pods" id="pf-pods"></div>
       <div class="holo">
-        <div class="holo-label">Daily Report · 5:00 PM ET · graded, with actions</div>
+        <div class="holo-label">Daily Report · 5:00 PM ET · graded vs the &gt;50% win-rate mission</div>
         <div id="pf-daily-reports" class="reports"><div class="empty-note">Loading reports…</div></div>
       </div>
       <div class="holo book-card">

@@ -21,11 +21,11 @@ export function mount(host) {
     <div class="panel" id="pb-flagship" style="overflow:hidden; margin-bottom:16px"></div>
 
     <div class="panel" style="overflow:hidden">
-      <div class="panel-head">Playbook <span class="faint" style="font-weight:500;font-size:12px">enable · set mode · SHADOW validates before LIVE</span></div>
+      <div class="panel-head">Playbook <span class="faint" style="font-weight:500;font-size:12px" id="pb-mission">Mission: every strategy &gt;50% win rate</span></div>
       <div style="overflow-x:auto">
         <table class="dtable playbook-tbl">
           <thead><tr>
-            <th>On</th><th>Strategy</th><th>Class</th><th class="num">P&L</th><th class="num">Win</th><th class="num">Trades</th><th class="num">W</th><th>Mode</th><th></th>
+            <th>On</th><th>Strategy</th><th>Status</th><th class="num">Last 20 · Win</th><th class="num">Exp $/tr</th><th class="num">P&L</th><th class="num">Trades</th><th>Mode</th><th></th>
           </tr></thead>
           <tbody id="pb"></tbody>
         </table>
@@ -61,6 +61,33 @@ function paint() {
   empty.hidden = rows.length > 0;
   body.innerHTML = rows.map(rowHtml).join('');
   bind(body);
+  // Mission line: how many armed strategies clear the >50% trailing-20 bar.
+  const mission = document.getElementById('pb-mission');
+  if (mission) {
+    const armed = rows.filter((s) => s.enabled);
+    const passing = armed.filter((s) => (s.trailing20?.n || 0) >= 5 && s.trailing20.winRate >= 0.5 && Number(s.trailing20.expectancy) > 0).length;
+    mission.textContent = `Mission: every strategy >50% win rate — ${passing} of ${armed.length} armed are passing`;
+  }
+}
+
+// Badge chip + trailing-20 win-rate bar vs the 50% line — the mission scoreboard.
+const BADGE_STYLE = { PROMOTED: 'live', PROBATION: 'off', BENCHED: 'shadow', SUSPENDED: 'halted' };
+function badgeChip(s) {
+  if (!s.badge) return '';
+  return `<span class="chip ${BADGE_STYLE[s.badge] || 'off'}" style="text-transform:none;font-size:10px">${esc(s.badge)}</span>`;
+}
+function wrBar(t20) {
+  if (!t20 || !t20.n) return '<span class="dim">—</span>';
+  const wr = Math.round((t20.winRate || 0) * 100);
+  const col = t20.winRate >= 0.5 ? 'var(--up)' : 'var(--down)';
+  return `<div style="display:inline-flex;align-items:center;gap:6px">
+    <span class="${t20.winRate >= 0.5 ? 'up' : 'down'}" style="font-weight:700">${wr}%</span>
+    <span style="position:relative;display:inline-block;width:54px;height:6px;background:var(--bg-4);border-radius:3px;overflow:visible">
+      <span style="position:absolute;left:0;top:0;height:6px;width:${Math.min(100, wr)}%;background:${col};border-radius:3px"></span>
+      <span style="position:absolute;left:50%;top:-2px;height:10px;width:1px;background:var(--text-faint)"></span>
+    </span>
+    <span class="faint" style="font-size:10px">${t20.n}tr</span>
+  </div>`;
 }
 
 // Riley's signature strategy gets a hero card — it's the flagship 7-dimension brain.
@@ -97,16 +124,17 @@ function paintFlagship() {
 
 function rowHtml(s) {
   const st = s.stats || {};
-  const wr = st.winRate != null ? Math.round(st.winRate * 100) + '%' : '—';
+  const t20 = s.trailing20 || null;
+  const exp = t20 && t20.expectancy != null ? t20.expectancy : null;
   return `
   <tr data-key="${esc(s.strategy_key)}">
     <td><label class="switch" title="enable/disable"><input type="checkbox" class="st-enabled" ${s.enabled ? 'checked' : ''}><span class="track"></span><span class="thumb"></span></label></td>
     <td><span class="sym">${esc(s.name || s.strategy_key)}</span>${s.custom ? ' <span class="chip live" style="text-transform:none;font-size:9px">custom</span>' : ''}<div class="st-thesis">${esc(s.thesis || '')}</div></td>
-    <td class="dim">${esc(s.tickClass || '')}</td>
+    <td>${badgeChip(s)}</td>
+    <td class="num">${wrBar(t20)}</td>
+    <td class="num ${exp != null ? (exp >= 0 ? 'up' : 'down') : 'dim'}">${exp != null ? money(exp, { sign: true, dp: 0 }) : '—'}</td>
     <td class="num ${(st.pnl || 0) >= 0 ? 'up' : 'down'}">${money(st.pnl || 0, { sign: true, dp: 0 })}</td>
-    <td class="num">${wr}</td>
     <td class="num">${st.trades ?? 0}</td>
-    <td class="num">${Number(s.arbiter_weight ?? 1).toFixed(2)}</td>
     <td><div class="mode-toggle" data-key="${esc(s.strategy_key)}"><button class="md-shadow ${s.mode !== 'LIVE' ? 'on-shadow' : ''}">SHADOW</button><button class="md-live ${s.mode === 'LIVE' ? 'on-live' : ''}">LIVE</button></div></td>
     <td>${s.custom ? `<button class="btn ghost st-del" style="min-height:30px;padding:3px 10px;font-size:11px">Delete</button>` : ''}</td>
   </tr>`;

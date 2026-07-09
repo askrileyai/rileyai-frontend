@@ -82,6 +82,22 @@ export function mount(host) {
 
 export function unmount() { unsubs.forEach((u) => u()); unsubs = []; }
 
+// Structure-managed trades show their CHART levels (✕ invalidation / ◎
+// objective on the UNDERLYING) instead of raw premium stop/target — the
+// levels the trade actually lives and dies by.
+function levelsCell(p, compact = false) {
+  let st = null;
+  try { st = p.structure ? (typeof p.structure === 'string' ? JSON.parse(p.structure) : p.structure) : null; } catch (_) {}
+  if (st && (st.invalidation || st.objective)) {
+    const inv = st.invalidation != null ? `$${st.invalidation}` : '—';
+    const obj = st.objective != null ? `$${st.objective}` : '—';
+    return compact ? `✕ ${inv} · ◎ ${obj}` : `<span class="down" title="invalidation (underlying)">✕ ${inv}</span> <span class="up" title="objective (underlying)">◎ ${obj}</span>`;
+  }
+  return compact
+    ? `stop ${p.stop_loss ? money(p.stop_loss) : '—'} · tgt ${p.target ? money(p.target) : '—'}`
+    : `${p.stop_loss ? money(p.stop_loss) : '—'} / ${p.target ? money(p.target) : '—'}`;
+}
+
 function paint() {
   const body = document.getElementById('p-body');
   const mob = document.getElementById('p-mobile');
@@ -98,7 +114,7 @@ function paint() {
       <td>${p.quantity}</td>
       <td>${money(p.entry_price)}</td>
       <td>${m.mark != null ? money(m.mark) : '—'}</td>
-      <td class="dim">${p.stop_loss ? money(p.stop_loss) : '—'} / ${p.target ? money(p.target) : '—'}</td>
+      <td class="dim">${levelsCell(p)}</td>
       <td class="${pnlClass(m.pnl)}">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</td>
       <td class="loss dim">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</td>
       <td><button class="btn ghost" style="min-height:32px;padding:2px 12px;font-size:.6rem" data-exit="${p.id}">EXIT</button></td>
@@ -111,7 +127,7 @@ function paint() {
       <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
       ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
-      <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">stop ${p.stop_loss ? money(p.stop_loss) : '—'} · tgt ${p.target ? money(p.target) : '—'}</span></div>
+      <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">${levelsCell(p, true)}</span></div>
       <div class="pm-detail"><span class="faint">max drawdown</span><span class="loss">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</span></div>
       <button class="btn ghost" style="min-height:38px;font-size:.62rem" data-exit="${p.id}">EXIT POSITION</button>
     </div>`;
