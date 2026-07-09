@@ -140,7 +140,11 @@
 .acct-combined { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); }
 .acct-combined b { font-size: 15px; color: var(--text); }
 .acct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acct-row.three { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .acct-row.three { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .acct-row { grid-template-columns: 1fr; } }
+.acct-card.bookb .ac-label { color: #eab308; }
+.acct-card.bookb.sel { border-color: #eab308; background: rgba(234,179,8,.05); }
 .acct-card { border: 1px solid var(--border); background: var(--bg-2); border-radius: 14px; padding: 12px 14px; cursor: pointer; display: grid; gap: 3px; transition: border-color .15s, background .15s; }
 .acct-card:hover { border-color: rgba(34,211,238,.4); }
 .acct-card.sel { border-color: var(--accent-hi); background: rgba(34,211,238,.05); }

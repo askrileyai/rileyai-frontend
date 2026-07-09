@@ -42,7 +42,8 @@ export function mount(host) {
           <div class="holo-label">Strategy Attribution</div>
           <div class="filters" id="pf-books">
             <button class="fchip on" data-book="all">All</button>
-            <button class="fchip" data-book="small">$1k Book</button>
+            <button class="fchip" data-book="small">Book A</button>
+            <button class="fchip" data-book="small_b">Book B</button>
             <button class="fchip" data-book="lab">Lab</button>
           </div>
         </div>
@@ -98,8 +99,8 @@ async function loadDailyReports() {
 
   // The unified report event (5pm cron or on-demand run)
   const unified = (ev) => {
-    const d = ev.data || {}, ai = d.report || {}, small = d.small, lab = d.lab, gates = d.gates || {};
-    const ve = small?.virtualEquity;
+    const d = ev.data || {}, ai = d.report || {}, small = d.small, bookB = d.bookB, lab = d.lab, gates = d.gates || {};
+    const ve = small?.virtualEquity, vb = bookB?.virtualEquity;
     const acts = (ai.actions || []).slice(0, 6).map((a) =>
       `<div style="margin:4px 0">${chip(a.type)} <b>${esc(a.target || '')}</b> — ${esc(a.action || '')}${a.evidence ? ` <span class="faint">(${esc(a.evidence)}${a.confidence ? ` · ${esc(a.confidence)}` : ''})</span>` : ''}</div>`).join('');
     const gateBits = [];
@@ -111,8 +112,9 @@ async function loadDailyReports() {
     <div class="report-block">
       <div class="report-head"><b>DAILY REPORT ${gradeBadge(ai.grade)}</b><span class="faint">${new Date(ev.ts || ev.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></div>
       ${ai.headline ? `<div class="report-summary"><b>${esc(ai.headline)}</b></div>` : ''}
-      <div class="report-summary">$1k BOOK — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
+      <div class="report-summary">BOOK A (A+) — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
       ${stratTable(small)}
+      ${bookB ? `<div class="report-summary" style="margin-top:8px">BOOK B (control) — ${vb ? `equity <b>${money(vb.equity, { dp: 2 })}</b> (${vb.realizedPnl >= 0 ? '+' : ''}${money(vb.realizedPnl, { dp: 2 })})` : ''} · ${bookB?.overall?.trades ?? 0} trades${ai.bookBRead ? ` · ${esc(ai.bookBRead)}` : ''}</div>${stratTable(bookB)}` : ''}
       <div class="report-summary" style="margin-top:8px">LAB — ${lab?.overall ? `${lab.overall.trades} trades, ${lab.overall.winRate != null ? Math.round(lab.overall.winRate * 100) + '% win' : '—'}, ${money(lab.overall.pnl || 0, { sign: true, dp: 0 })}` : ''}${ai.labRead ? ` · ${esc(ai.labRead)}` : ''}</div>
       ${stratTable(lab)}
       ${shadowLine(small?.shadow) || shadowLine(lab?.shadow)}

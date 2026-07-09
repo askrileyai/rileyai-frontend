@@ -55,11 +55,18 @@ export function mount(host) {
       <div class="bridge-grid">
         <div class="bridge-col">
           <div class="panel" style="overflow:hidden" id="d-panel-book">
-            <div class="panel-head">$1k Book — positions <span id="d-poscount-book" class="faint" style="letter-spacing:0"></span></div>
+            <div class="panel-head">Book A (A+ setups) — positions <span id="d-poscount-book" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-book"></tbody></table>
             </div>
-            <div class="empty-note" id="d-pos-book-empty" hidden>Book is flat — hunting for setups.</div>
+            <div class="empty-note" id="d-pos-book-empty" hidden>Book A is flat — waiting for an A+ setup.</div>
+          </div>
+          <div class="panel" style="overflow:hidden" id="d-panel-bookB">
+            <div class="panel-head">Book B (control) — positions <span id="d-poscount-bookB" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookB"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-bookB-empty" hidden>Book B is flat — hunting for setups.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
             <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
@@ -173,17 +180,19 @@ function paintCards() {
   const h = state.hero || {};
   const t = state.today || {};
   const openBook = state.positions.filter((p) => p.book === 'book').length;
-  const openAcct = state.positions.length - openBook;
+  const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
+  const openAcct = state.positions.length - openBook - openBookB;
 
   const bookVal = h.bookValue ?? h.bookEquity;
-  const acctVal = h.equity != null && bookVal != null ? h.equity - bookVal : h.equity;
-  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) : null;
+  const bookBVal = h.bookBValue ?? h.bookBEquity;
+  const acctVal = h.equity != null ? h.equity - (bookVal || 0) - (bookBVal || 0) : null;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) - (h.bookBDayChangeUsd || 0) : null;
   const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
   const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
 
   const rec = (r) => r ? `<span class="ac-rec"><b class="gain">${r.wins || 0}W</b> · <b class="loss">${r.losses || 0}L</b> today</span>` : '';
   const card = (key, label, val, chg, pct, r, open, accent) => `
-    <div class="acct-card${accent ? ' book' : ''}${selCard === key ? ' sel' : ''}" data-card="${key}" role="button">
+    <div class="acct-card${accent ? ` ${accent}` : ''}${selCard === key ? ' sel' : ''}" data-card="${key}" role="button">
       <div class="ac-label">${label}</div>
       <div class="ac-val mono">${val != null ? money(val, { dp: 2 }) : '—'}</div>
       <div class="ac-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : '—'}</div>
@@ -197,9 +206,10 @@ function paintCards() {
 
   box.innerHTML =
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
-    + `<div class="acct-row">`
-    + card('book', '$1K BOOK — real-money rehearsal', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, true)
-    + card('account', 'MAIN ACCOUNT — strategy lab', acctVal, acctChg, acctPct, t.account, openAcct, false)
+    + `<div class="acct-row three">`
+    + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
+    + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
+    + card('account', 'MAIN ACCOUNT — strategy lab', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`;
 }
 
@@ -229,10 +239,11 @@ function drawChart() {
   const note = document.querySelector('#d-chart-note');
   const title = document.querySelector('#d-chart-title');
   if (!wrap || typeof window.uPlot !== 'function') return;
-  if (title) title.textContent = `${selCard === 'book' ? '$1k Book' : 'Main Account'} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
+  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : 'Main Account';
+  if (title) title.textContent = `${cardName} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
 
   const data = seriesCache[range];
-  let pts = (data && (selCard === 'book' ? data.book : data.account)) || [];
+  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : data.account)) || [];
   pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
 
   const h = state.hero || {};
@@ -243,10 +254,11 @@ function drawChart() {
       if (open > 0) pts = [[midnightETms(), open], ...pts];
       if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
     } else {
-      const bookVal = h.bookValue ?? h.bookEquity;
-      const dayStart = bookVal != null && h.bookDayChangeUsd != null ? bookVal - h.bookDayChangeUsd : null;
+      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : (h.bookValue ?? h.bookEquity);
+      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : h.bookDayChangeUsd;
+      const dayStart = val != null && chg != null ? val - chg : null;
       if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
-      if (bookVal != null) pts = [...pts, [Date.now(), bookVal]];
+      if (val != null) pts = [...pts, [Date.now(), val]];
     }
     pts.sort((a, b) => a[0] - b[0]);
   }
@@ -266,7 +278,7 @@ function drawChart() {
   const xs = pts.map((p) => p[0] / 1000);
   const ys = pts.map((p) => p[1]);
   const up = ys[ys.length - 1] >= ys[0];
-  const color = selCard === 'book' ? css('--accent-hi') : (up ? css('--up') : css('--down'));
+  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : (up ? css('--up') : css('--down'));
   const axisStyle = {
     stroke: css('--text-faint'),
     grid: { stroke: 'rgba(63,63,70,.35)' },
@@ -281,7 +293,7 @@ function drawChart() {
     cursor: { drag: { x: false, y: false }, y: false },
     scales: { x: { time: true } },
     axes: [axisStyle, { ...axisStyle, size: 64 }],
-    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
+    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
     hooks: {
       setCursor: [(u) => {
         if (!tag) return;
@@ -319,6 +331,7 @@ function posRow(p) {
 function paintPositions() {
   const groups = [
     { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
+    { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
   ];
   for (const g of groups) {
@@ -334,6 +347,7 @@ function paintPositions() {
 
 function highlightGroups() {
   document.querySelector('#d-panel-book')?.classList.toggle('focus', selCard === 'book');
+  document.querySelector('#d-panel-bookB')?.classList.toggle('focus', selCard === 'bookB');
   document.querySelector('#d-panel-acct')?.classList.toggle('focus', selCard === 'account');
 }
 
@@ -348,7 +362,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">$1k</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
@@ -499,13 +513,13 @@ function simSeries() {
     for (let t = start; t <= now; t += 300000) { v += (Math.random() - 0.48) * vol; out.push([t, +v.toFixed(2)]); }
     return out;
   };
-  if (range === '1d') return { account: mk(mid + 34200000, 93500, 60), book: mk(mid + 34200000, 1000, 6) };
+  if (range === '1d') return { account: mk(mid + 34200000, 93500, 60), book: mk(mid + 34200000, 1000, 6), bookB: mk(mid + 34200000, 1000, 8) };
   const days = range === '1w' ? 7 : 30;
-  const acct = [], book = [];
-  let a = 95000, b = 1000;
+  const acct = [], book = [], bookB = [];
+  let a = 95000, b = 1000, b2 = 1000;
   for (let i = days; i >= 0; i--) {
-    a += (Math.random() - 0.45) * 800; b += (Math.random() - 0.42) * 40;
-    acct.push([now - i * 86400000, +a.toFixed(0)]); book.push([now - i * 86400000, +b.toFixed(0)]);
+    a += (Math.random() - 0.45) * 800; b += (Math.random() - 0.42) * 40; b2 += (Math.random() - 0.46) * 50;
+    acct.push([now - i * 86400000, +a.toFixed(0)]); book.push([now - i * 86400000, +b.toFixed(0)]); bookB.push([now - i * 86400000, +b2.toFixed(0)]);
   }
-  return { account: acct, book };
+  return { account: acct, book, bookB };
 }
