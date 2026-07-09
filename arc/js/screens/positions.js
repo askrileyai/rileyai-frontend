@@ -45,6 +45,31 @@ export function contractLabel(p) {
   return `<span class="opt-badge ${c.type === 'CALL' ? 'call' : 'put'}">${c.type}</span> $${c.strike} · exp ${c.expLabel} (${dteTxt})`;
 }
 
+// Riley's desk instrument panel — the health scorecard the engine stamps on
+// every open position each tick (score 0-100, band, flags). Dot = band color;
+// hover lists the flags driving it. (Exported — Overview shows the dot too.)
+function healthOf(p) {
+  try { return p.health ? (typeof p.health === 'string' ? JSON.parse(p.health) : p.health) : null; } catch (_) { return null; }
+}
+export function healthBadge(p, dotOnly = false) {
+  const h = healthOf(p);
+  if (!h || h.score == null) return '';
+  const cls = h.band === 'HEALTHY' ? 'h-ok' : h.band === 'CRITICAL' ? 'h-crit' : 'h-watch';
+  const flags = (h.flags || []).slice(0, 3).join(', ');
+  const title = `health ${h.score} (${h.band})${flags ? ' — ' + flags : ''}`;
+  return `<span class="health-dot ${cls}" title="${esc(title)}"></span>${dotOnly ? '' : `<span class="health-chip mono" title="${esc(title)}">${h.score}</span>`}`;
+}
+
+// The theta clock on a 0DTE: is the mark beating the pure-decay fade line, or
+// is decay the only thing moving this position?
+function thetaLine(p) {
+  const t = healthOf(p)?.theta;
+  if (!t || !t.is0dte || t.fadeValue == null) return '';
+  return t.thetaBeat
+    ? `<div class="theta-line up">beating theta · fade $${t.fadeValue}</div>`
+    : `<div class="theta-line down">carried by decay · fade $${t.fadeValue} · ${t.mtcNow != null ? `${t.mtcNow}m left` : ''}</div>`;
+}
+
 export function mount(host) {
   host.innerHTML = `
     <div class="positions">
@@ -108,7 +133,7 @@ function paint() {
   body.innerHTML = state.positions.map((p) => {
     const m = state.marks[p.id] || {};
     return `<tr>
-      <td><b>${esc(p.symbol)}</b>${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : ''}</td>
+      <td><b>${esc(p.symbol)}</b>${healthBadge(p)}${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}</td>
       <td class="dim">${esc(p.strategy_key)}</td>
       <td>${esc(p.direction).toUpperCase()}</td>
       <td>${p.quantity}</td>
@@ -124,8 +149,8 @@ function paint() {
   mob.innerHTML = state.positions.map((p) => {
     const m = state.marks[p.id] || {};
     return `<div class="holo pm-card">
-      <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
-      ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>` : ''}
+      <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}${healthBadge(p)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
+      ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
       <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">${levelsCell(p, true)}</span></div>
       <div class="pm-detail"><span class="faint">max drawdown</span><span class="loss">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</span></div>

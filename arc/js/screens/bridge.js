@@ -12,7 +12,7 @@ import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
 import { simResume, simKill } from '../sim.js';
-import { contractLabel } from './positions.js';
+import { contractLabel, healthBadge } from './positions.js';
 
 let unsubs = [];
 let selCard = 'book';                 // 'book' | 'account' — survives repaints (module scope)
@@ -320,7 +320,7 @@ function posRow(p) {
   const contract = p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : '';
   const dir = p.direction === 'short' ? ' <span class="chip off" style="padding:0 5px">SHORT</span>' : '';
   return `<tr onclick="location.hash='#/positions'" style="cursor:pointer">
-    <td><span class="sym">${esc(p.symbol)}</span>${dir}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
+    <td><span class="sym">${esc(p.symbol)}</span>${healthBadge(p, true)}${dir}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
     <td class="num">${Number(p.quantity)}</td>
     <td class="num">${money(p.entry_price)}</td>
     <td class="num">${mark != null ? money(mark) : '—'}</td>

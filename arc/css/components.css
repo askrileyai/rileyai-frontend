@@ -48,6 +48,23 @@
 .chip.up     { color: var(--up); border-color: var(--up-dim); background: rgba(34,197,94,.08); }
 .chip.down   { color: var(--down); border-color: var(--down-dim); background: rgba(239,68,68,.08); }
 
+/* ---- position health (Riley's desk instrument panel) ---- */
+.health-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin: 0 5px; vertical-align: middle;
+}
+.health-dot.h-ok    { background: var(--up); }
+.health-dot.h-watch { background: #eab308; }
+.health-dot.h-crit  { background: var(--down); animation: healthPulse 1.6s ease-in-out infinite; }
+@keyframes healthPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.health-chip {
+  font-size: 10px; color: var(--text-faint); border: 1px solid var(--border);
+  border-radius: 999px; padding: 0 6px; vertical-align: middle;
+}
+.theta-line { font-size: 10.5px; margin-top: 1px; }
+.theta-line.up   { color: var(--up); }
+.theta-line.down { color: var(--down); }
+
 /* ---- buttons ---- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

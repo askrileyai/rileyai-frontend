@@ -108,6 +108,10 @@ async function loadDailyReports() {
     if (gates.scratches?.n) gateBits.push(`${gates.scratches.n} scratch(es) ${money(gates.scratches.pnl, { sign: true, dp: 0 })}`);
     if (gates.tapeFlipTightens) gateBits.push(`${gates.tapeFlipTightens} tape-flip tighten(s)`);
     if (gates.rileyRides) gateBits.push(`${gates.rileyRides} ride(s)`);
+    if (gates.desk?.calls) {
+      const by = (gates.desk.byAction || []).map((a) => `${a.n} ${a.action}`).join('/');
+      gateBits.push(`desk ${gates.desk.calls} call(s)${by ? ` (${by})` : ''}${gates.desk.overrides ? ` · ${gates.desk.overrides} override(s)` : ''}${gates.desk.failures ? ` · ${gates.desk.failures} failed` : ''}`);
+    }
     return `
     <div class="report-block">
       <div class="report-head"><b>DAILY REPORT ${gradeBadge(ai.grade)}</b><span class="faint">${new Date(ev.ts || ev.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></div>
