@@ -44,6 +44,7 @@ export function mount(host) {
             <button class="fchip on" data-book="all">All</button>
             <button class="fchip" data-book="small">Book A</button>
             <button class="fchip" data-book="small_b">Book B</button>
+            <button class="fchip" data-book="small_c">Book C</button>
             <button class="fchip" data-book="lab">Lab</button>
           </div>
         </div>
@@ -99,8 +100,8 @@ async function loadDailyReports() {
 
   // The unified report event (5pm cron or on-demand run)
   const unified = (ev) => {
-    const d = ev.data || {}, ai = d.report || {}, small = d.small, bookB = d.bookB, lab = d.lab, gates = d.gates || {};
-    const ve = small?.virtualEquity, vb = bookB?.virtualEquity;
+    const d = ev.data || {}, ai = d.report || {}, small = d.small, bookB = d.bookB, bookC = d.bookC, lab = d.lab, gates = d.gates || {};
+    const ve = small?.virtualEquity, vb = bookB?.virtualEquity, vc = bookC?.virtualEquity;
     const acts = (ai.actions || []).slice(0, 6).map((a) =>
       `<div style="margin:4px 0">${chip(a.type)} <b>${esc(a.target || '')}</b> — ${esc(a.action || '')}${a.evidence ? ` <span class="faint">(${esc(a.evidence)}${a.confidence ? ` · ${esc(a.confidence)}` : ''})</span>` : ''}</div>`).join('');
     const gateBits = [];
@@ -119,6 +120,7 @@ async function loadDailyReports() {
       <div class="report-summary">BOOK A (A+) — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
       ${stratTable(small)}
       ${bookB ? `<div class="report-summary" style="margin-top:8px">BOOK B (control) — ${vb ? `equity <b>${money(vb.equity, { dp: 2 })}</b> (${vb.realizedPnl >= 0 ? '+' : ''}${money(vb.realizedPnl, { dp: 2 })})` : ''} · ${bookB?.overall?.trades ?? 0} trades${ai.bookBRead ? ` · ${esc(ai.bookBRead)}` : ''}</div>${stratTable(bookB)}` : ''}
+      ${bookC ? `<div class="report-summary" style="margin-top:8px">BOOK C (precision · BoS) — ${vc ? `equity <b>${money(vc.equity, { dp: 2 })}</b> (${vc.realizedPnl >= 0 ? '+' : ''}${money(vc.realizedPnl, { dp: 2 })})` : ''} · ${bookC?.overall?.trades ?? 0} trades${ai.bookCRead ? ` · ${esc(ai.bookCRead)}` : ''}</div>${stratTable(bookC)}` : ''}
       <div class="report-summary" style="margin-top:8px">LAB — ${lab?.overall ? `${lab.overall.trades} trades, ${lab.overall.winRate != null ? Math.round(lab.overall.winRate * 100) + '% win' : '—'}, ${money(lab.overall.pnl || 0, { sign: true, dp: 0 })}` : ''}${ai.labRead ? ` · ${esc(ai.labRead)}` : ''}</div>
       ${stratTable(lab)}
       ${shadowLine(small?.shadow) || shadowLine(lab?.shadow)}

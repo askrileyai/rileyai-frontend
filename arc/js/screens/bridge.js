@@ -68,6 +68,13 @@ export function mount(host) {
             </div>
             <div class="empty-note" id="d-pos-bookB-empty" hidden>Book B is flat — hunting for setups.</div>
           </div>
+          <div class="panel" style="overflow:hidden" id="d-panel-bookC">
+            <div class="panel-head">Book C (precision) — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookC"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-bookC-empty" hidden>Book C is flat — waiting for a break-of-structure setup.</div>
+          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
             <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
@@ -181,12 +188,14 @@ function paintCards() {
   const t = state.today || {};
   const openBook = state.positions.filter((p) => p.book === 'book').length;
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
-  const openAcct = state.positions.length - openBook - openBookB;
+  const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
+  const openAcct = state.positions.length - openBook - openBookB - openBookC;
 
   const bookVal = h.bookValue ?? h.bookEquity;
   const bookBVal = h.bookBValue ?? h.bookBEquity;
-  const acctVal = h.equity != null ? h.equity - (bookVal || 0) - (bookBVal || 0) : null;
-  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) - (h.bookBDayChangeUsd || 0) : null;
+  const bookCVal = h.bookCValue ?? h.bookCEquity;
+  const acctVal = h.equity != null ? h.equity - (bookVal || 0) - (bookBVal || 0) - (bookCVal || 0) : null;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) : null;
   const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
   const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
 
@@ -209,6 +218,7 @@ function paintCards() {
     + `<div class="acct-row three">`
     + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
     + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
+    + card('bookC', 'BOOK C · $1K — PRECISION (BoS)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
     + card('account', 'MAIN ACCOUNT — strategy lab', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`;
 }
@@ -239,11 +249,11 @@ function drawChart() {
   const note = document.querySelector('#d-chart-note');
   const title = document.querySelector('#d-chart-title');
   if (!wrap || typeof window.uPlot !== 'function') return;
-  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : 'Main Account';
+  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : 'Main Account';
   if (title) title.textContent = `${cardName} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
 
   const data = seriesCache[range];
-  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : data.account)) || [];
+  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : data.account)) || [];
   pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
 
   const h = state.hero || {};
@@ -254,8 +264,8 @@ function drawChart() {
       if (open > 0) pts = [[midnightETms(), open], ...pts];
       if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
     } else {
-      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : (h.bookValue ?? h.bookEquity);
-      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : h.bookDayChangeUsd;
+      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : (h.bookValue ?? h.bookEquity);
+      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : h.bookDayChangeUsd;
       const dayStart = val != null && chg != null ? val - chg : null;
       if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
       if (val != null) pts = [...pts, [Date.now(), val]];
@@ -278,7 +288,7 @@ function drawChart() {
   const xs = pts.map((p) => p[0] / 1000);
   const ys = pts.map((p) => p[1]);
   const up = ys[ys.length - 1] >= ys[0];
-  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : (up ? css('--up') : css('--down'));
+  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : (up ? css('--up') : css('--down'));
   const axisStyle = {
     stroke: css('--text-faint'),
     grid: { stroke: 'rgba(63,63,70,.35)' },
@@ -293,7 +303,7 @@ function drawChart() {
     cursor: { drag: { x: false, y: false }, y: false },
     scales: { x: { time: true } },
     axes: [axisStyle, { ...axisStyle, size: 64 }],
-    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
+    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
     hooks: {
       setCursor: [(u) => {
         if (!tag) return;
@@ -332,6 +342,7 @@ function paintPositions() {
   const groups = [
     { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
     { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
+    { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },
     { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
   ];
   for (const g of groups) {
@@ -362,7 +373,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
