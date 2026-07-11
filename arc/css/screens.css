@@ -74,7 +74,7 @@
 /* ---- STRATEGIES (playbook) ---- */
 .playbook-tbl td { vertical-align: top; }
 .playbook-tbl th:first-child, .playbook-tbl td:first-child { width: 56px; padding-right: 12px; }
-.st-thesis { color: var(--text-faint); font-size: 11.5px; font-family: var(--font-sans); white-space: normal; max-width: 340px; margin-top: 3px; line-height: 1.45; }
+.st-thesis { color: var(--text-faint); font-size: 11.5px; font-family: var(--font-sans); white-space: normal; max-width: min(340px, 48vw); margin-top: 3px; line-height: 1.45; }
 .mode-toggle { display: inline-flex; border: 1px solid var(--border-hi); border-radius: var(--radius-sm); overflow: hidden; }
 .mode-toggle button { font-family: var(--font-sans); font-size: 11px; font-weight: 600; padding: 6px 12px; color: var(--text-faint); min-height: 32px; }
 .mode-toggle button.on-shadow { background: rgba(234,179,8,.14); color: var(--shadow-c); }
@@ -141,8 +141,22 @@
 .acct-combined b { font-size: 15px; color: var(--text); }
 .acct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .acct-row.three { grid-template-columns: 1fr 1fr 1fr; }
-@media (max-width: 900px) { .acct-row.three { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .acct-row { grid-template-columns: 1fr; } }
+/* Mobile: the account cards become a one-per-swipe SNAP CAROUSEL with dots
+   (owner: "swiping through accounts is not made for mobile"). Scoped under
+   .acct-cards — bare .acct-row is reused by the reconciliation widget. */
+.acct-dots { display: none; justify-content: center; gap: 7px; padding: 6px 0 0; }
+.acct-dots .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); border: 0; padding: 0; cursor: pointer; transition: background .15s, transform .15s; }
+.acct-dots .dot.on { background: var(--accent-hi); transform: scale(1.3); }
+@media (max-width: 899px) {
+  .acct-cards .acct-row, .acct-cards .acct-row.three {
+    display: flex; grid-template-columns: none; gap: 10px;
+    overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding: 2px 2px 4px; margin: 0 -2px;
+  }
+  .acct-cards .acct-row::-webkit-scrollbar { display: none; }
+  .acct-cards .acct-row .acct-card { flex: 0 0 min(78vw, 340px); scroll-snap-align: center; }
+  .acct-dots { display: flex; }
+}
 .acct-card.bookb .ac-label { color: #eab308; }
 .acct-card.bookb.sel { border-color: #eab308; background: rgba(234,179,8,.05); }
 .acct-card { border: 1px solid var(--border); background: var(--bg-2); border-radius: 14px; padding: 12px 14px; cursor: pointer; display: grid; gap: 3px; transition: border-color .15s, background .15s; }
@@ -314,4 +328,16 @@
   .dtable { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   /* chat + activity feed: bounded viewport height → inner scroll + pinned input */
   .chat, .mind { height: calc(100dvh - 168px); min-height: 420px; }
+}
+
+/* ---- SMALL PHONES (iPhone SE/8/12 mini class) ---- */
+@media (max-width: 430px) {
+  .panel-body, .holo, .panel { --pad-tight: 1; }
+  .panel-body { padding: 12px; }
+  .perf-pods { gap: 8px; }
+  .perf-pods .holo { padding: 10px 12px; }
+  .ac-val { font-size: 22px; }
+  .cal-pnl { font-size: 10px; }
+  .dtable th, .dtable td { padding: 7px 8px; }
+  .hero-eq { font-size: 30px; }
 }

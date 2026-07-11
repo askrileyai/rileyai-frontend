@@ -134,7 +134,7 @@ function paint() {
     const m = state.marks[p.id] || {};
     return `<tr>
       <td><b>${esc(p.symbol)}</b>${healthBadge(p)}${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}</td>
-      <td class="dim">${esc(p.strategy_key)}</td>
+      <td class="dim">${esc(p.strategy_key)}${String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td>${esc(p.direction).toUpperCase()}</td>
       <td>${p.quantity}</td>
       <td>${money(p.entry_price)}</td>
@@ -152,7 +152,7 @@ function paint() {
       <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}${healthBadge(p)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
       ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
-      <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}</span><span class="faint">${levelsCell(p, true)}</span></div>
+      <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}${String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</span><span class="faint">${levelsCell(p, true)}</span></div>
       <div class="pm-detail"><span class="faint">max drawdown</span><span class="loss">${maxDD(p) != null ? money(maxDD(p), { sign: true }) : '—'}</span></div>
       <button class="btn ghost" style="min-height:38px;font-size:.62rem" data-exit="${p.id}">EXIT POSITION</button>
     </div>`;

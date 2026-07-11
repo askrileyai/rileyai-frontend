@@ -130,6 +130,13 @@ export function mount(host) {
   });
   // One delegated listener each — survives every repaint.
   host.querySelector('#d-cards').addEventListener('click', (e) => {
+    const dot = e.target.closest('[data-dot]');
+    if (dot) {   // carousel dot → glide to that card
+      const row = host.querySelector('#d-cards .acct-row');
+      const target = row?.children[Number(dot.getAttribute('data-dot'))];
+      if (row && target) row.scrollTo({ left: Math.max(0, target.offsetLeft - 8), behavior: 'smooth' });
+      return;
+    }
     const card = e.target.closest('[data-card]');
     if (!card) return;
     selCard = card.getAttribute('data-card');
@@ -155,13 +162,18 @@ export function mount(host) {
     bus.on('alert', paint),
     bus.on('evt', onEvt),
   ];
-  window.addEventListener('resize', drawChart);
+  window.addEventListener('resize', onWinResize);
 }
+
+// Debounced redraw — raw resize fired per-frame during orientation changes.
+let resizeT = 0;
+function onWinResize() { clearTimeout(resizeT); resizeT = setTimeout(drawChart, 150); }
 
 export function unmount() {
   unsubs.forEach((u) => u());
   unsubs = [];
-  window.removeEventListener('resize', drawChart);
+  window.removeEventListener('resize', onWinResize);
+  clearTimeout(resizeT);
   clearInterval(refreshT);
   if (chart) { chart.destroy(); chart = null; }
 }
@@ -222,6 +234,10 @@ function paintCards() {
     : s.startsWith('HALTED') ? `<span class="chip halted">${s === 'HALTED_MANUAL' ? 'PAUSED' : 'RISK-HALTED'}</span>`
     : `<span class="chip off">OFFLINE</span>`;
 
+  // Mobile carousel: keep the swipe position across live repaints (marks tick
+  // every few seconds — without this the row snaps back to card 1 mid-swipe).
+  const prevRow = box.querySelector('.acct-row');
+  const prevScroll = prevRow ? prevRow.scrollLeft : 0;
   box.innerHTML =
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
     + `<div class="acct-row three">`
@@ -230,7 +246,33 @@ function paintCards() {
     + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
     + card('bookD', 'BOOK D · $1K — MACHINE (mechanical)', bookDVal, h.bookDDayChangeUsd, h.bookDDayChangePct, t.bookD, openBookD, 'bookd')
     + card('account', 'MAIN ACCOUNT — research bench', acctVal, acctChg, acctPct, t.account, openAcct, '')
-    + `</div>`;
+    + `</div>`
+    + `<div class="acct-dots" id="d-dots">${[0, 1, 2, 3, 4].map((i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+  const row = box.querySelector('.acct-row');
+  if (row) {
+    if (prevScroll) row.scrollLeft = prevScroll;
+    row.addEventListener('scroll', onCardScroll, { passive: true });
+    updateDots();
+  }
+}
+
+// ── Carousel dots (mobile) ──────────────────────────────────────────────────
+let dotRaf = 0;
+function onCardScroll() {
+  if (dotRaf) return;
+  dotRaf = requestAnimationFrame(() => { dotRaf = 0; updateDots(); });
+}
+function updateDots() {
+  const box = document.querySelector('#d-cards');
+  const row = box?.querySelector('.acct-row');
+  const dots = box?.querySelectorAll('.acct-dots .dot');
+  if (!row || !dots || !dots.length) return;
+  const cards = [...row.children];
+  let idx = 0;
+  for (let i = 1; i < cards.length; i++) {
+    if (Math.abs(cards[i].offsetLeft - row.scrollLeft) < Math.abs(cards[idx].offsetLeft - row.scrollLeft)) idx = i;
+  }
+  dots.forEach((d, i) => d.classList.toggle('on', i === idx));
 }
 
 function isLive() { return state.engine?.risk_config?.liveTradingEnabled && state.strategies.some((s) => s.enabled && s.mode === 'LIVE'); }
@@ -308,7 +350,7 @@ function drawChart() {
   const tag = document.querySelector('#d-chart-tag');
   chart = new window.uPlot({
     width: Math.max(wrap.clientWidth || 320, 280),
-    height: 180,
+    height: Math.max(150, Math.min(240, Math.round((window.innerHeight || 640) * 0.28))),
     legend: { show: false },
     cursor: { drag: { x: false, y: false }, y: false },
     scales: { x: { time: true } },
@@ -339,8 +381,9 @@ function posRow(p) {
   const pct = pnl != null && basis > 0 ? (pnl / basis) * 100 : null;
   const contract = p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : '';
   const dir = p.direction === 'short' ? ' <span class="chip off" style="padding:0 5px">SHORT</span>' : '';
+  const swing = String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : '';
   return `<tr onclick="location.hash='#/positions'" style="cursor:pointer">
-    <td><span class="sym">${esc(p.symbol)}</span>${healthBadge(p, true)}${dir}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
+    <td><span class="sym">${esc(p.symbol)}</span>${healthBadge(p, true)}${dir}${swing}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
     <td class="num">${Number(p.quantity)}</td>
     <td class="num">${money(p.entry_price)}</td>
     <td class="num">${mark != null ? money(mark) : '—'}</td>
@@ -384,7 +427,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : r.book === 'bookD' ? ' <span class="chip" style="padding:0 5px;color:#f59e0b;border-color:#a3690b">D</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : r.book === 'bookD' ? ' <span class="chip" style="padding:0 5px;color:#f59e0b;border-color:#a3690b">D</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
