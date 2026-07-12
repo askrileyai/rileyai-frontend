@@ -176,7 +176,13 @@ async function loadDailyReports() {
     try {
       const briefs = (await api.log('?limit=6&type=review.brief')).events || [];
       const brief = [...briefs].reverse().find(isToday);
-      if (brief) briefHtml = `<div class="report-block"><div class="report-head"><b>📋 PRE-MARKET BRIEF</b><span class="faint">${new Date(brief.ts || brief.created_at).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}</span></div><div class="report-summary">${esc(String(brief.summary || '').replace(/^📋 PRE-MARKET BRIEF — /, ''))}</div></div>`;
+      if (brief) {
+        const bd = brief.data || {};
+        const tape = bd.regime ? `<div class="report-summary">Tape: <b>${esc(bd.regime.key || '')}</b>${bd.regime.vix != null ? ` · VIX ${bd.regime.vix}` : ''}${bd.regime.read ? ` — ${esc(bd.regime.read)}` : ''}</div>` : '';
+        const mktNews = bd.news?.market?.length ? `<div class="report-recs"><div class="faint" style="margin-bottom:2px">MARKET NEWS</div>${bd.news.market.slice(0, 5).map((h) => `<div>→ ${esc(h)}</div>`).join('')}</div>` : '';
+        const symNews = bd.news && Object.keys(bd.news.symbols || {}).length ? `<div class="report-recs"><div class="faint" style="margin-bottom:2px">TRADED NAMES</div>${Object.entries(bd.news.symbols).slice(0, 6).map(([s, h]) => `<div><b>${esc(s)}</b> — ${esc(h)}</div>`).join('')}</div>` : '';
+        briefHtml = `<div class="report-block"><div class="report-head"><b>📋 PRE-MARKET BRIEF</b><span class="faint">${new Date(brief.ts || brief.created_at).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}</span></div><div class="report-summary">${esc(String(brief.summary || '').replace(/^📋 PRE-MARKET BRIEF — /, ''))}</div>${tape}${mktNews}${symNews}</div>`;
+      }
     } catch (_) {}
     const latestUnified = [...evs].reverse().find((e) => isToday(e) && e.data?.report);
     if (latestUnified) { host.innerHTML = briefHtml + unified(latestUnified); return; }
