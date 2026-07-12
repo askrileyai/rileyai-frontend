@@ -115,6 +115,11 @@ async function loadDailyReports() {
       </tbody></table></div>`;
     };
     const crownLine = ai.crown ? `<div class="report-summary"><b>👑 Today: Book ${esc(ai.crown.today || '—')}</b> · Week leader: Book ${esc(ai.crown.week || '—')}${ai.crown.evidence ? ` — ${esc(ai.crown.evidence)}` : ''}</div>` : '';
+    // Live-vs-backtest drift per benchmarked lane (the test week's verdict instrument).
+    const vsB = sb?.vsBenchmark;
+    const vsBlock = vsB && vsB.length ? `<div style="overflow-x:auto;margin-top:8px"><table class="dtable"><thead><tr><th>Lane (live vs test)</th><th class="num">Trades</th><th class="num">Live WR</th><th class="num">Test WR</th><th class="num">Drift</th></tr></thead><tbody>
+      ${vsB.map((x) => `<tr><td>${esc(x.key)}</td><td class="num">${x.trades}</td><td class="num">${x.liveWR}%</td><td class="num dim">${x.testWR}%</td><td class="num ${x.drift >= 0 ? 'up' : 'down'}">${x.drift >= 0 ? '+' : ''}${x.drift}</td></tr>`).join('')}
+    </tbody></table></div>` : '';
     const acts = (ai.actions || []).slice(0, 6).map((a) =>
       `<div style="margin:4px 0">${chip(a.type)} <b>${esc(a.target || '')}</b> — ${esc(a.action || '')}${a.evidence ? ` <span class="faint">(${esc(a.evidence)}${a.confidence ? ` · ${esc(a.confidence)}` : ''})</span>` : ''}</div>`).join('');
     const gateBits = [];
@@ -132,6 +137,7 @@ async function loadDailyReports() {
       ${ai.headline ? `<div class="report-summary"><b>${esc(ai.headline)}</b></div>` : ''}
       ${crownLine}
       ${sbTable(sb)}
+      ${vsBlock}
       <div class="report-summary" style="margin-top:8px">BOOK A (Sniper · A+) — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
       ${stratTable(small)}
       ${bookB ? `<div class="report-summary" style="margin-top:8px">BOOK B (Yardstick) — ${vb ? `equity <b>${money(vb.equity, { dp: 2 })}</b> (${vb.realizedPnl >= 0 ? '+' : ''}${money(vb.realizedPnl, { dp: 2 })})` : ''} · ${bookB?.overall?.trades ?? 0} trades${ai.bookBRead ? ` · ${esc(ai.bookBRead)}` : ''}</div>${stratTable(bookB)}` : ''}
@@ -165,21 +171,28 @@ async function loadDailyReports() {
     // contradicts the live book number right below it.
     const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const isToday = (e) => new Date(e.ts || e.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === todayET;
+    // 📋 Today's pre-market brief pins above the report (9:15 ET systems check).
+    let briefHtml = '';
+    try {
+      const briefs = (await api.log('?limit=6&type=review.brief')).events || [];
+      const brief = [...briefs].reverse().find(isToday);
+      if (brief) briefHtml = `<div class="report-block"><div class="report-head"><b>📋 PRE-MARKET BRIEF</b><span class="faint">${new Date(brief.ts || brief.created_at).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}</span></div><div class="report-summary">${esc(String(brief.summary || '').replace(/^📋 PRE-MARKET BRIEF — /, ''))}</div></div>`;
+    } catch (_) {}
     const latestUnified = [...evs].reverse().find((e) => isToday(e) && e.data?.report);
-    if (latestUnified) { host.innerHTML = unified(latestUnified); return; }
+    if (latestUnified) { host.innerHTML = briefHtml + unified(latestUnified); return; }
     const latestSmall = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('$1k BOOK'));
     const latestLab = [...evs].reverse().find((e) => isToday(e) && (e.summary || '').startsWith('LAB'));
     if (latestSmall || latestLab) {
-      host.innerHTML =
-        (latestSmall ? block('$1k BOOK', latestSmall.ts || latestSmall.created_at, latestSmall.summary, latestSmall.data?.review, latestSmall.data?.ai) : '')
+      host.innerHTML = briefHtml
+        + (latestSmall ? block('$1k BOOK', latestSmall.ts || latestSmall.created_at, latestSmall.summary, latestSmall.data?.review, latestSmall.data?.ai) : '')
         + (latestLab ? block('LAB', latestLab.ts || latestLab.created_at, latestLab.summary, latestLab.data?.review, latestLab.data?.ai) : '');
       return;
     }
     // No report yet today → live preview until the 5pm run lands.
     const [small, lab] = await Promise.all([api.review(24, 'small'), api.review(24, 'lab')]);
     const sv = small.review?.virtualEquity;
-    host.innerHTML =
-      block('$1k BOOK', null, sv ? `equity ${money(sv.equity, { dp: 2 })} (${sv.realizedPnl >= 0 ? '+' : ''}${money(sv.realizedPnl, { dp: 2 })} since ${sv.sinceDate})` : 'no data yet', small.review, null)
+    host.innerHTML = briefHtml
+      + block('$1k BOOK', null, sv ? `equity ${money(sv.equity, { dp: 2 })} (${sv.realizedPnl >= 0 ? '+' : ''}${money(sv.realizedPnl, { dp: 2 })} since ${sv.sinceDate})` : 'no data yet', small.review, null)
       + block('LAB', null, `${lab.review?.overall?.trades || 0} trades in 24h`, lab.review, null)
       + `<div class="acct-note">Live preview — the full graded report (with actions) lands at 5:00 PM ET.</div>`;
   } catch (_) { host.innerHTML = `<div class="empty-note">Reports unavailable.</div>`; }

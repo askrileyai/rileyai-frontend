@@ -131,7 +131,7 @@ function rowHtml(s) {
     <td><label class="switch" title="enable/disable"><input type="checkbox" class="st-enabled" ${s.enabled ? 'checked' : ''}><span class="track"></span><span class="thumb"></span></label></td>
     <td><span class="sym">${esc(s.name || s.strategy_key)}</span>${s.custom ? ' <span class="chip live" style="text-transform:none;font-size:9px">custom</span>' : ''}<div class="st-thesis">${esc(s.thesis || '')}</div></td>
     <td>${badgeChip(s)}</td>
-    <td class="num">${wrBar(t20)}</td>
+    <td class="num">${wrBar(t20)}${s.benchmark?.wr ? `<div class="dim" style="font-size:10px" title="backtested win rate (${esc(s.benchmark.source || '')}, n=${s.benchmark.n ?? '?'})">test ${s.benchmark.wr}%</div>` : ''}</td>
     <td class="num ${exp != null ? (exp >= 0 ? 'up' : 'down') : 'dim'}">${exp != null ? money(exp, { sign: true, dp: 0 }) : '—'}</td>
     <td class="num ${(st.pnl || 0) >= 0 ? 'up' : 'down'}">${money(st.pnl || 0, { sign: true, dp: 0 })}</td>
     <td class="num">${st.trades ?? 0}</td>
