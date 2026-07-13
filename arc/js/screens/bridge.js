@@ -54,6 +54,13 @@ export function mount(host) {
 
       <div class="bridge-grid">
         <div class="bridge-col">
+          <div class="panel" style="overflow:hidden" id="d-panel-real">
+            <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center">💰 REAL $ — positions <span id="d-poscount-real" class="faint" style="letter-spacing:0"></span><button class="btn ghost" id="d-flatten-real" style="min-height:30px;padding:2px 10px;font-size:10px;color:#ef4444;border-color:#7f1d1d">EXIT ALL REAL</button></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-real"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-real-empty" hidden>No real-money positions — the 💰 lanes are watching for their setup.</div>
+          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-book">
             <div class="panel-head">Book A (A+ setups) — positions <span id="d-poscount-book" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
@@ -124,6 +131,10 @@ export function mount(host) {
   `;
 
   host.querySelector('#d-kill').appendChild(killSwitch());
+  host.querySelector('#d-flatten-real')?.addEventListener('click', async () => {
+    if (!confirm('Exit ALL real-money positions at market right now?')) return;
+    try { await api.flattenReal(); } catch (e) { alert('Flatten failed: ' + (e.message || e)); }
+  });
   host.querySelector('#d-killhint').addEventListener('click', async () => {
     if (!state.engine.state.startsWith('HALTED')) return;
     if (isSim()) simResume(); else await api.resume().catch(() => {});
@@ -242,12 +253,12 @@ function paintCards() {
   box.innerHTML =
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
     + `<div class="acct-row three">`
+    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, t.real?.realizedPnl ?? null, null, t.real, openReal, 'realacct') : '')
     + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
     + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
     + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
     + card('bookD', 'BOOK D · $1K — MACHINE (mechanical)', bookDVal, h.bookDDayChangeUsd, h.bookDDayChangePct, t.bookD, openBookD, 'bookd')
     + card('account', 'MAIN ACCOUNT — research bench', acctVal, acctChg, acctPct, t.account, openAcct, '')
-    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, null, null, null, openReal, 'realacct') : '')
     + `</div>`
     + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 6 : 5 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
@@ -396,6 +407,7 @@ function posRow(p) {
 
 function paintPositions() {
   const groups = [
+    { which: 'real', body: '#d-pos-real', empty: '#d-pos-real-empty', count: '#d-poscount-real' },
     { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
     { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },

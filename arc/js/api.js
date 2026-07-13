@@ -54,6 +54,7 @@ export const api = {
   log: (params = '') => req(`/log${params}`),
   kill: (level, reason) => req('/kill', { method: 'POST', body: JSON.stringify({ level, reason }) }),
   resume: () => req('/resume', { method: 'POST', body: JSON.stringify({ confirm: 'RESUME' }) }),
+  flattenReal: () => req('/real/flatten', { method: 'POST', body: JSON.stringify({}) }),
   start: () => req('/start', { method: 'POST', body: JSON.stringify({}) }),
   performance: (window = '1w') => req(`/performance?window=${window}`),
   calendar: (days = 180) => req(`/calendar?days=${days}`),
