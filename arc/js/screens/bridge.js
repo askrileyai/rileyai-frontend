@@ -209,7 +209,8 @@ function paintCards() {
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
   const openBookD = state.positions.filter((p) => p.book === 'bookD').length;
-  const openAcct = state.positions.length - openBook - openBookB - openBookC - openBookD;
+  const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
+  const openAcct = state.positions.length - openBook - openBookB - openBookC - openBookD - openReal;
 
   const bookVal = h.bookValue ?? h.bookEquity;
   const bookBVal = h.bookBValue ?? h.bookBEquity;
@@ -246,8 +247,9 @@ function paintCards() {
     + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
     + card('bookD', 'BOOK D · $1K — MACHINE (mechanical)', bookDVal, h.bookDDayChangeUsd, h.bookDDayChangePct, t.bookD, openBookD, 'bookd')
     + card('account', 'MAIN ACCOUNT — research bench', acctVal, acctChg, acctPct, t.account, openAcct, '')
+    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, null, null, null, openReal, 'realacct') : '')
     + `</div>`
-    + `<div class="acct-dots" id="d-dots">${[0, 1, 2, 3, 4].map((i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 6 : 5 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
   if (row) {
     if (prevScroll) row.scrollLeft = prevScroll;
@@ -382,8 +384,9 @@ function posRow(p) {
   const contract = p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>` : '';
   const dir = p.direction === 'short' ? ' <span class="chip off" style="padding:0 5px">SHORT</span>' : '';
   const swing = String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : '';
+  const realChip = /_real$/.test(p.strategy_key || '') ? ' <span class="chip" style="padding:0 5px;color:#22c55e;border-color:#15803d">💰 REAL</span>' : '';
   return `<tr onclick="location.hash='#/positions'" style="cursor:pointer">
-    <td><span class="sym">${esc(p.symbol)}</span>${healthBadge(p, true)}${dir}${swing}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
+    <td><span class="sym">${esc(p.symbol)}</span>${healthBadge(p, true)}${dir}${swing}${realChip}${contract}<div class="dim" style="font-size:11px">${esc(p.strategy_key)}</div></td>
     <td class="num">${Number(p.quantity)}</td>
     <td class="num">${money(p.entry_price)}</td>
     <td class="num">${mark != null ? money(mark) : '—'}</td>
