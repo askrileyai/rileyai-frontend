@@ -90,17 +90,21 @@ function wrBar(t20) {
   </div>`;
 }
 
-// Riley's signature strategy gets a hero card — it's the flagship 7-dimension brain.
+// The flagship hero card = the highest tested edge that's actually ARMED.
+// (A disabled legacy flagship must not headline the playbook — since the
+// 07-13 consolidation the desk is tested-edge-only, so the hero falls back
+// to the best live benchmark, e.g. confluence_stack at 72.2%.)
 function paintFlagship() {
   const box = document.getElementById('pb-flagship');
-  const f = state.strategies.find((s) => s.flagship);
+  const f = state.strategies.find((s) => s.flagship && s.enabled)
+    || [...state.strategies].filter((s) => s.enabled && s.benchmark?.wr).sort((a, b) => (b.benchmark.wr || 0) - (a.benchmark.wr || 0))[0];
   if (!box) return;
   if (!f) { box.hidden = true; return; }
   box.hidden = false;
   const st = f.stats || {};
   box.innerHTML = `
     <div class="panel-head">
-      <span class="row" style="gap:8px">${esc(f.name)} <span class="chip live" style="text-transform:none">Riley's brain</span></span>
+      <span class="row" style="gap:8px">${esc(f.name)} <span class="chip live" style="text-transform:none">${f.flagship ? "Riley's brain" : `Flagship · ${f.benchmark?.wr ? `tested ${f.benchmark.wr}%` : 'top edge'}`}</span></span>
       <label class="switch" title="enable/disable"><input type="checkbox" id="fl-en" ${f.enabled ? 'checked' : ''}><span class="track"></span><span class="thumb"></span></label>
     </div>
     <div class="panel-body">

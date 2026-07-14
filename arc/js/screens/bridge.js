@@ -309,11 +309,11 @@ function drawChart() {
   const note = document.querySelector('#d-chart-note');
   const title = document.querySelector('#d-chart-title');
   if (!wrap || typeof window.uPlot !== 'function') return;
-  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : selCard === 'bookD' ? 'Book D' : 'Main Account';
+  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : 'Main Account';
   if (title) title.textContent = `${cardName} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
 
   const data = seriesCache[range];
-  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : selCard === 'bookD' ? data.bookD : data.account)) || [];
+  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : data.account)) || [];
   pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
 
   const h = state.hero || {};
@@ -324,8 +324,8 @@ function drawChart() {
       if (open > 0) pts = [[midnightETms(), open], ...pts];
       if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
     } else {
-      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : selCard === 'bookD' ? (h.bookDValue ?? h.bookDEquity) : (h.bookValue ?? h.bookEquity);
-      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : selCard === 'bookD' ? h.bookDDayChangeUsd : h.bookDayChangeUsd;
+      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : (h.bookValue ?? h.bookEquity);
+      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : h.bookDayChangeUsd;
       const dayStart = val != null && chg != null ? val - chg : null;
       if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
       if (val != null) pts = [...pts, [Date.now(), val]];
@@ -348,7 +348,7 @@ function drawChart() {
   const xs = pts.map((p) => p[0] / 1000);
   const ys = pts.map((p) => p[1]);
   const up = ys[ys.length - 1] >= ys[0];
-  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : selCard === 'bookD' ? '#f59e0b' : (up ? css('--up') : css('--down'));
+  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : (up ? css('--up') : css('--down'));
   const axisStyle = {
     stroke: css('--text-faint'),
     grid: { stroke: 'rgba(63,63,70,.35)' },
@@ -363,7 +363,7 @@ function drawChart() {
     cursor: { drag: { x: false, y: false }, y: false },
     scales: { x: { time: true } },
     axes: [axisStyle, { ...axisStyle, size: 64 }],
-    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : selCard === 'bookD' ? 'rgba(245,158,11,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
+    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
     hooks: {
       setCursor: [(u) => {
         if (!tag) return;
@@ -461,7 +461,8 @@ function paintSystems() {
   if (a.scratches?.n) chips.push(`<span class="chip off">Scratches <b>${a.scratches.n}</b> (${money(a.scratches.pnl, { sign: true, dp: 0 })})</span>`);
   if (a.tapeFlipTightens) chips.push(`<span class="chip off">Tape-flip tightens <b>${a.tapeFlipTightens}</b></span>`);
   if (a.rileyRides) chips.push(`<span class="chip live">Rides <b>${a.rileyRides}</b></span>`);
-  chips.push(`<span class="chip off">Daily report · 5:00 PM ET</span>`);
+  chips.push(`<span class="chip off">Brief · 9:00 AM ET</span>`);
+  chips.push(`<span class="chip off">Daily report · 4:15 PM ET</span>`);
   box.innerHTML = chips.join('');
 }
 

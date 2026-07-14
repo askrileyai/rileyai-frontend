@@ -80,7 +80,7 @@ function render() {
         <div class="guard-line"><span>Pause the day if down</span><b>${money(rc.maxDailyLossUsd || 300, { dp: 0 })}</b></div>
         <div class="guard-line"><span>Most positions at once</span><b>${rc.maxOpenPositions || 5}</b></div>
         <div class="guard-line"><span>Pause around major news</span><b>Yes · ±${rc.econBlackoutMinutes || 15}m</b></div>
-        <p class="faint" style="font-size:12px; margin-top:10px">These follow your risk appetite. Riley never exceeds them, and auto-halts if the daily cap is hit.</p>
+        <p class="faint" style="font-size:12px; margin-top:10px">These are the PORTFOLIO backstops. Each account carries its own tighter protection underneath — main $2,500/day · Book C's caps · real money $40/day — plus the 1.25× loss floor on every position. Riley never exceeds any of them; the daily cap here is the fire alarm, not the first line.</p>
         <button class="btn ghost" id="adv-toggle" style="margin-top:12px; min-height:34px">Advanced ▾</button>
         <div id="adv" hidden style="margin-top:12px">
           ${ADVANCED.map(([k, l]) => `<div class="risk-row"><label>${l}</label><input id="rk-${k}" type="number" value="${rc[k] ?? ''}"></div>`).join('')}

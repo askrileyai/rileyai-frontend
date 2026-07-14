@@ -34,10 +34,15 @@ export const state = {
 
 // Risk-appetite presets → the raw risk_config numbers (so users pick a vibe,
 // not fiddle with dollar caps). Applied when appetite changes.
+// Re-scaled 07-14: these are PORTFOLIO backstops sitting ABOVE the per-account
+// protections (main $2.5k day stop · Book C caps · REAL $40 stop · 1.25R loss
+// floor). The old $1k-era Conservative preset (50/150/3/25) was tapped once
+// and silently strangled the whole engine — a preset must never sit below the
+// per-account stops it backs up.
 export const RISK_PRESETS = {
-  conservative: { maxPerTradeUsd: 50, maxDailyLossUsd: 150, maxOpenPositions: 3, maxExposurePct: 25 },
-  balanced:     { maxPerTradeUsd: 100, maxDailyLossUsd: 300, maxOpenPositions: 5, maxExposurePct: 40 },
-  aggressive:   { maxPerTradeUsd: 250, maxDailyLossUsd: 750, maxOpenPositions: 8, maxExposurePct: 60 },
+  conservative: { maxPerTradeUsd: 150, maxDailyLossUsd: 3000, maxOpenPositions: 8, maxExposurePct: 25 },
+  balanced:     { maxPerTradeUsd: 300, maxDailyLossUsd: 5000, maxOpenPositions: 12, maxExposurePct: 40 },
+  aggressive:   { maxPerTradeUsd: 500, maxDailyLossUsd: 8000, maxOpenPositions: 16, maxExposurePct: 60 },
 };
 
 const RING = 500;
