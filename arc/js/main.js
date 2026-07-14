@@ -12,13 +12,16 @@ import * as voice from './voice.js';
 import { clockET, money } from './components/fmt.js';
 import { engineStateLabel } from './components/killswitch.js';
 
-import * as bridge from './screens/bridge.js';
-import * as riley from './screens/riley.js';
-import * as mind from './screens/mind.js';
-import * as playbook from './screens/playbook.js';
-import * as positions from './screens/positions.js';
-import * as performance from './screens/performance.js';
-import * as armory from './screens/armory.js';
+// Screen imports carry their own cache-bust (07-14): main.js?v=mN alone does
+// NOT re-fetch these — a phone could hold an old bridge.js against a new
+// main.js and render a stale dashboard. Bump these with index.html's ?v.
+import * as bridge from './screens/bridge.js?v=m26';
+import * as riley from './screens/riley.js?v=m26';
+import * as mind from './screens/mind.js?v=m26';
+import * as playbook from './screens/playbook.js?v=m26';
+import * as positions from './screens/positions.js?v=m26';
+import * as performance from './screens/performance.js?v=m26';
+import * as armory from './screens/armory.js?v=m26';
 
 // Research retired (2026-07-07): it was the last screen on the synthetic data
 // generator (rendered SPY "$474" while it traded $745) and duplicated what the

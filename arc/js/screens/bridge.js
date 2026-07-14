@@ -217,7 +217,9 @@ function paintCards() {
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
-  const openAcct = state.positions.filter((p) => (p.book || 'account') === 'account').length - openReal;
+  // Main = untagged book only; real positions are tagged 'real' by the API,
+  // so subtracting openReal here would double-count them negative.
+  const openAcct = state.positions.filter((p) => (p.book || 'account') === 'account' && !/_real$/.test(p.strategy_key || '')).length;
 
   const bookVal = h.bookValue ?? h.bookEquity;
   const bookBVal = h.bookBValue ?? h.bookBEquity;
@@ -253,7 +255,7 @@ function paintCards() {
     + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
     + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
     + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
-    + card('account', 'MAIN ACCOUNT — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
+    + card('account', 'MAIN · $80K PAPER — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
     + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 5 : 4 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
