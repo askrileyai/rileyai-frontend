@@ -102,6 +102,8 @@ async function loadDailyReports() {
   const unified = (ev) => {
     const d = ev.data || {}, ai = d.report || {}, small = d.small, bookB = d.bookB, bookC = d.bookC, bookD = d.bookD, lab = d.lab, gates = d.gates || {}, sb = d.scoreboard;
     const ve = small?.virtualEquity, vb = bookB?.virtualEquity, vc = bookC?.virtualEquity, vd = bookD?.virtualEquity;
+    // bookD renders only on PRE-consolidation reports (retired 07-13) — the
+    // row/section guards below keep old reports readable.
     // Per-book scoreboard (deterministic, computed backend-side at report time).
     const sbTable = (s) => {
       if (!s || !s.day) return '';
@@ -111,7 +113,7 @@ async function loadDailyReports() {
         return `<tr><td>${label}</td><td>${cell(day)}</td><td>${cell(wk)}</td></tr>`;
       };
       return `<div style="overflow-x:auto;margin-top:8px"><table class="dtable"><thead><tr><th>Book</th><th>Today</th><th>Week</th></tr></thead><tbody>
-        ${row('REAL', '💰 REAL $')}${row('A', 'A · Sniper')}${row('B', 'B · Yardstick')}${row('C', 'C · Discipline')}${row('D', 'D · Machine')}${row('lab', 'Lab')}
+        ${row('REAL', '💰 REAL $')}${row('A', 'A · Sniper')}${row('B', 'B · Yardstick')}${row('C', 'C · Discipline')}${s.day?.D ? row('D', 'D · Machine') : ''}${row('lab', 'Lab')}
       </tbody></table></div>`;
     };
     const crownLine = ai.crown ? `<div class="report-summary"><b>👑 Today: Book ${esc(ai.crown.today || '—')}</b> · Week leader: Book ${esc(ai.crown.week || '—')}${ai.crown.evidence ? ` — ${esc(ai.crown.evidence)}` : ''}</div>` : '';
@@ -143,6 +145,7 @@ async function loadDailyReports() {
       ${bookB ? `<div class="report-summary" style="margin-top:8px">BOOK B (Yardstick) — ${vb ? `equity <b>${money(vb.equity, { dp: 2 })}</b> (${vb.realizedPnl >= 0 ? '+' : ''}${money(vb.realizedPnl, { dp: 2 })})` : ''} · ${bookB?.overall?.trades ?? 0} trades${ai.bookBRead ? ` · ${esc(ai.bookBRead)}` : ''}</div>${stratTable(bookB)}` : ''}
       ${bookC ? `<div class="report-summary" style="margin-top:8px">BOOK C (Discipline · caps) — ${vc ? `equity <b>${money(vc.equity, { dp: 2 })}</b> (${vc.realizedPnl >= 0 ? '+' : ''}${money(vc.realizedPnl, { dp: 2 })})` : ''} · ${bookC?.overall?.trades ?? 0} trades${ai.bookCRead ? ` · ${esc(ai.bookCRead)}` : ''}</div>${stratTable(bookC)}` : ''}
       ${bookD ? `<div class="report-summary" style="margin-top:8px">BOOK D (Machine · mechanical) — ${vd ? `equity <b>${money(vd.equity, { dp: 2 })}</b> (${vd.realizedPnl >= 0 ? '+' : ''}${money(vd.realizedPnl, { dp: 2 })})` : ''} · ${bookD?.overall?.trades ?? 0} trades${ai.bookDRead ? ` · ${esc(ai.bookDRead)}` : ''}</div>${stratTable(bookD)}` : ''}
+      ${ai.rileyRead ? `<div class="report-summary" style="margin-top:8px">🧠 RILEY'S EXITS vs THE MACHINE — ${esc(ai.rileyRead)}</div>` : ''}
       ${d.real ? `<div class="report-summary" style="margin-top:8px">💰 REAL $ (live money) — ${d.real?.overall?.trades ?? 0} trades, ${money(d.real?.overall?.pnl || 0, { sign: true, dp: 2 })}${ai.realRead ? ` · ${esc(ai.realRead)}` : ''}</div>${stratTable(d.real)}` : ''}
       <div class="report-summary" style="margin-top:8px">LAB — ${lab?.overall ? `${lab.overall.trades} trades, ${lab.overall.winRate != null ? Math.round(lab.overall.winRate * 100) + '% win' : '—'}, ${money(lab.overall.pnl || 0, { sign: true, dp: 0 })}` : ''}${ai.labRead ? ` · ${esc(ai.labRead)}` : ''}</div>
       ${stratTable(lab)}

@@ -82,13 +82,6 @@ export function mount(host) {
             </div>
             <div class="empty-note" id="d-pos-bookC-empty" hidden>Book C is flat — waiting for a break-of-structure setup.</div>
           </div>
-          <div class="panel" style="overflow:hidden" id="d-panel-bookD">
-            <div class="panel-head">Book D (machine) — positions <span id="d-poscount-bookD" class="faint" style="letter-spacing:0"></span></div>
-            <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookD"></tbody></table>
-            </div>
-            <div class="empty-note" id="d-pos-bookD-empty" hidden>Book D is flat — the machine is waiting for its trigger.</div>
-          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
             <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
@@ -216,12 +209,15 @@ function paintCards() {
   if (!box) return;
   const h = state.hero || {};
   const t = state.today || {};
+  // Book D retired 07-13 (the Great Consolidation) — hero.bookD* comes back
+  // null from the backend; keep the (…|| 0) terms so old cached payloads
+  // can't skew the Main figure.
+  if (selCard === 'bookD') selCard = 'book';
   const openBook = state.positions.filter((p) => p.book === 'book').length;
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
-  const openBookD = state.positions.filter((p) => p.book === 'bookD').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
-  const openAcct = state.positions.length - openBook - openBookB - openBookC - openBookD - openReal;
+  const openAcct = state.positions.filter((p) => (p.book || 'account') === 'account').length - openReal;
 
   const bookVal = h.bookValue ?? h.bookEquity;
   const bookBVal = h.bookBValue ?? h.bookBEquity;
@@ -257,10 +253,9 @@ function paintCards() {
     + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
     + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
     + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
-    + card('bookD', 'BOOK D · $1K — MACHINE (mechanical)', bookDVal, h.bookDDayChangeUsd, h.bookDDayChangePct, t.bookD, openBookD, 'bookd')
-    + card('account', 'MAIN ACCOUNT — research bench', acctVal, acctChg, acctPct, t.account, openAcct, '')
+    + card('account', 'MAIN ACCOUNT — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
-    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 6 : 5 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 5 : 4 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
   if (row) {
     if (prevScroll) row.scrollLeft = prevScroll;
@@ -411,7 +406,6 @@ function paintPositions() {
     { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
     { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },
-    { which: 'bookD', body: '#d-pos-bookD', empty: '#d-pos-bookD-empty', count: '#d-poscount-bookD' },
     { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
   ];
   for (const g of groups) {
@@ -442,7 +436,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : r.book === 'bookD' ? ' <span class="chip" style="padding:0 5px;color:#f59e0b;border-color:#a3690b">D</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
