@@ -15,7 +15,7 @@ import { simResume, simKill } from '../sim.js';
 import { contractLabel, healthBadge } from './positions.js';
 
 let unsubs = [];
-let selCard = 'book';                 // 'book' | 'account' — survives repaints (module scope)
+let selCard = 'bookB';                 // 'bookB' | 'bookC' | 'account' — survives repaints (module scope)
 let range = '1d';                     // '1d' | '1w' | '1m'
 let chart = null;
 const seriesCache = {};               // range -> /equity-series payload
@@ -61,26 +61,26 @@ export function mount(host) {
             </div>
             <div class="empty-note" id="d-pos-real-empty" hidden>No real-money positions — the 💰 lanes are watching for their setup.</div>
           </div>
-          <div class="panel" style="overflow:hidden" id="d-panel-book">
-            <div class="panel-head">Book A (A+ setups) — positions <span id="d-poscount-book" class="faint" style="letter-spacing:0"></span></div>
-            <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-book"></tbody></table>
-            </div>
-            <div class="empty-note" id="d-pos-book-empty" hidden>Book A is flat — waiting for an A+ setup.</div>
-          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-bookB">
-            <div class="panel-head">Book B (control) — positions <span id="d-poscount-bookB" class="faint" style="letter-spacing:0"></span></div>
+            <div class="panel-head">Book B (full roster) — positions <span id="d-poscount-bookB" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookB"></tbody></table>
             </div>
             <div class="empty-note" id="d-pos-bookB-empty" hidden>Book B is flat — hunting for setups.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-bookC">
-            <div class="panel-head">Book C (precision) — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
+            <div class="panel-head">Book C (winners only) — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookC"></tbody></table>
             </div>
             <div class="empty-note" id="d-pos-bookC-empty" hidden>Book C is flat — waiting for a break-of-structure setup.</div>
+          </div>
+          <div class="panel" style="overflow:hidden" id="d-panel-bookE">
+            <div class="panel-head">Book E (smarter brain) — positions <span id="d-poscount-bookE" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookE"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-bookE-empty" hidden>Book E is flat — mirrors Book B's entries with the enhanced brain.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
             <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
@@ -209,24 +209,24 @@ function paintCards() {
   if (!box) return;
   const h = state.hero || {};
   const t = state.today || {};
-  // Book D retired 07-13 (the Great Consolidation) — hero.bookD* comes back
-  // null from the backend; keep the (…|| 0) terms so old cached payloads
-  // can't skew the Main figure.
-  if (selCard === 'bookD') selCard = 'book';
-  const openBook = state.positions.filter((p) => p.book === 'book').length;
+  // Books D (07-13) and A (07-15) retired — the surviving $1k books are B & C.
+  // A cached selection pointing at a dead book falls back to Book B.
+  if (selCard === 'bookD' || selCard === 'book') selCard = 'bookB';
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
+  const openBookE = state.positions.filter((p) => p.book === 'bookE').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
   // Main = untagged book only; real positions are tagged 'real' by the API,
   // so subtracting openReal here would double-count them negative.
   const openAcct = state.positions.filter((p) => (p.book || 'account') === 'account' && !/_real$/.test(p.strategy_key || '')).length;
 
-  const bookVal = h.bookValue ?? h.bookEquity;
   const bookBVal = h.bookBValue ?? h.bookBEquity;
   const bookCVal = h.bookCValue ?? h.bookCEquity;
-  const bookDVal = h.bookDValue ?? h.bookDEquity;
-  const acctVal = h.equity != null ? h.equity - (bookVal || 0) - (bookBVal || 0) - (bookCVal || 0) - (bookDVal || 0) : null;
-  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookDayChangeUsd || 0) - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) - (h.bookDDayChangeUsd || 0) : null;
+  const bookEVal = h.bookEValue ?? h.bookEEquity;
+  // Main = total minus the ACTIVE books (B, C & E). Book A/D equity anchors
+  // still echo from the backend but are no longer separate accounts.
+  const acctVal = h.equity != null ? h.equity - (bookBVal || 0) - (bookCVal || 0) - (bookEVal || 0) : null;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) - (h.bookEDayChangeUsd || 0) : null;
   const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
   const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
 
@@ -252,9 +252,9 @@ function paintCards() {
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
     + `<div class="acct-row three">`
     + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, t.real?.realizedPnl ?? null, null, t.real, openReal, 'realacct') : '')
-    + card('book', 'BOOK A · $1K — A+ SETUPS', bookVal, h.bookDayChangeUsd, h.bookDayChangePct, t.book, openBook, 'book')
-    + card('bookB', 'BOOK B · $1K — CONTROL', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
-    + card('bookC', 'BOOK C · $1K — DISCIPLINE (caps)', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
+    + card('bookB', 'BOOK B · $1K — FULL ROSTER', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
+    + card('bookC', 'BOOK C · $1K — WINNERS ONLY', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
+    + card('bookE', 'BOOK E · $1K — SMARTER BRAIN', bookEVal, h.bookEDayChangeUsd, h.bookEDayChangePct, t.bookE, openBookE, 'booke')
     + card('account', 'MAIN · $80K PAPER — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
     + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 5 : 4 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
@@ -311,11 +311,11 @@ function drawChart() {
   const note = document.querySelector('#d-chart-note');
   const title = document.querySelector('#d-chart-title');
   if (!wrap || typeof window.uPlot !== 'function') return;
-  const cardName = selCard === 'book' ? 'Book A' : selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : 'Main Account';
+  const cardName = selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : selCard === 'bookE' ? 'Book E' : 'Main Account';
   if (title) title.textContent = `${cardName} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
 
   const data = seriesCache[range];
-  let pts = (data && (selCard === 'book' ? data.book : selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : data.account)) || [];
+  let pts = (data && (selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : selCard === 'bookE' ? data.bookE : data.account)) || [];
   pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
 
   const h = state.hero || {};
@@ -326,8 +326,8 @@ function drawChart() {
       if (open > 0) pts = [[midnightETms(), open], ...pts];
       if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
     } else {
-      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : (h.bookValue ?? h.bookEquity);
-      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : h.bookDayChangeUsd;
+      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : selCard === 'bookE' ? (h.bookEValue ?? h.bookEEquity) : (h.bookValue ?? h.bookEquity);
+      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : selCard === 'bookE' ? h.bookEDayChangeUsd : h.bookDayChangeUsd;
       const dayStart = val != null && chg != null ? val - chg : null;
       if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
       if (val != null) pts = [...pts, [Date.now(), val]];
@@ -350,7 +350,7 @@ function drawChart() {
   const xs = pts.map((p) => p[0] / 1000);
   const ys = pts.map((p) => p[1]);
   const up = ys[ys.length - 1] >= ys[0];
-  const color = selCard === 'book' ? css('--accent-hi') : selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : (up ? css('--up') : css('--down'));
+  const color = selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : selCard === 'bookE' ? '#2dd4bf' : (up ? css('--up') : css('--down'));
   const axisStyle = {
     stroke: css('--text-faint'),
     grid: { stroke: 'rgba(63,63,70,.35)' },
@@ -365,7 +365,7 @@ function drawChart() {
     cursor: { drag: { x: false, y: false }, y: false },
     scales: { x: { time: true } },
     axes: [axisStyle, { ...axisStyle, size: 64 }],
-    series: [{}, { stroke: color, width: 2, fill: selCard === 'book' ? 'rgba(34,211,238,.07)' : selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
+    series: [{}, { stroke: color, width: 2, fill: selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : selCard === 'bookE' ? 'rgba(45,212,191,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
     hooks: {
       setCursor: [(u) => {
         if (!tag) return;
@@ -405,9 +405,9 @@ function posRow(p) {
 function paintPositions() {
   const groups = [
     { which: 'real', body: '#d-pos-real', empty: '#d-pos-real-empty', count: '#d-poscount-real' },
-    { which: 'book', body: '#d-pos-book', empty: '#d-pos-book-empty', count: '#d-poscount-book' },
     { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },
+    { which: 'bookE', body: '#d-pos-bookE', empty: '#d-pos-bookE-empty', count: '#d-poscount-bookE' },
     { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
   ];
   for (const g of groups) {
@@ -422,8 +422,9 @@ function paintPositions() {
 }
 
 function highlightGroups() {
-  document.querySelector('#d-panel-book')?.classList.toggle('focus', selCard === 'book');
   document.querySelector('#d-panel-bookB')?.classList.toggle('focus', selCard === 'bookB');
+  document.querySelector('#d-panel-bookC')?.classList.toggle('focus', selCard === 'bookC');
+  document.querySelector('#d-panel-bookE')?.classList.toggle('focus', selCard === 'bookE');
   document.querySelector('#d-panel-acct')?.classList.toggle('focus', selCard === 'account');
 }
 
@@ -438,7 +439,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : r.book === 'bookE' ? ' <span class="chip" style="padding:0 5px;color:#2dd4bf;border-color:#1a7f76">E</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
