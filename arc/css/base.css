@@ -78,13 +78,16 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
 #nav a.active .nav-ico { color: var(--accent); }
 
 @media (min-width: 900px) {
-  #app { grid-template-columns: var(--rail-w) 1fr; grid-template-rows: var(--sb-h) var(--cmd-h) 1fr;
+  /* minmax(0, 1fr): let the #screen track SHRINK below its content's min width.
+     A bare 1fr = minmax(auto, 1fr) grows to the widest child (e.g. a long feed
+     line), and #app's overflow:hidden then clips the right edge. */
+  #app { grid-template-columns: var(--rail-w) minmax(0, 1fr); grid-template-rows: var(--sb-h) var(--cmd-h) 1fr;
          grid-template-areas: "sb sb" "cmd cmd" "nav main"; }
   #statusbar { grid-area: sb; }
   #modestrip { grid-area: cmd; }
   #nav { grid-area: nav; flex-direction: column; gap: 3px; border-right: 1px solid var(--border); background: var(--bg); padding: 12px 12px; overflow-y: auto; min-height: 0; }
   #nav a { padding: 11px 13px; min-height: 44px; }
-  #screen { grid-area: main; }
+  #screen { grid-area: main; min-width: 0; overflow-x: hidden; overflow-y: auto; }
 }
 @media (max-width: 899px) {
   /* iOS-safe shell: unlock the body and let the whole document scroll

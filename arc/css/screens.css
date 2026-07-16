@@ -12,7 +12,7 @@
 .deck-readout .ro .ro-value.state-running { color: var(--accent-hi); }
 .deck-readout .ro .ro-value.state-halted { color: var(--alert); }
 .deck-readout .ro .ro-value.big { font-size: 24px; }
-.bridge-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
+.bridge-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .bridge-col { display: grid; gap: 16px; }
 .deck-ticker { height: 200px; }
 .deck-ticker .terminal { height: calc(200px - 46px); }
@@ -368,7 +368,7 @@
 .brv { font-size: 13px; color: var(--text); font-weight: 700; }
 .brv .gain { color: var(--up); } .brv .loss { color: var(--down); }
 
-.brain-main { display: grid; grid-template-columns: 1.6fr 1fr; gap: 10px; }
+.brain-main { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; }
 .brain-stage { position: relative; aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid #123039;
   background: radial-gradient(120% 100% at 50% 44%, rgba(10,26,38,.55) 0%, rgba(8,11,16,.92) 72%); }
 .brain-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -380,9 +380,12 @@
 .brain-feed { background: #0b1119; border: 1px solid var(--border); border-radius: 12px; padding: 9px 10px; min-width: 0; overflow: hidden; }
 .bf-h { font-size: 9px; letter-spacing: .12em; color: var(--text-faint); display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
 .bf-live { width: 6px; height: 6px; border-radius: 50%; background: var(--up); box-shadow: 0 0 7px var(--up); animation: bblink 1.6s infinite; }
-.bf-body { display: flex; flex-direction: column; gap: 6px; }
-.bfl { font-size: 10.5px; line-height: 1.35; color: var(--text-dim); display: flex; gap: 7px; align-items: flex-start; }
+.bf-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bfl { font-size: 10.5px; line-height: 1.35; color: var(--text-dim); display: flex; gap: 7px; align-items: flex-start; min-width: 0; }
 .bfl i { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex: none; box-shadow: 0 0 6px currentColor; }
+/* let long feed lines wrap AND clamp to 2 lines so one giant event (e.g. the
+   "Weights set …" dump) can't blow out the column width or the panel height */
+.bfl span { min-width: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bfl b { color: var(--text); } .bfl.faint { color: var(--text-faint); }
 
 .brain-rhythm { margin-top: 9px; background: #0b1119; border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px 9px; }
