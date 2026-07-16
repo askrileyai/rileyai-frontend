@@ -1,7 +1,12 @@
 /* Per-screen layout — rounded cards, roomy (RileyAI app feel). */
 
 /* ---- OVERVIEW (deck) ---- */
-.bridge { display: grid; gap: 16px; }
+.bridge { display: grid; gap: 16px; min-width: 0; }
+/* Overflow guard at ALL widths (was mobile-only): every deck child must be
+   allowed to shrink below its content's min width, so a wide element (the brain
+   feed's long lines, a wide table) can't blow the layout past the viewport and
+   get clipped on the right on desktop. */
+.bridge > *, .bridge-col > *, .bridge-grid > *, .brain-panel, .brain-main > *, .acct-cards { min-width: 0; }
 .deck-readout { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
 .deck-readout .ro {
   background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
