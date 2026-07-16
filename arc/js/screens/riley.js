@@ -15,20 +15,15 @@ import { money, pnlClass, esc } from '../components/fmt.js';
 let msgs = []; // {role:'user'|'riley', text, tools?:[]}
 let streaming = false;
 
-const SUGGESTS = [
-  'How are my positions doing?',
-  "What is the engine doing right now?",
-  'Which strategy do you like best today?',
-  'Set up 0DTE momentum on SPY',
-  'How does the risk system work?',
-];
+// Preloaded suggestion chips removed (owner 07-15) — the input stands alone.
+const SUGGESTS = [];
 
 export function mount(host) {
   host.innerHTML = `
     <div class="chat">
       <div class="chat-scroll" id="c-scroll"></div>
       <div>
-        <div class="chat-suggests" id="c-suggests">${SUGGESTS.map((s) => `<button class="fchip" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+        ${SUGGESTS.length ? `<div class="chat-suggests" id="c-suggests">${SUGGESTS.map((s) => `<button class="fchip" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
         <div class="chat-input">
           <textarea id="c-input" placeholder="Ask Riley about your account, or tell it what to set up…" rows="1"></textarea>
           <button class="btn" id="c-send">Send</button>
@@ -108,6 +103,29 @@ function appendRiley(scroll, m) {
   scroll.appendChild(row);
   scroll.scrollTop = scroll.scrollHeight;
   return bubble; // has .msg-text and .msg-tools children
+}
+
+// Safety net: sometimes the agent finalizes with a raw JSON blob instead of
+// prose. Rather than print braces at the user, pull out the human field (or
+// flatten to readable lines). Applied only at stream END (partial JSON mid-
+// stream must not be parsed). Non-JSON text passes straight through.
+function humanizeMaybeJson(s) {
+  const t = (s || '').trim();
+  if (!(t.startsWith('{') || t.startsWith('['))) return s;
+  try {
+    const o = JSON.parse(t);
+    if (typeof o === 'string') return o;
+    for (const k of ['reply', 'response', 'answer', 'message', 'text', 'content', 'thesis', 'summary', 'note', 'read']) {
+      if (o && typeof o[k] === 'string' && o[k].trim()) return o[k];
+    }
+    if (o && typeof o === 'object' && !Array.isArray(o)) {
+      const parts = Object.entries(o)
+        .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
+        .map(([k, v]) => `**${k}:** ${v}`);
+      if (parts.length) return parts.join('\n');
+    }
+  } catch (_) {}
+  return s;
 }
 
 // Escape, then render **bold** and newlines — Riley's analysis reads cleanly.
@@ -193,6 +211,8 @@ async function realStream(scroll, text) {
       } catch (_) {}
     }
   }
+  m.text = humanizeMaybeJson(m.text);
+  setBubbleText(bubble, m.text);
 }
 
 // ---- local demo brain (sim mode): reads AND controls the engine state ----

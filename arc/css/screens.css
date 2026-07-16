@@ -141,20 +141,23 @@
 .acct-combined b { font-size: 15px; color: var(--text); }
 .acct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .acct-row.three { grid-template-columns: 1fr 1fr 1fr; }
+/* Desktop: 5 account cards auto-fit the available width (wrap instead of clip)
+   so a non-maximized window never cuts a card off. */
+.acct-cards .acct-row, .acct-cards .acct-row.three { grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)); }
 /* Mobile: the account cards become a one-per-swipe SNAP CAROUSEL with dots
    (owner: "swiping through accounts is not made for mobile"). Scoped under
    .acct-cards — bare .acct-row is reused by the reconciliation widget. */
 .acct-dots { display: none; justify-content: center; gap: 7px; padding: 6px 0 0; }
 .acct-dots .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); border: 0; padding: 0; cursor: pointer; transition: background .15s, transform .15s; }
 .acct-dots .dot.on { background: var(--accent-hi); transform: scale(1.3); }
-@media (max-width: 899px) {
+@media (max-width: 640px) {
   .acct-cards .acct-row, .acct-cards .acct-row.three {
     display: flex; grid-template-columns: none; gap: 10px;
     overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     scrollbar-width: none; padding: 2px 2px 4px; margin: 0 -2px;
   }
   .acct-cards .acct-row::-webkit-scrollbar { display: none; }
-  .acct-cards .acct-row .acct-card { flex: 0 0 min(78vw, 340px); scroll-snap-align: center; }
+  .acct-cards .acct-row .acct-card { flex: 0 0 min(82vw, 340px); scroll-snap-align: center; }
   .acct-dots { display: flex; }
 }
 .acct-card.realacct .ac-label { color: #22c55e; }
@@ -299,7 +302,7 @@
 
 /* ---- RILEY (chat) ---- */
 .chat { display: grid; grid-template-rows: 1fr auto; gap: 12px; height: 100%; min-height: 460px; }
-.chat-scroll { overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 14px; }
+.chat-scroll { overflow-y: auto; min-height: 0; padding: 4px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
 .msg { max-width: 76%; padding: 12px 15px; border-radius: var(--radius); font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
 .msg.user { align-self: flex-end; background: var(--accent); color: #04222a; border-bottom-right-radius: 4px; }
 .msg.riley { align-self: flex-start; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
@@ -331,8 +334,10 @@
   .settings > *, .research > *, .panel, .holo { min-width: 0; }
   /* data tables scroll horizontally inside their card instead of forcing width */
   .dtable { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* chat + activity feed: bounded viewport height → inner scroll + pinned input */
-  .chat, .mind { height: calc(100dvh - 168px); min-height: 420px; }
+  /* chat + activity feed: bounded to the visible viewport (statusbar + command
+     bar are the only chrome) so the scroll area scrolls internally and the
+     input stays pinned + reachable — no magic offset. */
+  .chat, .mind { height: calc(100dvh - var(--sb-h) - var(--cmd-h) - 18px); min-height: 380px; }
 }
 
 /* ---- SMALL PHONES (iPhone SE/8/12 mini class) ---- */
@@ -345,4 +350,43 @@
   .cal-pnl { font-size: 10px; }
   .dtable th, .dtable td { padding: 7px 8px; }
   .hero-eq { font-size: 30px; }
+}
+
+/* ── Riley's Mind — the live neural-brain dashboard ─────────────────────── */
+.brain-panel { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px 11px; margin: 8px 0; overflow: hidden; }
+.brain-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+.brain-head .bh-l { font-size: 14px; font-weight: 700; letter-spacing: .13em; display: flex; align-items: center; gap: 8px; color: var(--text); }
+.brain-head .bh-sub { color: var(--text-faint); font-weight: 600; letter-spacing: .09em; font-size: 11px; }
+.brain-head .bh-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-hi); box-shadow: 0 0 9px var(--accent-hi); flex: none; }
+.brain-head .bh-r { font-size: 10px; letter-spacing: .12em; color: var(--up); font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.bh-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 8px var(--up); animation: bblink 1.7s ease-in-out infinite; flex: none; }
+@keyframes bblink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.brain-readout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.bro { background: #0b1119; border: 1px solid var(--border); border-radius: 9px; padding: 6px 9px; display: flex; flex-direction: column; gap: 2px; }
+.brk { font-size: 8px; letter-spacing: .15em; color: var(--text-faint); }
+.brv { font-size: 13px; color: var(--text); font-weight: 700; }
+.brv .gain { color: var(--up); } .brv .loss { color: var(--down); }
+.brain-stage { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: radial-gradient(120% 90% at 50% 42%, rgba(12,22,34,.55) 0%, rgba(8,11,16,.9) 72%); }
+.brain-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.brain-legend { position: absolute; left: 12px; bottom: 9px; display: flex; gap: 11px; font-size: 9.5px; color: var(--text-dim); letter-spacing: .05em; }
+.brain-legend span { display: flex; align-items: center; gap: 5px; }
+.brain-legend i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 7px currentColor; }
+.brain-think { margin-top: 9px; background: #0b1119; border: 1px solid var(--border); border-radius: 9px; padding: 8px 11px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 9px; }
+.brain-think .bt-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-hi); box-shadow: 0 0 9px var(--accent-hi); flex: none; }
+.brain-think .bt-body { min-width: 0; }
+.brain-think b { color: var(--text); }
+.brain-think .gain { color: var(--up); } .brain-think .loss { color: var(--down); }
+.bt-read { color: var(--text-faint); }
+.bt-band { font-size: 8.5px; letter-spacing: .08em; padding: 1px 5px; border-radius: 5px; border: 1px solid; white-space: nowrap; }
+.bt-healthy { color: var(--up); border-color: rgba(34,197,94,.4); }
+.bt-watch { color: #eab308; border-color: rgba(234,179,8,.4); }
+.bt-critical { color: var(--down); border-color: rgba(239,68,68,.4); }
+/* tiny per-card trend line (replaces the big equity chart) */
+.ac-spark-wrap { height: 22px; margin: 3px 0 1px; }
+.ac-spark { width: 100%; height: 100%; display: block; opacity: .82; }
+@media (max-width: 640px) {
+  .brain-readout { grid-template-columns: repeat(2, 1fr); }
+  .brain-head .bh-sub { display: none; }
+  .brain-stage { aspect-ratio: 3/2; }
+  .brain-think { font-size: 11px; }
 }

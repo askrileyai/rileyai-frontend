@@ -13,12 +13,14 @@ import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
 import { simResume, simKill } from '../sim.js';
 import { contractLabel, healthBadge } from './positions.js';
+import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js';
 
 let unsubs = [];
 let selCard = 'bookB';                 // 'bookB' | 'bookC' | 'account' — survives repaints (module scope)
 let range = '1d';                     // '1d' | '1w' | '1m'
 let chart = null;
-const seriesCache = {};               // range -> /equity-series payload
+let brainCtl = null;                  // Riley's Mind controller (mounted once)
+const seriesCache = {};               // range -> /equity-series payload (drives the card sparklines)
 let activity = null;                  // /activity payload for the systems strip
 let refreshT = null;
 
@@ -29,23 +31,7 @@ export function mount(host) {
 
       <div class="acct-cards" id="d-cards"></div>
 
-      <div class="panel" style="overflow:hidden">
-        <div class="panel-head">
-          <span id="d-chart-title">Equity · Today</span>
-          <span class="row" style="gap:8px;align-items:center">
-            <span id="d-chart-tag" class="faint" style="letter-spacing:0;text-transform:none"></span>
-            <span class="fchips" id="d-ranges">
-              <button class="fchip on" data-range="1d">1D</button>
-              <button class="fchip" data-range="1w">1W</button>
-              <button class="fchip" data-range="1m">1M</button>
-            </span>
-          </span>
-        </div>
-        <div class="panel-body" style="padding:8px 10px">
-          <div id="d-chart-wrap" class="uplot-wrap" style="touch-action:pan-y"></div>
-          <div id="d-chart-note" class="empty-note" hidden></div>
-        </div>
-      </div>
+      <div id="d-brain"></div>
 
       <div class="panel" style="overflow:hidden">
         <div class="panel-head">Riley's Read <a href="#/riley" style="font-weight:500;font-size:12px">Ask Riley ›</a></div>
@@ -124,6 +110,7 @@ export function mount(host) {
   `;
 
   host.querySelector('#d-kill').appendChild(killSwitch());
+  brainCtl = mountBrain(host.querySelector('#d-brain'));
   host.querySelector('#d-flatten-real')?.addEventListener('click', async () => {
     if (!confirm('Exit ALL real-money positions at market right now?')) return;
     try { await api.flattenReal(); } catch (e) { alert('Flatten failed: ' + (e.message || e)); }
@@ -144,14 +131,7 @@ export function mount(host) {
     const card = e.target.closest('[data-card]');
     if (!card) return;
     selCard = card.getAttribute('data-card');
-    paintCards(); drawChart(); highlightGroups();
-  });
-  host.querySelector('#d-ranges').addEventListener('click', (e) => {
-    const chip = e.target.closest('[data-range]');
-    if (!chip) return;
-    range = chip.getAttribute('data-range');
-    host.querySelectorAll('#d-ranges .fchip').forEach((c) => c.classList.toggle('on', c === chip));
-    loadSeries();
+    paintCards(); highlightGroups();
   });
 
   paint();
@@ -180,6 +160,7 @@ export function unmount() {
   clearTimeout(resizeT);
   clearInterval(refreshT);
   if (chart) { chart.destroy(); chart = null; }
+  brainCtl?.destroy(); brainCtl = null;
 }
 
 function onEvt(evt) {
@@ -189,11 +170,36 @@ function onEvt(evt) {
     if (evt.type === 'arbiter.read') lastRead = evt.summary;
     paint();
   }
+  // Riley's Mind: fire a colored pulse on every real event, refresh the readout.
+  if (evt.type !== 'position.mark' && evt.type !== 'heartbeat') { brainCtl?.pulse(pulseTypeFor(evt.type)); updateBrain(); }
   const term = document.querySelector('#d-ticker');
   if (term) appendTickerRow(term, evt);
 }
 
-function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); paintToday(); paintSystems(); paintEngine(); }
+function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); paintToday(); paintSystems(); paintEngine(); updateBrain(); }
+
+// Feed live state into Riley's Mind — readout, activity level, and the
+// "current trade — what she's thinking" line (from the open position's health).
+function updateBrain() {
+  if (!brainCtl) return;
+  const now = Date.now();
+  const evs = state.events || [];
+  const since = (ms) => evs.filter((e) => now - new Date(e.ts).getTime() < ms).length;
+  const syms = new Set();
+  for (const p of state.positions) if (p.symbol) syms.add(p.symbol);
+  const think = thinkingFor(state.positions);
+  brainCtl.update({
+    engineState: state.engine?.state,
+    live: typeof isLive === 'function' ? isLive() : false,
+    watching: Math.max(syms.size, 8),
+    evaluating: since(60000),
+    managing: state.positions.length,
+    dayChangeUsd: state.hero?.dayChangeUsd,
+    recentEvents: since(10000),
+    think: think ? think.html : 'Flat — scanning the tape for the next setup.',
+    thinkColor: think ? think.color : '#22d3ee',
+  });
+}
 
 // ── Account cards — the two books, separately, with today's record ─────────
 function bookOpenPnl(which) {
@@ -236,6 +242,7 @@ function paintCards() {
       <div class="ac-label">${label}</div>
       <div class="ac-val mono">${val != null ? money(val, { dp: 2 }) : '—'}</div>
       <div class="ac-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : '—'}</div>
+      ${sparkline(key)}
       <div class="ac-foot">${rec(r)}<span class="ac-open">${open} open</span></div>
     </div>`;
 
@@ -287,6 +294,20 @@ function updateDots() {
 
 function isLive() { return state.engine?.risk_config?.liveTradingEnabled && state.strategies.some((s) => s.enabled && s.mode === 'LIVE'); }
 
+// Tiny inline trend line on each account card (replaces the big equity chart).
+// Reads today's per-account series from the cache; renders nothing until loaded.
+function sparkline(cardKey) {
+  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookB' ? 'bookB' : cardKey === 'bookC' ? 'bookC' : cardKey === 'bookE' ? 'bookE' : null;
+  if (!seriesKey) return '<div class="ac-spark-wrap"></div>';
+  const data = (seriesCache['1d'] || {})[seriesKey];
+  const ys = (data || []).map((p) => p[1]).filter(Number.isFinite);
+  if (ys.length < 2) return '<div class="ac-spark-wrap"></div>';
+  const min = Math.min(...ys), max = Math.max(...ys), rng = (max - min) || 1, W = 100, H = 24;
+  const pts = ys.map((y, i) => `${(i / (ys.length - 1) * W).toFixed(1)},${(H - ((y - min) / rng) * H).toFixed(1)}`).join(' ');
+  const up = ys[ys.length - 1] >= ys[0], c = up ? '#22c55e' : '#ef4444';
+  return `<div class="ac-spark-wrap"><svg class="ac-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg></div>`;
+}
+
 // ── The chart — real equity, the selected card's line ──────────────────────
 function midnightETms() {
   const now = new Date();
@@ -297,11 +318,13 @@ function midnightETms() {
 }
 
 async function loadSeries(force = false) {
-  if (isSim()) { seriesCache[range] = simSeries(); drawChart(); return; }
+  // The big equity chart is gone (replaced by Riley's Mind); we still pull the
+  // per-account series to paint the tiny sparkline on each account card.
+  if (isSim()) { seriesCache[range] = simSeries(); paintCards(); return; }
   if (!seriesCache[range] || force) {
     try { seriesCache[range] = await api.equitySeries(range); } catch (_) { seriesCache[range] = null; }
   }
-  drawChart();
+  paintCards();
 }
 
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
