@@ -88,10 +88,6 @@ export function mount(host) {
             <div class="panel-head">Systems</div>
             <div class="panel-body sys-chips" id="d-systems"></div>
           </div>
-          <div class="panel deck-ticker" style="overflow:hidden">
-            <div class="panel-head">Live Feed <a href="#/mind" class="faint" style="text-transform:none;letter-spacing:0">open ›</a></div>
-            <div class="terminal" id="d-ticker"></div>
-          </div>
         </div>
       </div>
 
@@ -131,7 +127,7 @@ export function mount(host) {
     const card = e.target.closest('[data-card]');
     if (!card) return;
     selCard = card.getAttribute('data-card');
-    paintCards(); highlightGroups();
+    paintCards(); highlightGroups(); updateBrain();   // re-target Riley's Mind to the selected account
   });
 
   paint();
@@ -180,24 +176,29 @@ function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); 
 
 // Feed live state into Riley's Mind — readout, activity level, and the
 // "current trade — what she's thinking" line (from the open position's health).
+// Feed Riley's Mind — scoped to the SELECTED account card (positions/hotspots +
+// managing count); the live feed + rhythm show the engine's whole-day activity.
+const ACCT_LABEL = { bookB: 'BOOK B', bookC: 'BOOK C', bookE: 'BOOK E', real: '💰 REAL', account: 'MAIN' };
 function updateBrain() {
   if (!brainCtl) return;
   const now = Date.now();
   const evs = state.events || [];
   const since = (ms) => evs.filter((e) => now - new Date(e.ts).getTime() < ms).length;
+  const acctPos = state.positions.filter((p) => (p.book || 'account') === selCard);
   const syms = new Set();
   for (const p of state.positions) if (p.symbol) syms.add(p.symbol);
-  const think = thinkingFor(state.positions);
   brainCtl.update({
     engineState: state.engine?.state,
     live: typeof isLive === 'function' ? isLive() : false,
+    acctLabel: ACCT_LABEL[selCard] || 'MAIN',
     watching: Math.max(syms.size, 8),
     evaluating: since(60000),
-    managing: state.positions.length,
+    managing: acctPos.length,
     dayChangeUsd: state.hero?.dayChangeUsd,
     recentEvents: since(10000),
-    think: think ? think.html : 'Flat — scanning the tape for the next setup.',
-    thinkColor: think ? think.color : '#22d3ee',
+    positions: acctPos,
+    events: evs,
+    regime: state.regime?.label || state.regime?.key || null,
   });
 }
 
