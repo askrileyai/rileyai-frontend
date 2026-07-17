@@ -47,6 +47,13 @@ export function mount(host) {
             </div>
             <div class="empty-note" id="d-pos-real-empty" hidden>No real-money positions — the 💰 lanes are watching for their setup.</div>
           </div>
+          <div class="panel" style="overflow:hidden" id="d-panel-bookRiley">
+            <div class="panel-head">🧠 Book Riley (AI trader) — positions <span id="d-poscount-bookRiley" class="faint" style="letter-spacing:0"></span></div>
+            <div style="overflow-x:auto">
+              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookRiley"></tbody></table>
+            </div>
+            <div class="empty-note" id="d-pos-bookRiley-empty" hidden>Book Riley is flat — Riley is reading the tape for her setup.</div>
+          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-bookB">
             <div class="panel-head">Book B (full roster) — positions <span id="d-poscount-bookB" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
@@ -432,6 +439,7 @@ function posRow(p) {
 function paintPositions() {
   const groups = [
     { which: 'real', body: '#d-pos-real', empty: '#d-pos-real-empty', count: '#d-poscount-real' },
+    { which: 'bookRiley', body: '#d-pos-bookRiley', empty: '#d-pos-bookRiley-empty', count: '#d-poscount-bookRiley' },
     { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },
     { which: 'bookE', body: '#d-pos-bookE', empty: '#d-pos-bookE-empty', count: '#d-poscount-bookE' },
@@ -449,6 +457,7 @@ function paintPositions() {
 }
 
 function highlightGroups() {
+  document.querySelector('#d-panel-bookRiley')?.classList.toggle('focus', selCard === 'bookRiley');
   document.querySelector('#d-panel-bookB')?.classList.toggle('focus', selCard === 'bookB');
   document.querySelector('#d-panel-bookC')?.classList.toggle('focus', selCard === 'bookC');
   document.querySelector('#d-panel-bookE')?.classList.toggle('focus', selCard === 'bookE');
