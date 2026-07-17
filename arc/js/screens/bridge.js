@@ -178,7 +178,7 @@ function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); 
 // "current trade — what she's thinking" line (from the open position's health).
 // Feed Riley's Mind — scoped to the SELECTED account card (positions/hotspots +
 // managing count); the live feed + rhythm show the engine's whole-day activity.
-const ACCT_LABEL = { bookB: 'BOOK B', bookC: 'BOOK C', bookE: 'BOOK E', real: '💰 REAL', account: 'MAIN' };
+const ACCT_LABEL = { bookB: 'BOOK B', bookC: 'BOOK C', bookE: 'BOOK E', bookRiley: '🧠 RILEY', real: '💰 REAL', account: 'MAIN' };
 function updateBrain() {
   if (!brainCtl) return;
   const now = Date.now();
@@ -222,6 +222,7 @@ function paintCards() {
   const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
   const openBookE = state.positions.filter((p) => p.book === 'bookE').length;
+  const openBookRiley = state.positions.filter((p) => p.book === 'bookRiley').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
   // Main = untagged book only; real positions are tagged 'real' by the API,
   // so subtracting openReal here would double-count them negative.
@@ -230,10 +231,11 @@ function paintCards() {
   const bookBVal = h.bookBValue ?? h.bookBEquity;
   const bookCVal = h.bookCValue ?? h.bookCEquity;
   const bookEVal = h.bookEValue ?? h.bookEEquity;
-  // Main = total minus the ACTIVE books (B, C & E). Book A/D equity anchors
+  const bookRileyVal = h.bookRileyValue ?? h.bookRileyEquity;
+  // Main = total minus the ACTIVE books (B, C, E & Riley). Book A/D equity anchors
   // still echo from the backend but are no longer separate accounts.
-  const acctVal = h.equity != null ? h.equity - (bookBVal || 0) - (bookCVal || 0) - (bookEVal || 0) : null;
-  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) - (h.bookEDayChangeUsd || 0) : null;
+  const acctVal = h.equity != null ? h.equity - (bookBVal || 0) - (bookCVal || 0) - (bookEVal || 0) - (bookRileyVal || 0) : null;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) - (h.bookEDayChangeUsd || 0) - (h.bookRileyDayChangeUsd || 0) : null;
   const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
   const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
 
@@ -260,12 +262,13 @@ function paintCards() {
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
     + `<div class="acct-row three">`
     + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, t.real?.realizedPnl ?? null, null, t.real, openReal, 'realacct') : '')
+    + card('bookRiley', '🧠 BOOK RILEY · $1K — AI TRADER', bookRileyVal, h.bookRileyDayChangeUsd, h.bookRileyDayChangePct, t.bookRiley, openBookRiley, 'bookriley')
     + card('bookB', 'BOOK B · $1K — FULL ROSTER', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
     + card('bookC', 'BOOK C · $1K — WINNERS ONLY', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
     + card('bookE', 'BOOK E · $1K — SMARTER BRAIN', bookEVal, h.bookEDayChangeUsd, h.bookEDayChangePct, t.bookE, openBookE, 'booke')
     + card('account', 'MAIN · $80K PAPER — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
-    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 5 : 4 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 6 : 5 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
   if (row) {
     if (prevScroll) row.scrollLeft = prevScroll;

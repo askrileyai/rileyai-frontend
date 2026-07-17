@@ -15,7 +15,7 @@ import { engineStateLabel } from './components/killswitch.js';
 // Screen imports carry their own cache-bust (07-14): main.js?v=mN alone does
 // NOT re-fetch these — a phone could hold an old bridge.js against a new
 // main.js and render a stale dashboard. Bump these with index.html's ?v.
-import * as bridge from './screens/bridge.js?v=m26';
+import * as bridge from './screens/bridge.js?v=m27';
 import * as riley from './screens/riley.js?v=m26';
 import * as mind from './screens/mind.js?v=m26';
 import * as playbook from './screens/playbook.js?v=m26';
