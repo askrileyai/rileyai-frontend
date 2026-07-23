@@ -1,24 +1,22 @@
 // @ts-check
-// OVERVIEW v2 — two accounts, one honest chart, today's record, and a
-// scoreboard that means something. Layout: mandate → account cards (Main /
-// $1k Book, tappable) → interactive equity chart (uPlot, 1D/1W/1M, series
-// follows the selected card, 1D anchored at the midnight equity_open so the
-// chart's move EQUALS the card's Today ±) → Riley's Read → positions split by
-// book → Working-today scoreboard + systems strip + live feed → engine control.
+// OVERVIEW — three accounts (💰 Real / Book C $1k / Main $80k), today's record,
+// and a scoreboard that means something. Layout: mandate → account cards
+// (tappable; each has a tiny sparkline) → Riley's Mind (live brain + feed +
+// today's rhythm; series follows the selected card) → Riley's Read → positions
+// split by book → Working-today scoreboard + systems strip → engine control.
 
 import * as bus from '../bus.js';
 import { state, winRate, hydrate, applyAlertTheme } from '../store.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
-import { simResume, simKill } from '../sim.js';
+import { simResume, simKill } from '../sim.js?v=m36';
 import { contractLabel, healthBadge } from './positions.js';
 import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js';
 
 let unsubs = [];
-let selCard = 'bookB';                 // 'bookB' | 'bookC' | 'account' — survives repaints (module scope)
-let range = '1d';                     // '1d' | '1w' | '1m'
-let chart = null;
+let selCard = 'account';               // 'bookC' | 'account' | 'real' — survives repaints (module scope)
+let range = '1d';                     // day series that feeds the card sparklines
 let brainCtl = null;                  // Riley's Mind controller (mounted once)
 const seriesCache = {};               // range -> /equity-series payload (drives the card sparklines)
 let activity = null;                  // /activity payload for the systems strip
@@ -47,33 +45,12 @@ export function mount(host) {
             </div>
             <div class="empty-note" id="d-pos-real-empty" hidden>No real-money positions — the 💰 lanes are watching for their setup.</div>
           </div>
-          <div class="panel" style="overflow:hidden" id="d-panel-bookRiley">
-            <div class="panel-head">🧠 Book Riley (AI trader) — positions <span id="d-poscount-bookRiley" class="faint" style="letter-spacing:0"></span></div>
-            <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookRiley"></tbody></table>
-            </div>
-            <div class="empty-note" id="d-pos-bookRiley-empty" hidden>Book Riley is flat — Riley is reading the tape for her setup.</div>
-          </div>
-          <div class="panel" style="overflow:hidden" id="d-panel-bookB">
-            <div class="panel-head">Book B (full roster) — positions <span id="d-poscount-bookB" class="faint" style="letter-spacing:0"></span></div>
-            <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookB"></tbody></table>
-            </div>
-            <div class="empty-note" id="d-pos-bookB-empty" hidden>Book B is flat — hunting for setups.</div>
-          </div>
           <div class="panel" style="overflow:hidden" id="d-panel-bookC">
             <div class="panel-head">Book C (winners only) — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookC"></tbody></table>
             </div>
             <div class="empty-note" id="d-pos-bookC-empty" hidden>Book C is flat — waiting for a break-of-structure setup.</div>
-          </div>
-          <div class="panel" style="overflow:hidden" id="d-panel-bookE">
-            <div class="panel-head">Book E (smarter brain) — positions <span id="d-poscount-bookE" class="faint" style="letter-spacing:0"></span></div>
-            <div style="overflow-x:auto">
-              <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookE"></tbody></table>
-            </div>
-            <div class="empty-note" id="d-pos-bookE-empty" hidden>Book E is flat — mirrors Book B's entries with the enhanced brain.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
             <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
@@ -149,20 +126,12 @@ export function mount(host) {
     bus.on('alert', paint),
     bus.on('evt', onEvt),
   ];
-  window.addEventListener('resize', onWinResize);
 }
-
-// Debounced redraw — raw resize fired per-frame during orientation changes.
-let resizeT = 0;
-function onWinResize() { clearTimeout(resizeT); resizeT = setTimeout(drawChart, 150); }
 
 export function unmount() {
   unsubs.forEach((u) => u());
   unsubs = [];
-  window.removeEventListener('resize', onWinResize);
-  clearTimeout(resizeT);
   clearInterval(refreshT);
-  if (chart) { chart.destroy(); chart = null; }
   brainCtl?.destroy(); brainCtl = null;
 }
 
@@ -185,7 +154,7 @@ function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); 
 // "current trade — what she's thinking" line (from the open position's health).
 // Feed Riley's Mind — scoped to the SELECTED account card (positions/hotspots +
 // managing count); the live feed + rhythm show the engine's whole-day activity.
-const ACCT_LABEL = { bookB: 'BOOK B', bookC: 'BOOK C', bookE: 'BOOK E', bookRiley: '🧠 RILEY', real: '💰 REAL', account: 'MAIN' };
+const ACCT_LABEL = { bookC: 'BOOK C', real: '💰 REAL', account: 'MAIN' };
 function updateBrain() {
   if (!brainCtl) return;
   const now = Date.now();
@@ -223,28 +192,29 @@ function paintCards() {
   if (!box) return;
   const h = state.hero || {};
   const t = state.today || {};
-  // Books D (07-13) and A (07-15) retired — the surviving $1k books are B & C.
-  // A cached selection pointing at a dead book falls back to Book B.
-  if (selCard === 'bookD' || selCard === 'book') selCard = 'bookB';
-  const openBookB = state.positions.filter((p) => p.book === 'bookB').length;
+  // Books A/D/B/E/Riley retired — the surviving $1k book is C; Main holds the full
+  // roster. A cached selection pointing at a dead book falls back to Main.
+  if (['bookD', 'book', 'bookB', 'bookE', 'bookRiley'].includes(selCard)) selCard = 'account';
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
-  const openBookE = state.positions.filter((p) => p.book === 'bookE').length;
-  const openBookRiley = state.positions.filter((p) => p.book === 'bookRiley').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
   // Main = untagged book only; real positions are tagged 'real' by the API,
   // so subtracting openReal here would double-count them negative.
   const openAcct = state.positions.filter((p) => (p.book || 'account') === 'account' && !/_real$/.test(p.strategy_key || '')).length;
 
-  const bookBVal = h.bookBValue ?? h.bookBEquity;
   const bookCVal = h.bookCValue ?? h.bookCEquity;
-  const bookEVal = h.bookEValue ?? h.bookEEquity;
-  const bookRileyVal = h.bookRileyValue ?? h.bookRileyEquity;
-  // Main = total minus the ACTIVE books (B, C, E & Riley). Book A/D equity anchors
-  // still echo from the backend but are no longer separate accounts.
-  const acctVal = h.equity != null ? h.equity - (bookBVal || 0) - (bookCVal || 0) - (bookEVal || 0) - (bookRileyVal || 0) : null;
-  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookBDayChangeUsd || 0) - (h.bookCDayChangeUsd || 0) - (h.bookEDayChangeUsd || 0) - (h.bookRileyDayChangeUsd || 0) : null;
+  // Main = total minus the $1k Book C (the only remaining sub-book). Retired-book
+  // equity anchors still echo from the backend but are no longer separate accounts.
+  const acctVal = h.equity != null ? h.equity - (bookCVal || 0) : null;
+  const acctChg = h.dayChangeUsd != null ? h.dayChangeUsd - (h.bookCDayChangeUsd || 0) : null;
   const acctBase = acctVal != null && acctChg != null ? acctVal - acctChg : null;
   const acctPct = acctBase > 0 && acctChg != null ? +((acctChg / acctBase) * 100).toFixed(2) : null;
+  // REAL day %: the real card only had a $ figure (owner 07-23 "match the others
+  // with percentage"). Real shows realized P&L today, so derive its % from
+  // start-of-day equity (current − realized). At $0 it reads +0% like the others.
+  const realChg = t.real?.realizedPnl ?? null;
+  const realBase = h.realEquity != null && realChg != null ? h.realEquity - realChg : null;
+  const realPct = realBase > 0 && realChg != null ? +((realChg / realBase) * 100).toFixed(2) : (realChg != null && h.realEquity > 0 ? 0 : null);
+  const todayBy = { real: { chg: realChg, pct: realPct }, bookC: { chg: h.bookCDayChangeUsd, pct: h.bookCDayChangePct }, account: { chg: acctChg, pct: acctPct } };
 
   const rec = (r) => r ? `<span class="ac-rec"><b class="gain">${r.wins || 0}W</b> · <b class="loss">${r.losses || 0}L</b> today</span>` : '';
   const card = (key, label, val, chg, pct, r, open, accent) => `
@@ -268,20 +238,63 @@ function paintCards() {
   box.innerHTML =
     `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
     + `<div class="acct-row three">`
-    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, t.real?.realizedPnl ?? null, null, t.real, openReal, 'realacct') : '')
-    + card('bookRiley', '🧠 BOOK RILEY · $1K — AI TRADER', bookRileyVal, h.bookRileyDayChangeUsd, h.bookRileyDayChangePct, t.bookRiley, openBookRiley, 'bookriley')
-    + card('bookB', 'BOOK B · $1K — FULL ROSTER', bookBVal, h.bookBDayChangeUsd, h.bookBDayChangePct, t.bookB, openBookB, 'bookb')
+    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, realChg, realPct, t.real, openReal, 'realacct') : '')
     + card('bookC', 'BOOK C · $1K — WINNERS ONLY', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
-    + card('bookE', 'BOOK E · $1K — SMARTER BRAIN', bookEVal, h.bookEDayChangeUsd, h.bookEDayChangePct, t.bookE, openBookE, 'booke')
-    + card('account', 'MAIN · $80K PAPER — tested roster', acctVal, acctChg, acctPct, t.account, openAcct, '')
+    + card('account', 'MAIN · $80K PAPER — FULL ROSTER', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
-    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 6 : 5 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+    + acctDetail(selCard, todayBy)
+    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 3 : 2 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
   if (row) {
     if (prevScroll) row.scrollLeft = prevScroll;
     row.addEventListener('scroll', onCardScroll, { passive: true });
     updateDots();
   }
+}
+
+// ── Selected-account detail — expands under the row on click (owner 07-23:
+// "when clicking an account, show the daily/week gain below") ────────────────
+const ACD_NAME = { real: '💰 Real', bookC: 'Book C', account: 'Main' };
+function acctDetail(key, todayBy) {
+  try {
+    const td = todayBy[key] || {};
+    const wk = rangeChange(key, '1w');
+    const openP = openPnlOf(key);
+    const t = state.today || {};
+    const rec = key === 'real' ? t.real : key === 'bookC' ? t.bookC : t.account;
+    const chgStr = (o) => o && o.chg != null ? `${money(o.chg, { sign: true, dp: 2 })}${o.pct != null ? ` (${o.pct >= 0 ? '+' : ''}${o.pct}%)` : ''}` : '<span class="faint">—</span>';
+    const stat = (lbl, val, cls) => `<div style="flex:1;min-width:78px"><div class="faint" style="font-size:10px;letter-spacing:.06em;text-transform:uppercase">${lbl}</div><div class="${cls || ''}" style="font-size:15px;font-weight:600;margin-top:3px">${val}</div></div>`;
+    return `<div class="acct-detail" style="display:flex;gap:14px;align-items:center;padding:11px 14px;margin-top:8px;border:1px solid rgba(120,160,200,.14);border-radius:10px;background:rgba(120,160,200,.05)">
+      <div class="faint" style="font-size:11px;font-weight:600;min-width:52px">${ACD_NAME[key] || 'Account'}</div>
+      ${stat('Today', chgStr(td), pnlClass(td.chg))}
+      ${stat('This week', wk ? chgStr(wk) : '<span class="faint">—</span>', wk ? pnlClass(wk.chg) : '')}
+      ${stat('Open P&L', money(openP, { sign: true, dp: 2 }), pnlClass(openP))}
+      ${stat('Record today', `${(rec && rec.wins) || 0}W · ${(rec && rec.losses) || 0}L`, '')}
+    </div>`;
+  } catch (_) { return ''; }   // a detail-panel glitch must never break the Overview
+}
+
+// Gain over a series range for a card's account (drives This-week on the detail).
+function rangeChange(cardKey, rng) {
+  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookC' ? 'bookC' : null;
+  if (!seriesKey) return null;   // real has no equity series yet → caller shows "—"
+  const data = (seriesCache[rng] || {})[seriesKey];
+  const ys = (data || []).map((p) => p[1]).filter(Number.isFinite);
+  if (ys.length < 2) return null;
+  const chg = +(ys[ys.length - 1] - ys[0]).toFixed(2);
+  const pct = ys[0] > 0 ? +((chg / ys[0]) * 100).toFixed(2) : null;
+  return { chg, pct };
+}
+
+// Unrealized P&L on the open positions of one account key (Book C / Main / Real).
+function openPnlOf(key) {
+  return state.positions.reduce((s, p) => {
+    const isReal = /_real$/.test(p.strategy_key || '');
+    const inSel = key === 'real' ? isReal : ((p.book || 'account') === key && !isReal);
+    if (!inSel) return s;
+    const m = state.marks[p.id] || {};
+    return s + Number(m.pnl ?? p.pnl ?? 0);
+  }, 0);
 }
 
 // ── Carousel dots (mobile) ──────────────────────────────────────────────────
@@ -308,7 +321,7 @@ function isLive() { return state.engine?.risk_config?.liveTradingEnabled && stat
 // Tiny inline trend line on each account card (replaces the big equity chart).
 // Reads today's per-account series from the cache; renders nothing until loaded.
 function sparkline(cardKey) {
-  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookB' ? 'bookB' : cardKey === 'bookC' ? 'bookC' : cardKey === 'bookE' ? 'bookE' : null;
+  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookC' ? 'bookC' : null;
   if (!seriesKey) return '<div class="ac-spark-wrap"></div>';
   const data = (seriesCache['1d'] || {})[seriesKey];
   const ys = (data || []).map((p) => p[1]).filter(Number.isFinite);
@@ -319,7 +332,7 @@ function sparkline(cardKey) {
   return `<div class="ac-spark-wrap"><svg class="ac-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg></div>`;
 }
 
-// ── The chart — real equity, the selected card's line ──────────────────────
+// ── Day-open anchor + per-account day series (feed the card sparklines) ─────
 function midnightETms() {
   const now = new Date();
   const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -335,85 +348,16 @@ async function loadSeries(force = false) {
   if (!seriesCache[range] || force) {
     try { seriesCache[range] = await api.equitySeries(range); } catch (_) { seriesCache[range] = null; }
   }
+  // 1-week series drives the "This week" figure in the selected-account detail.
+  if (!seriesCache['1w'] || force) {
+    try { seriesCache['1w'] = await api.equitySeries('1w'); } catch (_) { seriesCache['1w'] = null; }
+  }
   paintCards();
 }
 
-function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-function drawChart() {
-  const wrap = document.querySelector('#d-chart-wrap');
-  const note = document.querySelector('#d-chart-note');
-  const title = document.querySelector('#d-chart-title');
-  if (!wrap || typeof window.uPlot !== 'function') return;
-  const cardName = selCard === 'bookB' ? 'Book B' : selCard === 'bookC' ? 'Book C' : selCard === 'bookE' ? 'Book E' : 'Main Account';
-  if (title) title.textContent = `${cardName} · ${range === '1d' ? 'Today' : range.toUpperCase()}`;
-
-  const data = seriesCache[range];
-  let pts = (data && (selCard === 'bookB' ? data.bookB : selCard === 'bookC' ? data.bookC : selCard === 'bookE' ? data.bookE : data.account)) || [];
-  pts = pts.filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
-
-  const h = state.hero || {};
-  if (range === '1d') {
-    // Anchor at the day open + live tail, so the visual change equals the card.
-    if (selCard === 'account') {
-      const open = Number(state.ledger?.equity_open);
-      if (open > 0) pts = [[midnightETms(), open], ...pts];
-      if (h.equity != null) pts = [...pts, [Date.now(), h.equity]];
-    } else {
-      const val = selCard === 'bookB' ? (h.bookBValue ?? h.bookBEquity) : selCard === 'bookC' ? (h.bookCValue ?? h.bookCEquity) : selCard === 'bookE' ? (h.bookEValue ?? h.bookEEquity) : (h.bookValue ?? h.bookEquity);
-      const chg = selCard === 'bookB' ? h.bookBDayChangeUsd : selCard === 'bookC' ? h.bookCDayChangeUsd : selCard === 'bookE' ? h.bookEDayChangeUsd : h.bookDayChangeUsd;
-      const dayStart = val != null && chg != null ? val - chg : null;
-      if (dayStart != null) pts = [[midnightETms(), dayStart], ...pts];
-      if (val != null) pts = [...pts, [Date.now(), val]];
-    }
-    pts.sort((a, b) => a[0] - b[0]);
-  }
-
-  if (chart) { chart.destroy(); chart = null; }
-  if (pts.length < 2) {
-    if (note) {
-      note.hidden = false;
-      note.textContent = range === '1d'
-        ? 'Collecting today’s samples — one lands every ~3 minutes.'
-        : 'Not enough daily history yet — this fills as trading days close.';
-    }
-    return;
-  }
-  if (note) note.hidden = true;
-
-  const xs = pts.map((p) => p[0] / 1000);
-  const ys = pts.map((p) => p[1]);
-  const up = ys[ys.length - 1] >= ys[0];
-  const color = selCard === 'bookB' ? '#eab308' : selCard === 'bookC' ? '#a78bfa' : selCard === 'bookE' ? '#2dd4bf' : (up ? css('--up') : css('--down'));
-  const axisStyle = {
-    stroke: css('--text-faint'),
-    grid: { stroke: 'rgba(63,63,70,.35)' },
-    ticks: { stroke: 'rgba(63,63,70,.5)' },
-    font: '11px "IBM Plex Mono"',
-  };
-  const tag = document.querySelector('#d-chart-tag');
-  chart = new window.uPlot({
-    width: Math.max(wrap.clientWidth || 320, 280),
-    height: Math.max(150, Math.min(240, Math.round((window.innerHeight || 640) * 0.28))),
-    legend: { show: false },
-    cursor: { drag: { x: false, y: false }, y: false },
-    scales: { x: { time: true } },
-    axes: [axisStyle, { ...axisStyle, size: 64 }],
-    series: [{}, { stroke: color, width: 2, fill: selCard === 'bookB' ? 'rgba(234,179,8,.07)' : selCard === 'bookC' ? 'rgba(167,139,250,.07)' : selCard === 'bookE' ? 'rgba(45,212,191,.07)' : (up ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)') }],
-    hooks: {
-      setCursor: [(u) => {
-        if (!tag) return;
-        const i = u.cursor.idx;
-        if (i == null || u.data[1][i] == null) { tag.textContent = ''; return; }
-        const when = new Date(u.data[0][i] * 1000);
-        const lbl = range === '1d'
-          ? when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })
-          : when.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        tag.textContent = `${lbl} · ${money(u.data[1][i], { dp: 2 })}`;
-      }],
-    },
-  }, [xs, ys], wrap);
-}
+// The big uPlot equity chart was retired when Riley's Mind replaced it (no
+// #d-chart-wrap in the DOM anymore); loadSeries still pulls the per-account day
+// series so sparkline() can draw the tiny trend line on each account card.
 
 // ── Positions, split by book ────────────────────────────────────────────────
 function posRow(p) {
@@ -439,10 +383,7 @@ function posRow(p) {
 function paintPositions() {
   const groups = [
     { which: 'real', body: '#d-pos-real', empty: '#d-pos-real-empty', count: '#d-poscount-real' },
-    { which: 'bookRiley', body: '#d-pos-bookRiley', empty: '#d-pos-bookRiley-empty', count: '#d-poscount-bookRiley' },
-    { which: 'bookB', body: '#d-pos-bookB', empty: '#d-pos-bookB-empty', count: '#d-poscount-bookB' },
     { which: 'bookC', body: '#d-pos-bookC', empty: '#d-pos-bookC-empty', count: '#d-poscount-bookC' },
-    { which: 'bookE', body: '#d-pos-bookE', empty: '#d-pos-bookE-empty', count: '#d-poscount-bookE' },
     { which: 'account', body: '#d-pos-acct', empty: '#d-pos-acct-empty', count: '#d-poscount-acct' },
   ];
   for (const g of groups) {
@@ -457,10 +398,7 @@ function paintPositions() {
 }
 
 function highlightGroups() {
-  document.querySelector('#d-panel-bookRiley')?.classList.toggle('focus', selCard === 'bookRiley');
-  document.querySelector('#d-panel-bookB')?.classList.toggle('focus', selCard === 'bookB');
   document.querySelector('#d-panel-bookC')?.classList.toggle('focus', selCard === 'bookC');
-  document.querySelector('#d-panel-bookE')?.classList.toggle('focus', selCard === 'bookE');
   document.querySelector('#d-panel-acct')?.classList.toggle('focus', selCard === 'account');
 }
 
@@ -475,7 +413,7 @@ function paintToday() {
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'book' ? ' <span class="chip live" style="padding:0 5px">A</span>' : r.book === 'bookB' ? ' <span class="chip shadow" style="padding:0 5px">B</span>' : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : r.book === 'bookE' ? ' <span class="chip" style="padding:0 5px;color:#2dd4bf;border-color:#1a7f76">E</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
@@ -621,19 +559,14 @@ function appendTickerRow(term, evt) {
 
 // ── Sim fixtures ────────────────────────────────────────────────────────────
 function simSeries() {
+  // Only the intraday series is used now — sparkline() reads 'account' and
+  // 'bookC' (Main + the one surviving $1k book). The range toggle retired with
+  // the big chart.
   const now = Date.now(), mid = midnightETms();
   const mk = (start, base, vol) => {
     const out = []; let v = base;
-    for (let t = start; t <= now; t += 300000) { v += (Math.random() - 0.48) * vol; out.push([t, +v.toFixed(2)]); }
+    for (let t = start; t <= now; t += 300000) { v += (Math.random() - 0.46) * vol; out.push([t, +v.toFixed(2)]); }
     return out;
   };
-  if (range === '1d') return { account: mk(mid + 34200000, 93500, 60), book: mk(mid + 34200000, 1000, 6), bookB: mk(mid + 34200000, 1000, 8) };
-  const days = range === '1w' ? 7 : 30;
-  const acct = [], book = [], bookB = [];
-  let a = 95000, b = 1000, b2 = 1000;
-  for (let i = days; i >= 0; i--) {
-    a += (Math.random() - 0.45) * 800; b += (Math.random() - 0.42) * 40; b2 += (Math.random() - 0.46) * 50;
-    acct.push([now - i * 86400000, +a.toFixed(0)]); book.push([now - i * 86400000, +b.toFixed(0)]); bookB.push([now - i * 86400000, +b2.toFixed(0)]);
-  }
-  return { account: acct, book, bookB };
+  return { account: mk(mid + 34200000, 24300, 45), bookC: mk(mid + 34200000, 1024, 6) };
 }
