@@ -43,8 +43,6 @@ export function mount(host) {
           <div class="filters" id="pf-books">
             <button class="fchip on" data-book="all">All</button>
             <button class="fchip" data-book="real">💰 Real</button>
-            <button class="fchip" data-book="small">Book A</button>
-            <button class="fchip" data-book="small_b">Book B</button>
             <button class="fchip" data-book="small_c">Book C</button>
             <button class="fchip" data-book="lab">Main</button>
           </div>
@@ -101,10 +99,11 @@ async function loadDailyReports() {
 
   // The unified report event (5pm cron or on-demand run)
   const unified = (ev) => {
-    const d = ev.data || {}, ai = d.report || {}, small = d.small, bookB = d.bookB, bookC = d.bookC, bookD = d.bookD, lab = d.lab, gates = d.gates || {}, sb = d.scoreboard;
-    const ve = small?.virtualEquity, vb = bookB?.virtualEquity, vc = bookC?.virtualEquity, vd = bookD?.virtualEquity;
-    // bookD renders only on PRE-consolidation reports (retired 07-13) — the
-    // row/section guards below keep old reports readable.
+    const d = ev.data || {}, ai = d.report || {}, small = d.small, bookC = d.bookC, lab = d.lab, gates = d.gates || {}, sb = d.scoreboard;
+    const vc = bookC?.virtualEquity;
+    // Surviving books only: 💰 Real, Book C (discipline · caps), and Main (lab =
+    // full roster). Books A/B/D/E/Riley retired — old cached reports still render
+    // via the section guards below.
     // Per-book scoreboard (deterministic, computed backend-side at report time).
     const sbTable = (s) => {
       if (!s || !s.day) return '';
@@ -114,7 +113,7 @@ async function loadDailyReports() {
         return `<tr><td>${label}</td><td>${cell(day)}</td><td>${cell(wk)}</td></tr>`;
       };
       return `<div style="overflow-x:auto;margin-top:8px"><table class="dtable"><thead><tr><th>Book</th><th>Today</th><th>Week</th></tr></thead><tbody>
-        ${row('REAL', '💰 REAL $')}${row('A', 'A · Sniper')}${row('B', 'B · Yardstick')}${row('C', 'C · Discipline')}${s.day?.D ? row('D', 'D · Machine') : ''}${row('lab', 'Lab')}
+        ${row('REAL', '💰 REAL $')}${row('C', 'C · Discipline · caps')}${row('lab', 'Main · full roster')}
       </tbody></table></div>`;
     };
     const crownLine = ai.crown ? `<div class="report-summary"><b>👑 Today: Book ${esc(ai.crown.today || '—')}</b> · Week leader: Book ${esc(ai.crown.week || '—')}${ai.crown.evidence ? ` — ${esc(ai.crown.evidence)}` : ''}</div>` : '';
@@ -141,11 +140,7 @@ async function loadDailyReports() {
       ${crownLine}
       ${sbTable(sb)}
       ${vsBlock}
-      <div class="report-summary" style="margin-top:8px">BOOK A (Sniper · A+) — ${ve ? `equity <b>${money(ve.equity, { dp: 2 })}</b> (${ve.realizedPnl >= 0 ? '+' : ''}${money(ve.realizedPnl, { dp: 2 })})` : ''} · ${small?.overall?.trades ?? 0} trades${ai.bookRead ? ` · ${esc(ai.bookRead)}` : ''}</div>
-      ${stratTable(small)}
-      ${bookB ? `<div class="report-summary" style="margin-top:8px">BOOK B (Yardstick) — ${vb ? `equity <b>${money(vb.equity, { dp: 2 })}</b> (${vb.realizedPnl >= 0 ? '+' : ''}${money(vb.realizedPnl, { dp: 2 })})` : ''} · ${bookB?.overall?.trades ?? 0} trades${ai.bookBRead ? ` · ${esc(ai.bookBRead)}` : ''}</div>${stratTable(bookB)}` : ''}
       ${bookC ? `<div class="report-summary" style="margin-top:8px">BOOK C (Discipline · caps) — ${vc ? `equity <b>${money(vc.equity, { dp: 2 })}</b> (${vc.realizedPnl >= 0 ? '+' : ''}${money(vc.realizedPnl, { dp: 2 })})` : ''} · ${bookC?.overall?.trades ?? 0} trades${ai.bookCRead ? ` · ${esc(ai.bookCRead)}` : ''}</div>${stratTable(bookC)}` : ''}
-      ${bookD ? `<div class="report-summary" style="margin-top:8px">BOOK D (Machine · mechanical) — ${vd ? `equity <b>${money(vd.equity, { dp: 2 })}</b> (${vd.realizedPnl >= 0 ? '+' : ''}${money(vd.realizedPnl, { dp: 2 })})` : ''} · ${bookD?.overall?.trades ?? 0} trades${ai.bookDRead ? ` · ${esc(ai.bookDRead)}` : ''}</div>${stratTable(bookD)}` : ''}
       ${ai.rileyRead ? `<div class="report-summary" style="margin-top:8px">🧠 RILEY'S EXITS vs THE PLAYBOOK — ${esc(ai.rileyRead)}</div>` : ''}
       ${d.real ? `<div class="report-summary" style="margin-top:8px">💰 REAL $ (live money) — ${d.real?.overall?.trades ?? 0} trades, ${money(d.real?.overall?.pnl || 0, { sign: true, dp: 2 })}${ai.realRead ? ` · ${esc(ai.realRead)}` : ''}</div>${stratTable(d.real)}` : ''}
       <div class="report-summary" style="margin-top:8px">LAB — ${lab?.overall ? `${lab.overall.trades} trades, ${lab.overall.winRate != null ? Math.round(lab.overall.winRate * 100) + '% win' : '—'}, ${money(lab.overall.pnl || 0, { sign: true, dp: 0 })}` : ''}${ai.labRead ? ` · ${esc(ai.labRead)}` : ''}</div>

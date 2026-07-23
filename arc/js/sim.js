@@ -121,9 +121,13 @@ function seedEquityDay() {
 }
 
 export function startSim() {
-  const positions = [mkPosition('mean_reversion_bb', 'NVDA'), mkPosition('riley_signature', 'SPY'), mkOptionPosition('riley_signature', 'AAPL', 'swing'), mkOptionPosition('zero_dte_momentum', 'SPY', '0dte')];
-  // Overview v2 groups positions by book — tag the fixtures like the backend does.
-  positions.forEach((p) => { p.book = p.strategy_key === 'zero_dte_momentum' ? 'book' : 'account'; });
+  const positions = [mkPosition('mean_reversion_bb', 'NVDA'), mkPosition('riley_signature', 'SPY'), mkOptionPosition('riley_signature', 'AAPL', 'swing'), mkOptionPosition('zero_dte_momentum', 'SPY', '0dte'),
+    { ...mkOptionPosition('engulf_level_qqq_c', 'QQQ', '0dte'), book: 'bookC' },
+    { ...mkOptionPosition('engulf_level_qqq_c_real', 'QQQ', '0dte'), book: 'real', quantity: 1 }];
+  // Overview groups positions by book — tag the fixtures like the backend does.
+  // Explicit tags (bookC / real) are preserved; everything else is Main ('account').
+  // Books A/B/D/E/Riley are retired, so the full roster lives on Main now.
+  positions.forEach((p) => { if (!p.book) p.book = 'account'; });
   simHydrate({
     engine: { state: 'RUNNING', state_reason: null, risk_config: { liveTradingEnabled: false, maxPerTradeUsd: 100, maxDailyLossUsd: 300, maxOpenPositions: 5, maxNotionalPerTradeUsd: 2000, maxExposurePct: 40, pdtProtection: true, cooldownLosses: 3, cooldownMinutes: 90, econBlackoutMinutes: 15, smallAccountStrategies: ['zero_dte_momentum'] }, trading_account_id: 'SIM-ALPACA-PAPER' },
     market: { status: 'open', message: 'Market open (simulation)' },
@@ -131,13 +135,14 @@ export function startSim() {
     equity: 25412.88,
     todayPnl: 184.62,
     unrealized: 63.4,
-    hero: { equity: 25412.88, dayChangeUsd: 212.4, dayChangePct: 0.84, bookEquity: 1038.2, bookValue: 1061.7, bookDayChangeUsd: 41.3, bookDayChangePct: 4.05 },
+    hero: { equity: 25412.88, dayChangeUsd: 212.4, dayChangePct: 0.84, bookCValue: 1042.5, bookCEquity: 1042.5, bookCDayChangeUsd: 18.6, bookCDayChangePct: 1.82, realEquity: 214.73, realDayChangeUsd: 6.4, realDayChangePct: 3.07 },
     today: {
       wins: 5, losses: 3, realizedPnl: 184.62,
-      book: { wins: 2, losses: 1, realizedPnl: 38.2 },
+      real: { wins: 1, losses: 0, realizedPnl: 6.4 },
+      bookC: { wins: 1, losses: 0, realizedPnl: 18.6 },
       account: { wins: 3, losses: 2, realizedPnl: 146.42 },
       byStrategy: [
-        { strategy_key: 'zero_dte_momentum', trades: 3, wins: 2, losses: 1, pnl: 38.2, book: 'book' },
+        { strategy_key: 'engulf_level_qqq_c', trades: 1, wins: 1, losses: 0, pnl: 18.6, book: 'bookC' },
         { strategy_key: 'scalp_equity', trades: 3, wins: 2, losses: 1, pnl: 82.1, book: 'account' },
         { strategy_key: 'riley_signature', trades: 2, wins: 1, losses: 1, pnl: 64.3, book: 'account' },
       ],

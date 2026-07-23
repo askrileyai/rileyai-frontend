@@ -5,7 +5,7 @@
 
 import { api, isSim } from '../api.js';
 import { state } from '../store.js';
-import { simKill } from '../sim.js';
+import { simKill } from '../sim.js?v=m36';
 import { esc } from './fmt.js';
 
 const HOLD_MS = 1200;
