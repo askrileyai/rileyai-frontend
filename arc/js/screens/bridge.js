@@ -10,12 +10,15 @@ import { state, winRate, hydrate, applyAlertTheme } from '../store.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
-import { simResume, simKill } from '../sim.js?v=m36';
+import { simResume, simKill } from '../sim.js?v=m42';
 import { contractLabel, healthBadge } from './positions.js';
-import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js';
+import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js?v=m42';
 
 let unsubs = [];
-let selCard = 'account';               // 'bookC' | 'account' | 'real' — survives repaints (module scope)
+// 💰 REAL money is the default view (owner 08-04: "make the real account the
+// focus"). paintCards falls back to 'account' if the real account isn't
+// configured, so a paper-only deployment still lands on something.
+let selCard = 'real';                  // 'real' | 'bookC' | 'account' — survives repaints (module scope)
 let range = '1d';                     // day series that feeds the card sparklines
 let brainCtl = null;                  // Riley's Mind controller (mounted once)
 const seriesCache = {};               // range -> /equity-series payload (drives the card sparklines)
@@ -46,14 +49,14 @@ export function mount(host) {
             <div class="empty-note" id="d-pos-real-empty" hidden>No real-money positions — the 💰 lanes are watching for their setup.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-bookC">
-            <div class="panel-head">Book C (winners only) — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
+            <div class="panel-head">Book C <span class="paper-tag">paper</span> — positions <span id="d-poscount-bookC" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-bookC"></tbody></table>
             </div>
             <div class="empty-note" id="d-pos-bookC-empty" hidden>Book C is flat — waiting for a break-of-structure setup.</div>
           </div>
           <div class="panel" style="overflow:hidden" id="d-panel-acct">
-            <div class="panel-head">Main Account — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
+            <div class="panel-head">Main test bench <span class="paper-tag">paper</span> — positions <span id="d-poscount-acct" class="faint" style="letter-spacing:0"></span></div>
             <div style="overflow-x:auto">
               <table class="dtable"><thead><tr><th>Position</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Mark</th><th class="num">P&L</th></tr></thead><tbody id="d-pos-acct"></tbody></table>
             </div>
@@ -195,6 +198,7 @@ function paintCards() {
   // Books A/D/B/E/Riley retired — the surviving $1k book is C; Main holds the full
   // roster. A cached selection pointing at a dead book falls back to Main.
   if (['bookD', 'book', 'bookB', 'bookE', 'bookRiley'].includes(selCard)) selCard = 'account';
+  if (selCard === 'real' && h.realEquity == null) selCard = 'account';   // real not configured
   const openBookC = state.positions.filter((p) => p.book === 'bookC').length;
   const openReal = state.positions.filter((p) => /_real$/.test(p.strategy_key || '')).length;
   // Main = untagged book only; real positions are tagged 'real' by the API,
@@ -235,21 +239,64 @@ function paintCards() {
   // every few seconds — without this the row snaps back to card 1 mid-swipe).
   const prevRow = box.querySelector('.acct-row');
   const prevScroll = prevRow ? prevRow.scrollLeft : 0;
+  // Real money is the HERO, not a card. Owner 08-04: "take the real money out
+  // of the paper research — leave it book c and the main account." The hero band
+  // doubles as the real account's selector (data-card="real"), so tapping it
+  // still re-targets Riley's Mind and the position panels; the row below holds
+  // ONLY paper books, and nothing about live dollars sits under a "paper" header.
   box.innerHTML =
-    `<div class="acct-combined"><span class="faint">Combined</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`
-    + `<div class="acct-row three">`
-    + (h.realEquity != null ? card('real', '💰 REAL $ — LIVE MONEY', h.realEquity, realChg, realPct, t.real, openReal, 'realacct') : '')
-    + card('bookC', 'BOOK C · $1K — WINNERS ONLY', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
-    + card('account', 'MAIN · $80K PAPER — FULL ROSTER', acctVal, acctChg, acctPct, t.account, openAcct, '')
+    realHero(h, realChg, realPct, t.real, openReal, engChip)
+    + `<div class="paper-head"><span>Paper · research</span><span class="faint">Combined ${h.equity != null ? money(h.equity, { dp: 0 }) : '—'} · ${h.dayChangeUsd != null ? money(h.dayChangeUsd, { sign: true, dp: 0 }) : '—'} today</span></div>`
+    + `<div class="acct-row">`
+    + card('bookC', 'BOOK C · $1K PAPER — REAL\'S MIRROR', bookCVal, h.bookCDayChangeUsd, h.bookCDayChangePct, t.bookC, openBookC, 'bookc')
+    + card('account', 'MAIN · $80K PAPER — TEST BENCH', acctVal, acctChg, acctPct, t.account, openAcct, '')
     + `</div>`
-    + acctDetail(selCard, todayBy)
-    + `<div class="acct-dots" id="d-dots">${Array.from({ length: h.realEquity != null ? 3 : 2 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
+    // Real's detail lives in the hero grid — repeating it below would just say
+    // the same four numbers twice. Only the paper books get a detail strip.
+    + (selCard === 'real' ? '' : acctDetail(selCard, todayBy))
+    + `<div class="acct-dots" id="d-dots">${Array.from({ length: 2 }, (_, i) => `<button class="dot" data-dot="${i}" aria-label="account ${i + 1}"></button>`).join('')}</div>`;
   const row = box.querySelector('.acct-row');
   if (row) {
     if (prevScroll) row.scrollLeft = prevScroll;
     row.addEventListener('scroll', onCardScroll, { passive: true });
     updateDots();
   }
+}
+
+// ── 💰 REAL-MONEY HERO — the top of the page, and the point of the site ─────
+// Owner 08-04: "cater to the real account money … make the real account the
+// focus." This band carries the whole live picture — equity, today, open P&L,
+// today's record, and the since-inception total — so nothing about actual
+// dollars requires selecting a card or reconciling paper figures.
+function realHero(h, chg, pct, rec, open, engChip) {
+  const r = h.real || null;
+  const eq = h.realEquity;
+  if (eq == null) {   // real not configured — fall back to the old paper line
+    return `<div class="acct-combined"><span class="faint">Combined (paper)</span> <b class="mono">${h.equity != null ? money(h.equity, { dp: 2 }) : '—'}</b> <span class="${pnlClass(h.dayChangeUsd)}">${h.dayChangeUsd != null ? `${money(h.dayChangeUsd, { sign: true, dp: 2 })} today` : ''}</span> ${engChip}</div>`;
+  }
+  const openPnl = r?.openPnl != null ? r.openPnl : openPnlOf('real');
+  const life = r?.lifetimePnl;
+  const lifeTr = r?.lifetimeTrades || 0;
+  const wr = lifeTr > 0 ? Math.round(((r.lifetimeWins || 0) / lifeTr) * 100) : null;
+  const wk = rangeChange('real', '1w');
+  const wkStr = wk && wk.chg != null ? `${money(wk.chg, { sign: true, dp: 2 })}${wk.pct != null ? ` (${wk.pct >= 0 ? '+' : ''}${wk.pct}%)` : ''}` : '—';
+  const wkCls = wk ? pnlClass(wk.chg) : '';
+  const cell = (lbl, val, cls) => `<div class="rh-cell"><span class="rh-k">${lbl}</span><span class="rh-v ${cls || ''}">${val}</span></div>`;
+  return `<div class="real-hero${selCard === 'real' ? ' sel' : ''}" data-card="real" role="button" tabindex="0">
+    <div class="rh-top">
+      <div class="rh-title">💰 REAL MONEY<span class="rh-sub">live at Alpaca</span></div>${engChip}
+    </div>
+    <div class="rh-eq mono">${money(eq, { dp: 2 })}</div>
+    <div class="rh-chg ${pnlClass(chg)}">${chg != null ? `${money(chg, { sign: true, dp: 2 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''} today` : 'flat today'}</div>
+    <div class="rh-grid">
+      ${cell('Open P&L', money(openPnl, { sign: true, dp: 2 }), pnlClass(openPnl))}
+      ${cell('Positions', `${open} open`, '')}
+      ${cell('Today', `${(rec && rec.wins) || 0}W · ${(rec && rec.losses) || 0}L`, '')}
+      ${cell('This week', wkStr, wkCls)}
+      ${cell('Since start', life != null ? money(life, { sign: true, dp: 2 }) : '—', pnlClass(life))}
+      ${cell('All trades', lifeTr ? `${lifeTr}${wr != null ? ` · ${wr}% W` : ''}` : '—', '')}
+    </div>
+  </div>`;
 }
 
 // ── Selected-account detail — expands under the row on click (owner 07-23:
@@ -263,9 +310,12 @@ function acctDetail(key, todayBy) {
     const t = state.today || {};
     const rec = key === 'real' ? t.real : key === 'bookC' ? t.bookC : t.account;
     const chgStr = (o) => o && o.chg != null ? `${money(o.chg, { sign: true, dp: 2 })}${o.pct != null ? ` (${o.pct >= 0 ? '+' : ''}${o.pct}%)` : ''}` : '<span class="faint">—</span>';
-    const stat = (lbl, val, cls) => `<div style="flex:1;min-width:78px"><div class="faint" style="font-size:10px;letter-spacing:.06em;text-transform:uppercase">${lbl}</div><div class="${cls || ''}" style="font-size:15px;font-weight:600;margin-top:3px">${val}</div></div>`;
-    return `<div class="acct-detail" style="display:flex;gap:14px;align-items:center;padding:11px 14px;margin-top:8px;border:1px solid rgba(120,160,200,.14);border-radius:10px;background:rgba(120,160,200,.05)">
-      <div class="faint" style="font-size:11px;font-weight:600;min-width:52px">${ACD_NAME[key] || 'Account'}</div>
+    // Class-based, not inline: the old inline `flex:1;min-width:78px` could not
+    // shrink or wrap, so on a phone the fourth stat was clipped off the right
+    // edge (html{overflow-x:hidden} hid it rather than scrolling). See .acd-* CSS.
+    const stat = (lbl, val, cls) => `<div class="acd-stat"><div class="acd-k">${lbl}</div><div class="acd-v ${cls || ''}">${val}</div></div>`;
+    return `<div class="acct-detail">
+      <div class="acd-name">${ACD_NAME[key] || 'Account'}</div>
       ${stat('Today', chgStr(td), pnlClass(td.chg))}
       ${stat('This week', wk ? chgStr(wk) : '<span class="faint">—</span>', wk ? pnlClass(wk.chg) : '')}
       ${stat('Open P&L', money(openP, { sign: true, dp: 2 }), pnlClass(openP))}
@@ -275,9 +325,11 @@ function acctDetail(key, todayBy) {
 }
 
 // Gain over a series range for a card's account (drives This-week on the detail).
+// `real` now has its own reconstructed curve (backend 08-04: realSeries()), so
+// the real card no longer shows "—" where every paper book shows a number.
 function rangeChange(cardKey, rng) {
-  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookC' ? 'bookC' : null;
-  if (!seriesKey) return null;   // real has no equity series yet → caller shows "—"
+  const seriesKey = ['account', 'bookC', 'real'].includes(cardKey) ? cardKey : null;
+  if (!seriesKey) return null;
   const data = (seriesCache[rng] || {})[seriesKey];
   const ys = (data || []).map((p) => p[1]).filter(Number.isFinite);
   if (ys.length < 2) return null;
@@ -321,7 +373,7 @@ function isLive() { return state.engine?.risk_config?.liveTradingEnabled && stat
 // Tiny inline trend line on each account card (replaces the big equity chart).
 // Reads today's per-account series from the cache; renders nothing until loaded.
 function sparkline(cardKey) {
-  const seriesKey = cardKey === 'account' ? 'account' : cardKey === 'bookC' ? 'bookC' : null;
+  const seriesKey = ['account', 'bookC', 'real'].includes(cardKey) ? cardKey : null;
   if (!seriesKey) return '<div class="ac-spark-wrap"></div>';
   const data = (seriesCache['1d'] || {})[seriesKey];
   const ys = (data || []).map((p) => p[1]).filter(Number.isFinite);
@@ -344,7 +396,9 @@ function midnightETms() {
 async function loadSeries(force = false) {
   // The big equity chart is gone (replaced by Riley's Mind); we still pull the
   // per-account series to paint the tiny sparkline on each account card.
-  if (isSim()) { seriesCache[range] = simSeries(); paintCards(); return; }
+  // SIM populates 1w as well — the This-week figures (hero + card detail) read
+  // seriesCache['1w'], which sim never filled, so every one of them showed "—".
+  if (isSim()) { seriesCache[range] = simSeries(); seriesCache['1w'] = simSeries(); paintCards(); return; }
   if (!seriesCache[range] || force) {
     try { seriesCache[range] = await api.equitySeries(range); } catch (_) { seriesCache[range] = null; }
   }
@@ -398,6 +452,7 @@ function paintPositions() {
 }
 
 function highlightGroups() {
+  document.querySelector('#d-panel-real')?.classList.toggle('focus', selCard === 'real');
   document.querySelector('#d-panel-bookC')?.classList.toggle('focus', selCard === 'bookC');
   document.querySelector('#d-panel-acct')?.classList.toggle('focus', selCard === 'account');
 }
@@ -413,29 +468,42 @@ function paintToday() {
   // was silently dropped and the panel's numbers didn't reconcile with the
   // day's P&L anywhere else in the app. The panel scrolls; the truth doesn't
   // need trimming. A TOTAL row makes it reconcile at a glance.
-  const rows = state.today?.byStrategy || [];
+  // 💰 REAL lanes sort to the TOP and total separately (owner 08-04). One mixed
+  // list with one grand total buried the only rows that moved actual dollars.
+  const all = state.today?.byStrategy || [];
+  const realRows = all.filter((r) => r.book === 'real');
+  const paperRows = all.filter((r) => r.book !== 'real');
+  const rows = [...realRows, ...paperRows];
   if (empty) empty.hidden = rows.length > 0;
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
-  const tot = rows.reduce((a, r) => ({
+  const sum = (rs) => rs.reduce((a, r) => ({
     trades: a.trades + (Number(r.trades) || 0),
     wins: a.wins + (Number(r.wins) || 0),
     losses: a.losses + (Number(r.losses) || 0),
     pnl: a.pnl + (Number(r.pnl) || 0),
   }), { trades: 0, wins: 0, losses: 0, pnl: 0 });
-  body.innerHTML = rows.map((r) => `
-    <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
-      <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
+  const chip = (r) => r.book === 'real' ? ' <span class="chip" style="padding:0 5px;color:#22c55e;border-color:#15803d">💰 REAL</span>'
+    : r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>'
+    : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : '';
+  const row = (r) => `
+    <tr onclick="location.hash='#/playbook'" style="cursor:pointer"${r.book === 'real' ? ' class="tr-real"' : ''}>
+      <td><span class="sym">${esc(r.strategy_key)}</span>${chip(r)}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
-    </tr>`).join('')
-    + (rows.length ? `
-    <tr class="dtable-total">
-      <td><b>ALL (${rows.length} ${rows.length === 1 ? 'lane' : 'lanes'})</b></td>
-      <td class="num"><b>${tot.trades}</b></td>
-      <td class="num"><b><span class="gain">${tot.wins}</span>–<span class="loss">${tot.losses}</span></b></td>
-      <td class="num ${pnlClass(tot.pnl)}"><b>${money(tot.pnl, { sign: true, dp: 0 })}</b></td>
-    </tr>` : '');
+    </tr>`;
+  const total = (label, rs, cls) => { const t = sum(rs); return `
+    <tr class="dtable-total ${cls || ''}">
+      <td><b>${label}</b></td>
+      <td class="num"><b>${t.trades}</b></td>
+      <td class="num"><b><span class="gain">${t.wins}</span>–<span class="loss">${t.losses}</span></b></td>
+      <td class="num ${pnlClass(t.pnl)}"><b>${money(t.pnl, { sign: true, dp: 0 })}</b></td>
+    </tr>`; };
+  body.innerHTML =
+    realRows.map(row).join('')
+    + (realRows.length ? total(`💰 REAL (${realRows.length} ${realRows.length === 1 ? 'lane' : 'lanes'})`, realRows, 'tot-real') : '')
+    + paperRows.map(row).join('')
+    + (paperRows.length ? total(`PAPER (${paperRows.length} ${paperRows.length === 1 ? 'lane' : 'lanes'})`, paperRows) : '');
 }
 
 // ── Systems strip — what the protective layers did today ───────────────────
@@ -586,5 +654,7 @@ function simSeries() {
     for (let t = start; t <= now; t += 300000) { v += (Math.random() - 0.46) * vol; out.push([t, +v.toFixed(2)]); }
     return out;
   };
-  return { account: mk(mid + 34200000, 24300, 45), bookC: mk(mid + 34200000, 1024, 6) };
+  // `real` mirrors the live payload's reconstructed real curve (performanceService
+  // .realSeries) so SIM exercises the hero's This-week cell instead of showing "—".
+  return { real: mk(mid + 34200000, 208, 1.6), account: mk(mid + 34200000, 24300, 45), bookC: mk(mid + 34200000, 1024, 6) };
 }

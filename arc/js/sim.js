@@ -135,7 +135,19 @@ export function startSim() {
     equity: 25412.88,
     todayPnl: 184.62,
     unrealized: 63.4,
-    hero: { equity: 25412.88, dayChangeUsd: 212.4, dayChangePct: 0.84, bookCValue: 1042.5, bookCEquity: 1042.5, bookCDayChangeUsd: 18.6, bookCDayChangePct: 1.82, realEquity: 214.73, realDayChangeUsd: 6.4, realDayChangePct: 3.07 },
+    hero: {
+      equity: 25412.88, dayChangeUsd: 212.4, dayChangePct: 0.84,
+      bookCValue: 1042.5, bookCEquity: 1042.5, bookCDayChangeUsd: 18.6, bookCDayChangePct: 1.82,
+      realEquity: 214.73, realDayChangeUsd: 6.4, realDayChangePct: 3.07,
+      // Mirrors the live /status hero.real block so SIM exercises the same
+      // real-money surfaces the owner actually looks at (hero band + P&L pods).
+      real: {
+        equity: 214.73, cash: 88.12, buyingPower: 88.12, optionsBuyingPower: 88.12,
+        open: 1, openPnl: 4.15,
+        lifetimePnl: 114.73, lifetimeTrades: 22, lifetimeWins: 13, lifetimeLosses: 9,
+        since: '2026-07-13T13:41:00.000Z',
+      },
+    },
     today: {
       wins: 5, losses: 3, realizedPnl: 184.62,
       real: { wins: 1, losses: 0, realizedPnl: 6.4 },

@@ -100,6 +100,9 @@
 .performance { display: grid; gap: 16px; }
 .perf-pods { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 .perf-pods .holo { padding: 14px 16px; }
+/* 💰 real-money pods sit first and read brighter than the paper ones. */
+.perf-pods .pod.pod-real { border-color: rgba(34,197,94,.4); background: linear-gradient(160deg, rgba(34,197,94,.08), transparent 70%); }
+.perf-pods .pod.pod-real .pod-sub { color: #22c55e; }
 .uplot-wrap { width: 100%; }
 .u-legend { font-family: var(--font-mono) !important; font-size: 11px !important; color: var(--text-dim) !important; }
 @media (max-width: 760px) { .perf-pods { grid-template-columns: repeat(2, 1fr); } }
@@ -139,6 +142,63 @@
 .opt-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
 .opt-badge.call { background: rgba(34,197,94,.15); color: var(--up); border: 1px solid rgba(34,197,94,.35); }
 .opt-badge.put { background: rgba(239,68,68,.15); color: var(--down); border: 1px solid rgba(239,68,68,.35); }
+
+/* ---- 💰 REAL-MONEY HERO (08-04) ---------------------------------------------
+   The site now LEADS with live money. The hero band owns the top of the
+   Overview; everything below it is paper research and reads visually quieter
+   (see .paper-head / .paper-tag) so a glance can never confuse the two. */
+.real-hero {
+  border: 1px solid rgba(34,197,94,.42); border-radius: 16px; padding: 14px 16px 12px;
+  background: linear-gradient(160deg, rgba(34,197,94,.10), rgba(34,197,94,.02) 62%, transparent);
+  box-shadow: 0 0 0 1px rgba(34,197,94,.06), 0 8px 26px -18px rgba(34,197,94,.55);
+  cursor: pointer; transition: border-color .15s, box-shadow .15s;
+}
+/* The hero doubles as the real account's SELECTOR — it's the only place real
+   money appears now, so it has to be tappable to re-target Riley's Mind. */
+.real-hero:hover { border-color: rgba(34,197,94,.62); }
+.real-hero.sel { border-color: #22c55e; box-shadow: 0 0 0 1px rgba(34,197,94,.22), 0 8px 30px -16px rgba(34,197,94,.7); }
+.rh-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rh-title { font-size: 11px; font-weight: 700; letter-spacing: .11em; color: #22c55e; }
+.rh-sub { font-weight: 500; letter-spacing: .04em; color: var(--text-faint); margin-left: 8px; text-transform: none; }
+.rh-eq { font-size: clamp(28px, 8vw, 40px); font-weight: 600; line-height: 1.08; margin-top: 6px; letter-spacing: -.01em; }
+.rh-chg { font-size: 14px; font-weight: 600; margin-top: 1px; }
+.rh-grid { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 11px; padding-top: 10px; border-top: 1px solid rgba(34,197,94,.16); }
+.rh-cell { display: grid; gap: 2px; min-width: 74px; }
+.rh-k { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.rh-v { font-size: 13.5px; font-weight: 600; }
+/* Everything under here is paper. Say so once, quietly, and stop repeating it. */
+.paper-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px; padding-bottom: 2px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);
+}
+.paper-head .faint { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11.5px; }
+.paper-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-faint); border: 1px solid var(--border); border-radius: 5px;
+  padding: 1px 5px; margin-left: 5px; vertical-align: 1px;
+}
+/* Selected-account detail. A 4-up GRID, not a no-shrink flex row — the inline
+   `flex:1;min-width:78px` it used to carry summed past a phone's width and the
+   last stat was clipped off the right edge. It drops to 2-up on narrow screens. */
+.acct-detail {
+  display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  gap: 10px 14px; align-items: center; padding: 11px 14px; margin-top: 8px;
+  border: 1px solid rgba(120,160,200,.14); border-radius: 10px; background: rgba(120,160,200,.05);
+}
+.acd-name { font-size: 11px; font-weight: 600; color: var(--text-faint); }
+.acd-stat { min-width: 0; }
+.acd-k { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.acd-v { font-size: 15px; font-weight: 600; margin-top: 3px; white-space: nowrap; }
+@media (max-width: 640px) {
+  .acct-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acd-name { grid-column: 1 / -1; }
+}
+
+/* Real rows get a left rail wherever they appear; real subtotals get a band. */
+.dtable tr.tr-real td:first-child { box-shadow: inset 2px 0 0 #22c55e; }
+.dtable tr.dtable-total.tot-real td { background: rgba(34,197,94,.07); border-top-color: rgba(34,197,94,.3); }
+.pm-card.pm-real { border-color: rgba(34,197,94,.4); }
 
 /* ---- OVERVIEW v2: two account cards + combined line ---- */
 .acct-cards { display: grid; gap: 8px; padding: 6px 2px 2px; }
@@ -194,6 +254,10 @@
 .ac-rec b { font-weight: 700; }
 .ac-open { color: var(--text-faint); }
 .panel.focus { border-color: rgba(34,211,238,.45); }
+/* The real-money positions panel is permanently the primary one on the page. */
+#d-panel-real { border-color: rgba(34,197,94,.38); }
+#d-panel-real.focus { border-color: rgba(34,197,94,.72); }
+#d-panel-real > .panel-head { color: #22c55e; }
 .sys-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .sys-chips .chip b { font-weight: 700; }
 

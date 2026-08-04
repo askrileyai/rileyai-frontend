@@ -11,8 +11,29 @@
 import { money, esc } from './fmt.js';
 
 const DW = 1000, DH = 560;                  // design space (brain region)
-const CX = 500, CY = 285, A = 348, B = 214; // top-down brain ellipse
+const CX = 500, CY = 285;                   // projection centre
+// v5 — TRUE 3D. The cortex is an ELLIPSOID VOLUME turning on its vertical axis,
+// not a flat silhouette: neurons carry x/y/z, every point is rotated then
+// perspective-projected, and everything is depth-sorted so the far hemisphere
+// draws behind the near one. A/B/C are the semi-axes (x wide, y tall, z deep).
+const A = 300, B = 196, C = 250;
+const PD = 980;                             // perspective distance (smaller = more dramatic)
+const ROT = 0.20;                           // radians/sec ≈ one turn per 31s
+const MIDLINE = 16;                         // hemispheric fissure half-width in x
+// Gentle cortical lumpiness so the volume reads as a brain, not a billiard ball.
+const surf = (phi, lam) => 1 + 0.065 * Math.sin(3 * lam) * Math.sin(2 * phi) + 0.04 * Math.sin(5 * phi);
 const COLORS = { read: '#22d3ee', entry: '#22c55e', bank: '#eab308', cut: '#ef4444' };
+
+// Rotate a 3D point about the Y axis by theta, then project to design space.
+// Returns screen-space x/y, the depth scale k (1 = at centre) and the rotated z
+// (negative = nearer the viewer) for sorting and fog.
+function project(p, theta) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  const x = p.x * c + p.z * s;
+  const z = -p.x * s + p.z * c;
+  const k = PD / (PD + z);
+  return { x: CX + x * k, y: CY + p.y * k, k, z };
+}
 
 // Map a live engine event type → a pulse/decision color bucket.
 export function pulseTypeFor(t) {
@@ -54,13 +75,19 @@ export function thinkingFor(positions) {
   return { html: `<b>${esc(p.symbol || p.strategy_key)}</b> ${r.read}`, color: r.color };
 }
 
-// Deterministic point INSIDE the ellipse for a symbol (stable placement).
+// Deterministic point ON THE CORTEX (3D) for a symbol — stable across repaints,
+// and now anchored in the volume so it turns with the brain and passes behind it.
 function placeHotspot(sym, i) {
   const s = String(sym || '') + ':' + i;
   let hsh = 0; for (let k = 0; k < s.length; k++) hsh = (hsh * 31 + s.charCodeAt(k)) & 0xffff;
-  const ang = (hsh % 360) * Math.PI / 180;
-  const rad = 0.42 + ((hsh >> 4) % 100) / 100 * 0.32;      // 0.42..0.74 of the extent
-  return { x: CX + Math.cos(ang) * A * rad * 0.82, y: CY + Math.sin(ang) * B * rad * 0.82 };
+  const lam = (hsh % 360) * Math.PI / 180;                  // longitude
+  const phi = 0.60 + ((hsh >> 4) % 100) / 100 * 1.94;       // polar, biased off the poles
+  const r = 0.90 * surf(phi, lam);                          // just under the surface
+  return {
+    x: A * r * Math.sin(phi) * Math.cos(lam),
+    y: B * r * Math.cos(phi),
+    z: C * r * Math.sin(phi) * Math.sin(lam),
+  };
 }
 function hotspotColor(pnl) { return pnl == null ? '#22d3ee' : pnl >= 15 ? '#eab308' : pnl >= 0 ? '#22c55e' : '#ef4444'; }
 
@@ -115,27 +142,48 @@ export function mountBrain(host) {
   let hotspots = [];                     // {x,y,sym,pnl,color,band,read}
   let overall = 'Scanning the tape for the next setup.';
 
-  const edgeR = (a) => 1 + 0.045 * Math.sin(6 * a + 0.5) + 0.03 * Math.sin(11 * a);
-  function inside(x, y) {
-    if (Math.abs(x - CX) < 7) return false;
-    const dx = x - CX, dy = y - CY, front = dy < 0 ? 1 - 0.10 * (-dy / B) : 1, ang = Math.atan2(dy, dx), r = edgeR(ang);
-    return (dx / (A * front * r)) ** 2 + (dy / (B * r)) ** 2 <= 1;
-  }
-  // neurons + synapses
-  const N = 116, neurons = [];
+  // NEURONS IN 3D — rejection-sampled inside the ellipsoid, with a hemispheric
+  // fissure down the middle and a minimum 3D separation so they never clump.
+  const N = 132, neurons = [];
   let guard = 0;
-  while (neurons.length < N && guard++ < 20000) {
-    const x = 40 + Math.random() * (DW - 80), y = 20 + Math.random() * (DH - 40);
-    if (!inside(x, y)) continue;
-    let ok = true; for (const n of neurons) { if ((n.x - x) ** 2 + (n.y - y) ** 2 < 42 * 42) { ok = false; break; } }
-    if (ok) neurons.push({ x, y, phase: Math.random() * 6.28, flash: 0, hemi: x < CX ? 0 : 1 });
+  while (neurons.length < N && guard++ < 60000) {
+    const x = (Math.random() * 2 - 1) * A, y = (Math.random() * 2 - 1) * B, z = (Math.random() * 2 - 1) * C;
+    const rr = (x / A) ** 2 + (y / B) ** 2 + (z / C) ** 2;
+    if (rr > 0.92) continue;                                   // inside, just under the surface
+    if (Math.abs(x) < MIDLINE) continue;                       // the fissure
+    let ok = true;
+    for (const n of neurons) { if ((n.x - x) ** 2 + (n.y - y) ** 2 + (n.z - z) ** 2 < 52 * 52) { ok = false; break; } }
+    if (ok) neurons.push({ x, y, z, phase: Math.random() * 6.28, flash: 0, hemi: x < 0 ? 0 : 1 });
   }
   const syn = [], adj = neurons.map(() => []);
   for (let i = 0; i < neurons.length; i++) {
     const a = neurons[i], d = [];
-    for (let j = 0; j < neurons.length; j++) { if (i === j) continue; const b = neurons[j], dist = Math.hypot(a.x - b.x, a.y - b.y), cross = a.hemi !== b.hemi; if (dist < 150 && (!cross || Math.random() < 0.1)) d.push([dist, j]); }
+    for (let j = 0; j < neurons.length; j++) {
+      if (i === j) continue;
+      const b = neurons[j];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z), cross = a.hemi !== b.hemi;
+      if (dist < 165 && (!cross || Math.random() < 0.08)) d.push([dist, j]);
+    }
     d.sort((p, q) => p[0] - q[0]);
     for (const [, j] of d.slice(0, 3)) { if (!adj[i].includes(j)) { adj[i].push(j); adj[j].push(i); syn.push([i, j]); } }
+  }
+  // Wireframe shell: meridians + latitude rings, precomputed in 3D once.
+  const shell = [];
+  for (let m = 0; m < 8; m++) {
+    const lam = (m / 8) * Math.PI * 2, pts = [];
+    for (let phi = 0.06; phi <= Math.PI - 0.06; phi += 0.10) {
+      const r = surf(phi, lam);
+      pts.push({ x: A * r * Math.sin(phi) * Math.cos(lam), y: B * r * Math.cos(phi), z: C * r * Math.sin(phi) * Math.sin(lam) });
+    }
+    shell.push(pts);
+  }
+  for (const fy of [-0.55, 0, 0.55]) {
+    const pts = [], ry = Math.sqrt(Math.max(0, 1 - fy * fy));
+    for (let u = 0; u <= 6.2832 + 0.1; u += 0.10) {
+      const phi = Math.acos(fy), r = surf(phi, u);
+      pts.push({ x: A * r * ry * Math.cos(u), y: B * fy * r, z: C * r * ry * Math.sin(u) });
+    }
+    shell.push(pts);
   }
   const imp = [], ripples = [];
   const WT = [['read', 0.55], ['entry', 0.18], ['bank', 0.18], ['cut', 0.09]];
@@ -146,32 +194,89 @@ export function mountBrain(host) {
   const SX = (x) => offx + x * scale, SY = (y) => offy + y * scale;
 
   let lastSpawn = 0;
+  // Depth → fog. z runs −C (nearest) .. +C (furthest); 0 = the equator.
+  const fog = (z) => Math.max(0.10, Math.min(1, 0.62 - z / (C * 2.35)));
   function draw(ts) {
     if (!running) return;
     const t = ts / 1000, breath = 1 + 0.006 * Math.sin(t * 1.05);
+    const th = t * ROT;                                  // ← the turn
     ctx.clearRect(0, 0, cv.width, cv.height);
     for (let k = 0; k < 3; k++) { const pr = ((t * 36 + k * 90) % 250); ctx.beginPath(); ctx.strokeStyle = `rgba(34,211,238,${0.08 * (1 - pr / 250)})`; ctx.lineWidth = 1.2; ctx.arc(SX(CX), SY(CY), pr * scale, 0, 6.2832); ctx.stroke(); }
     ctx.save(); ctx.translate(cv.width / 2, cv.height / 2); ctx.scale(breath, breath); ctx.translate(-cv.width / 2, -cv.height / 2);
-    // outline
-    ctx.lineWidth = 1.4 * scale; ctx.globalAlpha = 0.3; ctx.strokeStyle = '#22d3ee'; ctx.shadowColor = 'rgba(34,211,238,.5)'; ctx.shadowBlur = 13 * scale; ctx.beginPath();
-    for (let a = 0; a <= 6.2832; a += 0.03) { const r = edgeR(a), f = Math.sin(a) < 0 ? 1 - 0.10 * (-Math.sin(a)) : 1, x = CX + Math.cos(a) * A * f * r, y = CY + Math.sin(a) * B * r; a === 0 ? ctx.moveTo(SX(x), SY(y)) : ctx.lineTo(SX(x), SY(y)); }
-    ctx.closePath(); ctx.stroke(); ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(34,211,238,.14)'; ctx.lineWidth = scale; ctx.beginPath(); ctx.moveTo(SX(CX), SY(CY - B * 0.86)); ctx.lineTo(SX(CX), SY(CY + B * 0.86)); ctx.stroke();
-    ctx.strokeStyle = 'rgba(80,150,175,.12)'; ctx.lineWidth = scale; ctx.beginPath(); for (const [i, j] of syn) { ctx.moveTo(SX(neurons[i].x), SY(neurons[i].y)); ctx.lineTo(SX(neurons[j].x), SY(neurons[j].y)); } ctx.stroke();
-    for (const n of neurons) { const base = 0.3 + 0.26 * Math.sin(t * 1.5 + n.phase), b = Math.min(1, base + n.flash); ctx.beginPath(); ctx.fillStyle = `rgba(160,225,245,${0.42 + 0.5 * b})`; ctx.shadowColor = 'rgba(34,211,238,.9)'; ctx.shadowBlur = (5 + 9 * b) * scale; ctx.arc(SX(n.x), SY(n.y), (1.4 + 1.6 * b) * scale, 0, 6.2832); ctx.fill(); n.flash *= 0.9; }
+
+    // Project everything ONCE per frame, then paint strictly back-to-front so
+    // the far hemisphere sits behind the near one — that is what sells the 3D.
+    const P = neurons.map((n) => project(n, th));
+    const hp = hotspots.map((p) => project(p, th));
+    hotspots.forEach((p, i) => { p._sx = SX(hp[i].x); p._sy = SY(hp[i].y); p._k = hp[i].k; p._front = hp[i].z < 40; });
+
+    // wireframe shell (subtle, depth-faded)
+    ctx.lineWidth = 1.05 * scale;
+    for (const ring of shell) {
+      let prev = null;
+      for (const pt of ring) {
+        const q = project(pt, th);
+        if (prev) {
+          ctx.beginPath();
+          ctx.globalAlpha = 0.20 * fog(q.z);
+          ctx.strokeStyle = '#22d3ee';
+          ctx.moveTo(SX(prev.x), SY(prev.y)); ctx.lineTo(SX(q.x), SY(q.y)); ctx.stroke();
+        }
+        prev = q;
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // synapses — sorted far→near, faded by depth
+    const sl = syn.map(([i, j]) => ({ i, j, z: (P[i].z + P[j].z) / 2 })).sort((a, b) => b.z - a.z);
+    for (const s of sl) {
+      ctx.beginPath();
+      ctx.globalAlpha = 0.34 * fog(s.z);
+      ctx.strokeStyle = 'rgba(120,190,215,1)';
+      ctx.lineWidth = scale * (0.6 + 0.5 * fog(s.z));
+      ctx.moveTo(SX(P[s.i].x), SY(P[s.i].y)); ctx.lineTo(SX(P[s.j].x), SY(P[s.j].y)); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // neurons — far→near, size and glow scale with depth
+    const order = neurons.map((_, i) => i).sort((a, b) => P[b].z - P[a].z);
+    for (const i of order) {
+      const n = neurons[i], q = P[i], f = fog(q.z);
+      const base = 0.3 + 0.26 * Math.sin(t * 1.5 + n.phase), b = Math.min(1, base + n.flash);
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(160,225,245,${(0.30 + 0.55 * b) * f})`;
+      ctx.shadowColor = 'rgba(34,211,238,.9)'; ctx.shadowBlur = (4 + 9 * b) * scale * q.k;
+      ctx.arc(SX(q.x), SY(q.y), (1.15 + 1.7 * b) * scale * q.k, 0, 6.2832); ctx.fill();
+      n.flash *= 0.9;
+    }
     ctx.shadowBlur = 0;
+
+    // impulses — interpolate in 3D, then project
     for (let k = imp.length - 1; k >= 0; k--) {
-      const m = imp[k], a = neurons[m.a], b = neurons[m.b]; m.t += m.sp; const x = a.x + (b.x - a.x) * m.t, y = a.y + (b.y - a.y) * m.t; m.tr.push([x, y]); if (m.tr.length > 10) m.tr.shift();
-      for (let q = 0; q < m.tr.length; q++) { ctx.globalAlpha = (q / m.tr.length) * 0.45; ctx.fillStyle = m.col; ctx.beginPath(); ctx.arc(SX(m.tr[q][0]), SY(m.tr[q][1]), 1.4 * scale, 0, 6.2832); ctx.fill(); }
-      ctx.globalAlpha = 1; ctx.beginPath(); ctx.fillStyle = m.col; ctx.shadowColor = m.col; ctx.shadowBlur = 11 * scale; ctx.arc(SX(x), SY(y), 2.5 * scale, 0, 6.2832); ctx.fill(); ctx.shadowBlur = 0;
+      const m = imp[k], a = neurons[m.a], b = neurons[m.b];
+      m.t += m.sp;
+      const q = project({ x: a.x + (b.x - a.x) * m.t, y: a.y + (b.y - a.y) * m.t, z: a.z + (b.z - a.z) * m.t }, th);
+      const f = fog(q.z);
+      m.tr.push([q.x, q.y, f, q.k]); if (m.tr.length > 10) m.tr.shift();
+      for (let w = 0; w < m.tr.length; w++) { ctx.globalAlpha = (w / m.tr.length) * 0.45 * m.tr[w][2]; ctx.fillStyle = m.col; ctx.beginPath(); ctx.arc(SX(m.tr[w][0]), SY(m.tr[w][1]), 1.4 * scale * m.tr[w][3], 0, 6.2832); ctx.fill(); }
+      ctx.globalAlpha = f; ctx.beginPath(); ctx.fillStyle = m.col; ctx.shadowColor = m.col; ctx.shadowBlur = 11 * scale; ctx.arc(SX(q.x), SY(q.y), 2.5 * scale * q.k, 0, 6.2832); ctx.fill(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
       if (m.t >= 1) { b.flash = 1; m.life--; const nb = adj[m.b].filter((z) => z !== m.a); if (m.life <= 0 || !nb.length) imp.splice(k, 1); else { m.a = m.b; m.b = nb[(Math.random() * nb.length) | 0]; m.t = 0; m.tr = []; } }
     }
-    // POSITION HOTSPOTS
-    ctx.textAlign = 'center'; ctx.font = `700 ${12 * scale}px 'IBM Plex Mono',monospace`;
-    for (const p of hotspots) { const pu = 0.5 + 0.5 * Math.sin(t * 2.2), R = (14 + 4 * pu) * scale;
-      ctx.beginPath(); ctx.strokeStyle = p.color; ctx.globalAlpha = 0.5 + 0.4 * pu; ctx.lineWidth = 2 * scale; ctx.shadowColor = p.color; ctx.shadowBlur = 15 * scale; ctx.arc(SX(p.x), SY(p.y), R, 0, 6.2832); ctx.stroke();
-      ctx.beginPath(); ctx.globalAlpha = 1; ctx.fillStyle = p.color; ctx.arc(SX(p.x), SY(p.y), 4 * scale, 0, 6.2832); ctx.fill(); ctx.shadowBlur = 0;
-      ctx.fillStyle = p.color; ctx.fillText(`${p.sym}${p.pnl != null ? ' ' + (p.pnl >= 0 ? '+' : '') + p.pnl.toFixed(0) + '%' : ''}`, SX(p.x), SY(p.y) - R - 6 * scale); }
+
+    // POSITION HOTSPOTS — ride the cortex, dim as they swing behind it
+    ctx.textAlign = 'center';
+    const hOrder = hotspots.map((_, i) => i).sort((a, b) => hp[b].z - hp[a].z);
+    for (const i of hOrder) {
+      const p = hotspots[i], q = hp[i], f = fog(q.z), pu = 0.5 + 0.5 * Math.sin(t * 2.2);
+      const R = (13 + 4 * pu) * scale * q.k;
+      ctx.font = `700 ${12 * scale * q.k}px 'IBM Plex Mono',monospace`;
+      ctx.beginPath(); ctx.strokeStyle = p.color; ctx.globalAlpha = (0.5 + 0.4 * pu) * f; ctx.lineWidth = 2 * scale * q.k;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 15 * scale * f; ctx.arc(SX(q.x), SY(q.y), R, 0, 6.2832); ctx.stroke();
+      ctx.beginPath(); ctx.globalAlpha = f; ctx.fillStyle = p.color; ctx.arc(SX(q.x), SY(q.y), 4 * scale * q.k, 0, 6.2832); ctx.fill(); ctx.shadowBlur = 0;
+      // Only label the front face — a label on the far side reads as noise.
+      if (p._front) { ctx.globalAlpha = Math.min(1, f * 1.25); ctx.fillStyle = p.color; ctx.fillText(`${p.sym}${p.pnl != null ? ' ' + (p.pnl >= 0 ? '+' : '') + p.pnl.toFixed(0) + '%' : ''}`, SX(q.x), SY(q.y) - R - 6 * scale); }
+      ctx.globalAlpha = 1;
+    }
     for (let k = ripples.length - 1; k >= 0; k--) { const r = ripples[k]; r.t += 0.03; ctx.beginPath(); ctx.strokeStyle = '#22d3ee'; ctx.globalAlpha = (1 - r.t) * 0.6; ctx.lineWidth = 2 * scale; ctx.arc(r.x, r.y, r.t * 120 * scale, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1; if (r.t >= 1) ripples.splice(k, 1); }
     ctx.restore();
     const interval = 520 - activity * 380;
@@ -192,7 +297,15 @@ export function mountBrain(host) {
   }
   cv.addEventListener('click', (e) => {
     const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-    let hit = null; for (const p of hotspots) { const dx = mx - SX(p.x) / dpr, dy = my - SY(p.y) / dpr; if (dx * dx + dy * dy < 28 * 28) { hit = p; break; } }
+    // Hit-test against the LAST PROJECTED position (the brain is turning, so the
+    // 3D anchor is not where it appears). Front-facing hotspots win a tie.
+    let hit = null, bestZ = Infinity;
+    for (const p of hotspots) {
+      if (p._sx == null) continue;
+      const dx = mx - p._sx / dpr, dy = my - p._sy / dpr;
+      const rr = 30 * (p._k || 1);
+      if (dx * dx + dy * dy < rr * rr) { const z = p._front ? 0 : 1; if (z < bestZ) { bestZ = z; hit = p; } }
+    }
     ripples.push({ x: mx * dpr, y: my * dpr, t: 0 }); for (let i = 0; i < 4; i++) setTimeout(() => spawn(wpick()), i * 60);
     if (hit) showCallout(e.clientX, e.clientY, `<div class="co-h"><span>${esc(hit.sym)}</span>${hit.pnl != null ? `<span style="color:${hit.color};font-weight:700">${hit.pnl >= 0 ? '+' : ''}${hit.pnl.toFixed(1)}%</span>` : ''}${hit.band ? `<span class="co-band bt-${hit.band.toLowerCase()}">${hit.band}</span>` : ''}</div>${esc(hit.read)}`, hit.color);
     else showCallout(e.clientX, e.clientY, `<div class="co-h">RILEY · now</div>${overall}`, '#22d3ee');
@@ -216,7 +329,7 @@ export function mountBrain(host) {
 
       // hotspots from the account's open positions
       const open = (d.positions || []).filter((p) => p.status !== 'closed');
-      hotspots = open.slice(0, 6).map((p, i) => { const pt = placeHotspot(p.symbol || p.strategy_key, i), r = readOne(p); return { x: pt.x, y: pt.y, sym: p.symbol || p.strategy_key || '?', pnl: r.pnl, color: hotspotColor(r.pnl), band: r.band, read: r.read }; });
+      hotspots = open.slice(0, 6).map((p, i) => { const pt = placeHotspot(p.symbol || p.strategy_key, i), r = readOne(p); return { x: pt.x, y: pt.y, z: pt.z, sym: p.symbol || p.strategy_key || '?', pnl: r.pnl, color: hotspotColor(r.pnl), band: r.band, read: r.read }; });
       elHint.style.opacity = hotspots.length ? '' : '0.6';
       overall = open.length
         ? `Managing <b>${open.length} position${open.length === 1 ? '' : 's'}</b> — ${open.map((p) => esc(p.symbol || p.strategy_key)).slice(0, 4).join(', ')}. ${d.regime ? esc(d.regime) + ' tape · ' : ''}watching for the next move.`

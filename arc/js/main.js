@@ -7,7 +7,7 @@ import { getKey, isSim, clearKey, setSim } from './api.js';
 import { state, hydrate, applyAlertTheme, thoughtRate } from './store.js';
 import { renderGate } from './auth.js';
 import * as sse from './sse.js';
-import { startSim, stopSim } from './sim.js?v=m36';
+import { startSim, stopSim } from './sim.js?v=m42';
 import * as voice from './voice.js';
 import { clockET, money } from './components/fmt.js';
 import { engineStateLabel } from './components/killswitch.js';
@@ -15,12 +15,12 @@ import { engineStateLabel } from './components/killswitch.js';
 // Screen imports carry their own cache-bust (07-14): main.js?v=mN alone does
 // NOT re-fetch these — a phone could hold an old bridge.js against a new
 // main.js and render a stale dashboard. Bump these with index.html's ?v.
-import * as bridge from './screens/bridge.js?v=m41';
+import * as bridge from './screens/bridge.js?v=m42';
 import * as riley from './screens/riley.js?v=m26';
 import * as mind from './screens/mind.js?v=m26';
 import * as playbook from './screens/playbook.js?v=m26';
-import * as positions from './screens/positions.js?v=m36';
-import * as performance from './screens/performance.js?v=m37';
+import * as positions from './screens/positions.js?v=m42';
+import * as performance from './screens/performance.js?v=m42';
 import * as armory from './screens/armory.js?v=m26';
 
 // Research retired (2026-07-07): it was the last screen on the synthetic data
@@ -110,8 +110,15 @@ function bindShell() {
       state.engine.state === 'RUNNING' ? (isLiveArmed() ? 'live' : 'shadow') :
       state.engine.state.startsWith('HALTED') ? 'halted' : 'off'
     );
-    const eq = state.equity ?? state.balance?.cash;
-    equity.textContent = eq != null ? money(eq, { dp: 0 }) : '';
+    // 💰 REAL money is the headline (owner 08-04: "make the real account the
+    // focus"). The status bar used to show the $77k PAPER equity — the single
+    // most misleading number on the site. Real leads; paper trails it, dimmed
+    // and labelled, so the two can never be confused at a glance.
+    const real = state.hero?.realEquity ?? null;
+    const paper = state.equity ?? state.balance?.cash;
+    equity.innerHTML = real != null
+      ? `<b class="sbe-real">💰 ${money(real, { dp: 2 })}</b><span class="sbe-paper">${paper != null ? money(paper, { dp: 0 }) + ' paper' : ''}</span>`
+      : (paper != null ? `<span class="sbe-paper">${money(paper, { dp: 0 })} paper</span>` : '');
     paintModeStrip(strip);
   };
   bus.on('state', paint);

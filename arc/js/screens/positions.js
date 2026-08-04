@@ -123,17 +123,24 @@ function levelsCell(p, compact = false) {
     : `${p.stop_loss ? money(p.stop_loss) : '—'} / ${p.target ? money(p.target) : '—'}`;
 }
 
+// 💰 REAL money first, always (owner 08-04). Positions arrive in engine order,
+// which buries the only rows holding actual dollars among the paper research.
+const isReal = (p) => (p.book === 'real') || /_real$/.test(p.strategy_key || '');
+const REAL_CHIP = ' <span class="chip" style="padding:0 5px;color:#22c55e;border-color:#15803d">💰 REAL</span>';
+const realFirst = (ps) => [...ps].sort((a, b) => (isReal(b) ? 1 : 0) - (isReal(a) ? 1 : 0));
+
 function paint() {
   const body = document.getElementById('p-body');
   const mob = document.getElementById('p-mobile');
   const empty = document.getElementById('p-empty');
   if (!body) return;
   empty.hidden = state.positions.length > 0;
+  const rows = realFirst(state.positions);
 
-  body.innerHTML = state.positions.map((p) => {
+  body.innerHTML = rows.map((p) => {
     const m = state.marks[p.id] || {};
-    return `<tr>
-      <td><b>${esc(p.symbol)}</b>${healthBadge(p)}${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}</td>
+    return `<tr${isReal(p) ? ' class="tr-real"' : ''}>
+      <td><b>${esc(p.symbol)}</b>${healthBadge(p)}${isReal(p) ? REAL_CHIP : ''}${p.instrument_type === 'option' ? `<div class="opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}</td>
       <td class="dim">${esc(p.strategy_key)}${String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td>${esc(p.direction).toUpperCase()}</td>
       <td>${p.quantity}</td>
@@ -146,10 +153,10 @@ function paint() {
     </tr>`;
   }).join('');
 
-  mob.innerHTML = state.positions.map((p) => {
+  mob.innerHTML = rows.map((p) => {
     const m = state.marks[p.id] || {};
-    return `<div class="holo pm-card">
-      <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}${healthBadge(p)}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
+    return `<div class="holo pm-card${isReal(p) ? ' pm-real' : ''}">
+      <div class="pm-top"><b class="display" style="font-size:.95rem">${esc(p.symbol)}${healthBadge(p)}${isReal(p) ? REAL_CHIP : ''}</b><span class="${pnlClass(m.pnl)} mono">${m.pnl != null ? money(m.pnl, { sign: true }) : '—'}</span></div>
       ${p.instrument_type === 'option' ? `<div class="pm-detail opt-line">${contractLabel(p)}</div>${thetaLine(p)}` : ''}
       <div class="pm-detail"><span>${esc(p.direction).toUpperCase()} ${p.quantity} @ ${money(p.entry_price)}</span><span>mark ${m.mark != null ? money(m.mark) : '—'}</span></div>
       <div class="pm-detail"><span class="faint">${esc(p.strategy_key)}${String(p.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</span><span class="faint">${levelsCell(p, true)}</span></div>
@@ -168,7 +175,7 @@ async function exitPosition(id) {
   if (!p) return;
   if (!window.confirm(`Flatten ${p.quantity} ${p.symbol} at market?`)) return;
   if (isSim()) {
-    const { simKill } = await import('../sim.js?v=m36'); // reuse close mechanics
+    const { simKill } = await import('../sim.js?v=m42'); // reuse close mechanics
     const { applyEvent } = await import('../store.js');
     applyEvent({ ts: new Date().toISOString(), type: 'position.closed', severity: 'info', strategyKey: p.strategy_key, symbol: p.symbol, summary: `SHADOW closed LONG ${p.quantity} ${p.symbol} @ ${money(p.entry_price)} → $0.00 (manual)`, data: { positionId: p.id, pnl: 0, reason: 'manual' } });
     bus.emit('state', state);

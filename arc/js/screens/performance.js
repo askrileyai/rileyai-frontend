@@ -260,14 +260,25 @@ async function load(windowKey) {
 function paintPods(t, windowKey = '1w') {
   const pods = document.getElementById('pf-pods');
   const h = state.hero || {};
+  const r = h.real || null;
   const chg = h.dayChangeUsd, pct = h.dayChangePct;
   const wr = t.winRate != null ? ` · ${Math.round(t.winRate * 100)}% win` : '';
-  pods.innerHTML = [
-    ['Account value', h.equity != null ? money(h.equity, { dp: 0 }) : '—', ''],
-    ['Today (incl. open positions)', chg != null ? `${money(chg, { sign: true, dp: 0 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''}` : '—', pnlClassSafe(chg)],
-    [`Closed trades · ${windowKey}${t.trades != null ? ` · ${t.trades} trades${wr}` : ''}`, money(t.pnl || 0, { sign: true, dp: 0 }), pnlClassSafe(t.pnl)],
-  ].map(([label, val, cls]) => `
-    <div class="holo pod"><div class="pod-value mono ${cls}">${val}</div><div class="pod-sub">${label}</div></div>`).join('');
+  // 💰 REAL money leads (owner 08-04). The paper account value stays, but it is
+  // explicitly labelled paper and no longer occupies the first pod.
+  const realWr = r && r.lifetimeTrades ? Math.round((r.lifetimeWins / r.lifetimeTrades) * 100) : null;
+  const pods3 = r ? [
+    ['💰 Real money · live at Alpaca', money(r.equity, { dp: 2 }), 'gain', 'pod-real'],
+    [`💰 Real since start${r.lifetimeTrades ? ` · ${r.lifetimeTrades} trades${realWr != null ? ` · ${realWr}% win` : ''}` : ''}`,
+      r.lifetimePnl != null ? money(r.lifetimePnl, { sign: true, dp: 2 }) : '—', pnlClassSafe(r.lifetimePnl), 'pod-real'],
+    ['Paper account value', h.equity != null ? money(h.equity, { dp: 0 }) : '—', '', ''],
+  ] : [
+    ['Account value', h.equity != null ? money(h.equity, { dp: 0 }) : '—', '', ''],
+    ['Today (incl. open positions)', chg != null ? `${money(chg, { sign: true, dp: 0 })}${pct != null ? ` (${pct >= 0 ? '+' : ''}${pct}%)` : ''}` : '—', pnlClassSafe(chg), ''],
+    [`Closed trades · ${windowKey}${t.trades != null ? ` · ${t.trades} trades${wr}` : ''}`, money(t.pnl || 0, { sign: true, dp: 0 }), pnlClassSafe(t.pnl), ''],
+  ];
+  pods.innerHTML = pods3.map(([label, val, cls, extra]) => `
+    <div class="holo pod ${extra || ''}"><div class="pod-value mono ${cls}">${val}</div><div class="pod-sub">${label}</div></div>`).join('')
+    + (r ? `<div class="holo pod"><div class="pod-value mono ${pnlClassSafe(t.pnl)}">${money(t.pnl || 0, { sign: true, dp: 0 })}</div><div class="pod-sub">Paper closed · ${windowKey}${t.trades != null ? ` · ${t.trades} trades${wr}` : ''}</div></div>` : '');
 }
 function pnlClassSafe(v) { return v == null ? '' : v >= 0 ? 'gain' : 'loss'; }
 
