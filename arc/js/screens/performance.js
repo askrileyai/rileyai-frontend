@@ -65,6 +65,11 @@ export function mount(host) {
       loadBookAttribution(chip.getAttribute('data-book'));
     });
   });
+  // Day-picker on the reports panel — delegated so it survives every repaint.
+  host.querySelector('#pf-daily-reports').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-rday]');
+    if (b) pickReportDay(b.getAttribute('data-rday'));
+  });
   load('1w');
   loadCalendar();
   loadAccount();
@@ -77,6 +82,17 @@ export function mount(host) {
 // gate ("did declining those trades save or cost money"), system activity, a
 // process grade, and explicit improve / steady / delete / add actions. Renders
 // the persisted review.daily event; live preview before the 5pm run lands.
+// DAY NAVIGATION (08-04). This panel used to hard-filter both the brief and the
+// report to TODAY and drop everything else on the floor, so a month of archived
+// desk analysis was unreachable from the UI even though the backend had it all
+// (40 briefs back to 07-16, 33 reports back to 07-05). Fetch a window, expose the
+// days that actually have content, and let the owner walk back through them.
+let reportCache = null;              // { reports: [], briefs: [] }
+let reportDay = null;                // 'YYYY-MM-DD' (ET) currently shown; null = latest
+const dayKeyOf = (e) => new Date(e.ts || e.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+
+export function pickReportDay(d) { reportDay = d || null; loadDailyReports(); }
+
 async function loadDailyReports() {
   const host = document.getElementById('pf-daily-reports');
   if (!host) return;
@@ -166,22 +182,36 @@ async function loadDailyReports() {
     return;
   }
   try {
-    const evs = (await api.log('?limit=10&type=review.daily')).events || [];
-    // Only pin TODAY'S report (ET) — a stale one measures a dead window and
-    // contradicts the live book number right below it.
+    if (!reportCache) {
+      const [rep, bri] = await Promise.all([
+        api.log('?limit=90&type=review.daily').catch(() => ({ events: [] })),
+        api.log('?limit=90&type=review.brief').catch(() => ({ events: [] })),
+      ]);
+      reportCache = { reports: rep.events || [], briefs: bri.events || [] };
+    }
+    const evs = reportCache.reports;
     const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-    const isToday = (e) => new Date(e.ts || e.created_at).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) === todayET;
-    // 📋 Today's pre-market brief pins above the report (9:15 ET systems check).
-    let briefHtml = '';
+    // Which ET day are we showing? Default = today (live preview if the 5pm run
+    // hasn't landed); otherwise whichever archived day the owner picked.
+    const shownDay = reportDay || todayET;
+    const isToday = (e) => dayKeyOf(e) === shownDay;
+    // Every day that has EITHER a brief or a report, newest first — the picker.
+    const days = [...new Set([...evs, ...reportCache.briefs].map(dayKeyOf))].sort().reverse().slice(0, 40);
+    const dayNav = days.length ? `<div class="report-days">${days.map((d) => {
+      const lbl = d === todayET ? 'Today' : new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+      return `<button class="fchip${d === shownDay ? ' on' : ''}" data-rday="${d}">${lbl}</button>`;
+    }).join('')}</div>` : '';
+    // 📋 The day's pre-market brief pins above its report (9:00 ET systems check).
+    let briefHtml = dayNav;
     try {
-      const briefs = (await api.log('?limit=6&type=review.brief')).events || [];
+      const briefs = reportCache.briefs;
       const brief = [...briefs].reverse().find(isToday);
       if (brief) {
         const bd = brief.data || {};
         const tape = bd.regime ? `<div class="report-summary">Tape: <b>${esc(bd.regime.key || '')}</b>${bd.regime.vix != null ? ` · VIX ${bd.regime.vix}` : ''}${bd.regime.read ? ` — ${esc(bd.regime.read)}` : ''}</div>` : '';
         const mktNews = bd.news?.market?.length ? `<div class="report-recs"><div class="faint" style="margin-bottom:2px">MARKET NEWS</div>${bd.news.market.slice(0, 5).map((h) => `<div>→ ${esc(h)}</div>`).join('')}</div>` : '';
         const symNews = bd.news && Object.keys(bd.news.symbols || {}).length ? `<div class="report-recs"><div class="faint" style="margin-bottom:2px">TRADED NAMES</div>${Object.entries(bd.news.symbols).slice(0, 6).map(([s, h]) => `<div><b>${esc(s)}</b> — ${esc(h)}</div>`).join('')}</div>` : '';
-        briefHtml = `<div class="report-block"><div class="report-head"><b>📋 PRE-MARKET BRIEF</b><span class="faint">${new Date(brief.ts || brief.created_at).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })}</span></div><div class="report-summary">${esc(String(brief.summary || '').replace(/^📋 PRE-MARKET BRIEF — /, ''))}</div>${tape}${mktNews}${symNews}</div>`;
+        briefHtml += `<div class="report-block"><div class="report-head"><b>📋 PRE-MARKET BRIEF</b><span class="faint">${new Date(brief.ts || brief.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></div><div class="report-summary">${esc(String(brief.summary || '').replace(/^📋 PRE-MARKET BRIEF — /, ''))}</div>${tape}${mktNews}${symNews}</div>`;
       }
     } catch (_) {}
     const latestUnified = [...evs].reverse().find((e) => isToday(e) && e.data?.report);
@@ -192,6 +222,12 @@ async function loadDailyReports() {
       host.innerHTML = briefHtml
         + (latestSmall ? block('$1k BOOK', latestSmall.ts || latestSmall.created_at, latestSmall.summary, latestSmall.data?.review, latestSmall.data?.ai) : '')
         + (latestLab ? block('LAB', latestLab.ts || latestLab.created_at, latestLab.summary, latestLab.data?.review, latestLab.data?.ai) : '');
+      return;
+    }
+    // An ARCHIVED day with no graded report has nothing more to show — the live
+    // preview below reads TODAY'S window and would be a lie on any past date.
+    if (shownDay !== todayET) {
+      host.innerHTML = briefHtml + `<div class="empty-note">No graded report archived for ${shownDay}.</div>`;
       return;
     }
     // No report yet today → live preview until the 5pm run lands.
@@ -364,14 +400,36 @@ async function loadAccount() {
 // ── Daily P&L calendar ─────────────────────────────────────────────────────
 function ymd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 
+// The calendar is REAL-MONEY FIRST (owner 08-04: "cater the calendar to the real
+// money"). The backend now returns each day split into real / paper / shadow
+// instead of one number that silently summed all three — shadow trades are
+// hypotheticals nothing ever took, and blending them with live dollars produced a
+// figure matching no account the owner actually has.
+let calBook = 'real';                 // 'real' | 'paper'
+let calRaw = [];
+
+export function pickCalBook(b) { calBook = b === 'paper' ? 'paper' : 'real'; applyCalBook(); renderCalendar(); }
+
+function applyCalBook() {
+  calData = new Map(calRaw.map((d) => {
+    // Segmented payload when present; fall back to the legacy flat shape so an
+    // old cached bundle still renders something sane.
+    const seg = d[calBook] || (calBook === 'paper'
+      ? { pnl: Number(d.realized_pnl || 0), trades: Number(d.trades_closed || 0), wins: Number(d.wins || 0), losses: Number(d.losses || 0) }
+      : { pnl: 0, trades: 0, wins: 0, losses: 0 });
+    return [String(d.trading_day).slice(0, 10), {
+      pnl: Number(seg.pnl || 0), trades: Number(seg.trades || 0),
+      wins: Number(seg.wins || 0), losses: Number(seg.losses || 0),
+    }];
+  }));
+}
+
 async function loadCalendar() {
-  let days;
-  if (isSim()) days = simCalendar();
-  else { try { days = (await api.calendar(180)).days || []; } catch (_) { days = []; } }
-  calData = new Map(days.map((d) => [String(d.trading_day).slice(0, 10), {
-    pnl: Number(d.realized_pnl || 0), trades: Number(d.trades_closed || 0),
-    wins: Number(d.wins || 0), losses: Number(d.losses || 0),
-  }]));
+  if (isSim()) calRaw = simCalendar();
+  else { try { calRaw = (await api.calendar(180)).days || []; } catch (_) { calRaw = []; } }
+  // If the real book has no history at all yet, don't open on an empty grid.
+  if (calBook === 'real' && !calRaw.some((d) => Number(d.real?.trades || 0) > 0)) calBook = 'paper';
+  applyCalBook();
   const now = new Date();
   calCursor = new Date(now.getFullYear(), now.getMonth(), 1);
   renderCalendar();
@@ -412,6 +470,10 @@ function renderCalendar() {
       <div class="cal-title">${monthName}</div>
       <button class="cal-nav" data-cal="next" aria-label="Next month">&rsaquo;</button>
     </div>
+    <div class="cal-books">
+      <button class="fchip${calBook === 'real' ? ' on' : ''}" data-calbook="real">💰 Real money</button>
+      <button class="fchip${calBook === 'paper' ? ' on' : ''}" data-calbook="paper">Paper</button>
+    </div>
     <div class="cal-grid cal-dows">${dows}</div>
     <div class="cal-grid cal-days">${cells}</div>
     <div class="cal-foot">
@@ -422,6 +484,7 @@ function renderCalendar() {
     calCursor.setMonth(calCursor.getMonth() + (b.getAttribute('data-cal') === 'next' ? 1 : -1));
     renderCalendar();
   }));
+  host.querySelectorAll('[data-calbook]').forEach((b) => b.addEventListener('click', () => pickCalBook(b.getAttribute('data-calbook'))));
 }
 
 function simCalendar() {
@@ -431,7 +494,16 @@ function simCalendar() {
     if (d.getDay() === 0 || d.getDay() === 6) continue;
     const pnl = +(Math.random() * 340 - 130).toFixed(2);
     const trades = 2 + Math.floor(Math.random() * 6);
-    days.push({ trading_day: ymd(d), realized_pnl: pnl, trades_closed: trades, wins: pnl > 0 ? Math.ceil(trades * 0.7) : Math.floor(trades * 0.3), losses: 0 });
+    // Mirror the live payload's per-book split so SIM exercises the calendar's
+    // real/paper toggle instead of silently falling back to the legacy shape.
+    const rPnl = +(Math.random() * 90 - 30).toFixed(2), rTr = 1 + Math.floor(Math.random() * 3);
+    days.push({
+      trading_day: ymd(d), realized_pnl: pnl, trades_closed: trades,
+      wins: pnl > 0 ? Math.ceil(trades * 0.7) : Math.floor(trades * 0.3), losses: 0,
+      real: { pnl: rPnl, trades: rTr, wins: rPnl > 0 ? rTr : 0, losses: rPnl > 0 ? 0 : rTr },
+      paper: { pnl, trades, wins: pnl > 0 ? Math.ceil(trades * 0.7) : Math.floor(trades * 0.3), losses: 0 },
+      shadow: { pnl: +(Math.random() * 60 - 40).toFixed(2), trades: 1, wins: 0, losses: 1 },
+    });
   }
   return days;
 }

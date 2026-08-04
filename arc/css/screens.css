@@ -178,6 +178,21 @@
   color: var(--text-faint); border: 1px solid var(--border); border-radius: 5px;
   padding: 1px 5px; margin-left: 5px; vertical-align: 1px;
 }
+/* Riley's Read armed-lane strip: ALL lanes, scrolled rather than truncated. */
+.rr-fav-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  margin-top: 9px; font-size: 10px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--text-faint);
+}
+.rr-fav-head .faint { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11px; }
+.rr-fav { max-height: 132px; overflow-y: auto; }
+.rr-fav::-webkit-scrollbar { width: 6px; }
+.rr-fav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Calendar book toggle + report day picker. */
+.cal-books, .report-days { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.report-days { max-height: 68px; overflow-y: auto; }
+
 /* Selected-account detail. A 4-up GRID, not a no-shrink flex row — the inline
    `flex:1;min-width:78px` it used to carry summed past a phone's width and the
    last stat was clipped off the right edge. It drops to 2-up on narrow screens. */

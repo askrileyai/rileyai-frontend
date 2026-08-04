@@ -143,6 +143,8 @@ export function startSim() {
       // real-money surfaces the owner actually looks at (hero band + P&L pods).
       real: {
         equity: 214.73, cash: 88.12, buyingPower: 88.12, optionsBuyingPower: 88.12,
+        // Broker-truth day change (equity − last_equity), same as live.
+        lastEquity: 203.9, dayChangeUsd: 10.83, dayChangePct: 5.31,
         open: 1, openPnl: 4.15,
         lifetimePnl: 114.73, lifetimeTrades: 22, lifetimeWins: 13, lifetimeLosses: 9,
         since: '2026-07-13T13:41:00.000Z',

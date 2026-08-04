@@ -175,7 +175,7 @@ async function exitPosition(id) {
   if (!p) return;
   if (!window.confirm(`Flatten ${p.quantity} ${p.symbol} at market?`)) return;
   if (isSim()) {
-    const { simKill } = await import('../sim.js?v=m42'); // reuse close mechanics
+    const { simKill } = await import('../sim.js?v=m44'); // reuse close mechanics
     const { applyEvent } = await import('../store.js');
     applyEvent({ ts: new Date().toISOString(), type: 'position.closed', severity: 'info', strategyKey: p.strategy_key, symbol: p.symbol, summary: `SHADOW closed LONG ${p.quantity} ${p.symbol} @ ${money(p.entry_price)} → $0.00 (manual)`, data: { positionId: p.id, pnl: 0, reason: 'manual' } });
     bus.emit('state', state);

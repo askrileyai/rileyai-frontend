@@ -10,9 +10,9 @@ import { state, winRate, hydrate, applyAlertTheme } from '../store.js';
 import { killSwitch } from '../components/killswitch.js';
 import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
-import { simResume, simKill } from '../sim.js?v=m42';
+import { simResume, simKill } from '../sim.js?v=m44';
 import { contractLabel, healthBadge } from './positions.js';
-import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js?v=m42';
+import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js?v=m44';
 
 let unsubs = [];
 // 💰 REAL money is the default view (owner 08-04: "make the real account the
@@ -215,9 +215,18 @@ function paintCards() {
   // REAL day %: the real card only had a $ figure (owner 07-23 "match the others
   // with percentage"). Real shows realized P&L today, so derive its % from
   // start-of-day equity (current − realized). At $0 it reads +0% like the others.
-  const realChg = t.real?.realizedPnl ?? null;
-  const realBase = h.realEquity != null && realChg != null ? h.realEquity - realChg : null;
-  const realPct = realBase > 0 && realChg != null ? +((realChg / realBase) * 100).toFixed(2) : (realChg != null && h.realEquity > 0 ? 0 : null);
+  // REAL day change comes from the BROKER (08-04). It used to be today's REALIZED
+  // real P&L with the % taken against (equity − realized) — which ignores open
+  // positions moving, and drifts from Alpaca the moment our books and theirs
+  // disagree (they did: see the #769 quantity drift). hero.real.dayChangeUsd is
+  // equity − last_equity, the exact figure Alpaca's own dashboard shows, so the
+  // site and the broker now agree. Falls back to the old derivation if the broker
+  // withheld last_equity.
+  const realChg = h.real?.dayChangeUsd != null ? h.real.dayChangeUsd : (t.real?.realizedPnl ?? null);
+  const realBase = h.real?.lastEquity > 0 ? h.real.lastEquity
+    : (h.realEquity != null && realChg != null ? h.realEquity - realChg : null);
+  const realPct = h.real?.dayChangePct != null ? h.real.dayChangePct
+    : (realBase > 0 && realChg != null ? +((realChg / realBase) * 100).toFixed(2) : (realChg != null && h.realEquity > 0 ? 0 : null));
   const todayBy = { real: { chg: realChg, pct: realPct }, bookC: { chg: h.bookCDayChangeUsd, pct: h.bookCDayChangePct }, account: { chg: acctChg, pct: acctPct } };
 
   const rec = (r) => r ? `<span class="ac-rec"><b class="gain">${r.wins || 0}W</b> · <b class="loss">${r.losses || 0}L</b> today</span>` : '';
@@ -558,9 +567,21 @@ function paintRead() {
   const situation = reg
     ? `<div class="rr-situation"><span class="rr-sit-dot"></span>${esc(reg.label)} · VIX ${reg.vix} · <b>${auto}</b>${auto === 'Full Auto' ? ' — hunting market-wide' : ''}</div>`
     : '';
-  const favChips = favored.slice(0, 4).map((s) => `<span class="chip live">${esc(s.name || s.strategy_key)}</span>`).join('');
-  const stoodChips = stood.slice(0, 2).map((s) => `<span class="chip off">${esc((s.name || s.strategy_key).split(' ·')[0])} · stood down</span>`).join('');
-  box.innerHTML = `${situation}<div class="rr-line">${esc(readLine)}</div>${(favChips || stoodChips) ? `<div class="rr-fav">${favChips}${stoodChips}</div>` : ''}`;
+  // ALL of them (owner 08-04: "show all the strategies and not some of them").
+  // This was slice(0,4) / slice(0,2) — 52 lanes armed, 6 chips rendered, and no
+  // hint that the rest existed. The strip scrolls instead of truncating, and
+  // lanes mirrored to REAL money are marked so live dollars stand out.
+  const realKeys = new Set(state.engine?.risk_config?.bookCStrategies || []);
+  const chipFor = (s, cls, suffix) => {
+    const key = s.strategy_key || '';
+    const isReal = realKeys.has(key);
+    return `<span class="chip ${cls}"${isReal ? ' style="border-color:#15803d;color:#22c55e"' : ''}>${isReal ? '💰 ' : ''}${esc(s.name || key)}${suffix || ''}</span>`;
+  };
+  const favChips = favored.map((s) => chipFor(s, 'live')).join('');
+  const stoodChips = stood.map((s) => chipFor({ ...s, name: (s.name || s.strategy_key).split(' ·')[0] }, 'off', ' · stood down')).join('');
+  const n = favored.length + stood.length;
+  box.innerHTML = `${situation}<div class="rr-line">${esc(readLine)}</div>`
+    + (n ? `<div class="rr-fav-head"><span>${n} armed</span><span class="faint">${favored.length} favored · ${stood.length} stood down</span></div><div class="rr-fav">${favChips}${stoodChips}</div>` : '');
 }
 
 // ── Engine control (unchanged) ──────────────────────────────────────────────
