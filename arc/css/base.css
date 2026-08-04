@@ -77,6 +77,17 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
 #nav a.active { color: var(--accent-hi); background: var(--bg-3); }
 #nav a.active .nav-ico { color: var(--accent); }
 
+/* The single vertical scroll container.
+   ORDER MATTERS (bug fixed 08-03): this block used to sit BELOW the media
+   queries. Same specificity (#screen), later rule wins — so its `padding:
+   18px 20px 32px` silently overrode the mobile
+   `calc(var(--nav-h) + safe-area + 20px)` bottom padding, and every phone
+   screen ran its last ~60px underneath the fixed bottom nav. On Riley that
+   meant the chat input was completely unreachable. Base first, overrides
+   after. */
+#screen { overflow-y: auto; overflow-x: hidden; min-height: 0; -webkit-overflow-scrolling: touch;
+  padding: 18px 20px 32px; max-width: 1320px; width: 100%; margin: 0 auto; }
+
 @media (min-width: 900px) {
   /* minmax(0, 1fr): let the #screen track SHRINK below its content's min width.
      A bare 1fr = minmax(auto, 1fr) grows to the widest child (e.g. a long feed
@@ -112,13 +123,34 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px v
     background: rgba(9,9,11,.94); border-top: 1px solid var(--border); justify-content: space-around;
     backdrop-filter: blur(10px);
   }
-  #nav a { flex-direction: column; gap: 3px; flex: 1; justify-content: center; font-size: 10px; }
-  #nav a span:last-child { font-weight: 500; }
+  /* min-width:0 — `flex:1` is `flex:1 1 0%`, but a flex item still cannot
+     shrink below its MIN-CONTENT unless min-width is cleared. The six nowrap
+     labels held the bar at 408px on a 375px phone, which was the second source
+     of the whole-document horizontal overflow (the bar is the widest fixed
+     element, so it set the scroll width for every screen). */
+  #nav a { flex-direction: column; gap: 3px; flex: 1 1 0; min-width: 0; justify-content: center; font-size: 10px; padding: 0 2px; }
+  #nav a span:last-child { font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+  /* The status bar is the other overflow source: .sb-left/.sb-right are nowrap
+     flex groups with no min-width:0, so they could not shrink either. Let the
+     centre line yield first, then allow the groups to compress. */
+  #statusbar { padding: 0 12px; gap: 8px; }
+  .sb-left, .sb-right { min-width: 0; gap: 8px; }
+  .wordmark { padding-right: 8px; }
+
+  /* The mode strip is `overflow:hidden; white-space:nowrap`, so on a phone its
+     segments ran to ~766px and everything past the first was silently
+     unreachable. Make it a real horizontal scroller instead of a clip. */
+  #modestrip { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  #modestrip::-webkit-scrollbar { display: none; }
 }
 
-/* The single vertical scroll container. */
-#screen { overflow-y: auto; overflow-x: hidden; min-height: 0; -webkit-overflow-scrolling: touch;
-  padding: 18px 20px 32px; max-width: 1320px; width: 100%; margin: 0 auto; }
+/* Belt-and-braces: nothing may widen the document. Any horizontal scrolling on
+   mobile must happen INSIDE a designated scroller (the card carousel, the mode
+   strip, a table wrapper), never on the page itself. */
+@media (max-width: 899px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

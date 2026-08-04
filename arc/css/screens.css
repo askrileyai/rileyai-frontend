@@ -142,6 +142,13 @@
 
 /* ---- OVERVIEW v2: two account cards + combined line ---- */
 .acct-cards { display: grid; gap: 8px; padding: 6px 2px 2px; }
+/* GRID MIN-CONTENT BLOWOUT (fixed 08-03). .acct-cards is a grid, so its children
+   default to min-width:auto and the implicit column sizes to the WIDEST child's
+   min-content — the card row's 82vw cards forced a 449.6px column inside a 335px
+   box, so the row (and the selected book's detail under it) was clipped off the
+   right edge on every phone. min-width:0 lets the column collapse to the
+   container, which is what makes the carousel's own overflow-x actually scroll. */
+.acct-cards > * { min-width: 0; }
 .acct-combined { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--text-dim); }
 .acct-combined b { font-size: 15px; color: var(--text); }
 .acct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -345,11 +352,29 @@
   /* chat + activity feed: bounded to the visible viewport (statusbar + command
      bar are the only chrome) so the scroll area scrolls internally and the
      input stays pinned + reachable — no magic offset. */
-  .chat, .mind { height: calc(100dvh - var(--sb-h) - var(--cmd-h) - 18px); min-height: 380px; }
+  /* Bound the chat/feed to what is ACTUALLY visible: viewport minus the status
+     bar, the mode strip, the fixed bottom nav (+ iOS safe area) and #screen's
+     own vertical padding. The old calc omitted the nav and the padding, so the
+     input rendered ~60px below the nav's top edge — invisible and untappable
+     (owner 08-03: "the riley chat is not fixated correctly"). */
+  .chat, .mind {
+    height: calc(100dvh - var(--sb-h) - var(--cmd-h) - var(--nav-h) - env(safe-area-inset-bottom) - 52px);
+    min-height: 380px;
+  }
+  /* Keep the composer above the nav even while the on-screen keyboard is up. */
+  .chat-input { padding-bottom: 2px; }
 }
 
 /* ---- SMALL PHONES (iPhone SE/8/12 mini class) ---- */
 @media (max-width: 430px) {
+  /* At 320-390px the status bar can't fit wordmark + chip + clock + equity, and
+     the item that lost was #sb-equity — the account value, i.e. the single most
+     important number on the screen. Drop the market clock (the phone has one)
+     and tighten the wordmark so the money always survives. */
+  #market-clock { display: none; }
+  .wordmark { font-size: 14px; letter-spacing: .1em; padding-right: 6px; }
+  #engine-chip { font-size: 10px; }
+  .sb-equity { font-size: 13px; }
   .panel-body, .holo, .panel { --pad-tight: 1; }
   .panel-body { padding: 12px; }
   .perf-pods { gap: 8px; }

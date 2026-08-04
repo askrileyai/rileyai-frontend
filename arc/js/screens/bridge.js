@@ -408,16 +408,34 @@ function paintToday() {
   const empty = document.querySelector('#d-today-empty');
   const link = document.querySelector('#d-armed-link');
   if (!body) return;
-  const rows = (state.today?.byStrategy || []).slice(0, 6);
+  // EVERY lane that traded today (owner 08-03: "doesn't show all the trades
+  // taken"). This used to slice(0, 6), so on a normal 8-11 trade day the tail
+  // was silently dropped and the panel's numbers didn't reconcile with the
+  // day's P&L anywhere else in the app. The panel scrolls; the truth doesn't
+  // need trimming. A TOTAL row makes it reconcile at a glance.
+  const rows = state.today?.byStrategy || [];
   if (empty) empty.hidden = rows.length > 0;
   if (link) link.textContent = `${state.strategies.filter((s) => s.enabled).length} armed ›`;
+  const tot = rows.reduce((a, r) => ({
+    trades: a.trades + (Number(r.trades) || 0),
+    wins: a.wins + (Number(r.wins) || 0),
+    losses: a.losses + (Number(r.losses) || 0),
+    pnl: a.pnl + (Number(r.pnl) || 0),
+  }), { trades: 0, wins: 0, losses: 0, pnl: 0 });
   body.innerHTML = rows.map((r) => `
     <tr onclick="location.hash='#/playbook'" style="cursor:pointer">
       <td><span class="sym">${esc(r.strategy_key)}</span>${r.book === 'bookC' ? ' <span class="chip" style="padding:0 5px;color:#a78bfa;border-color:#6d5aa8">C</span>' : String(r.strategy_key || '').startsWith('swing_') ? ' <span class="chip" style="padding:0 5px;color:#fbbf24;border-color:#b4881d">SWING</span>' : ''}</td>
       <td class="num">${r.trades}</td>
       <td class="num"><span class="gain">${r.wins}</span>–<span class="loss">${r.losses}</span></td>
       <td class="num ${pnlClass(r.pnl)}">${money(r.pnl, { sign: true, dp: 0 })}</td>
-    </tr>`).join('');
+    </tr>`).join('')
+    + (rows.length ? `
+    <tr class="dtable-total">
+      <td><b>ALL (${rows.length} ${rows.length === 1 ? 'lane' : 'lanes'})</b></td>
+      <td class="num"><b>${tot.trades}</b></td>
+      <td class="num"><b><span class="gain">${tot.wins}</span>–<span class="loss">${tot.losses}</span></b></td>
+      <td class="num ${pnlClass(tot.pnl)}"><b>${money(tot.pnl, { sign: true, dp: 0 })}</b></td>
+    </tr>` : '');
 }
 
 // ── Systems strip — what the protective layers did today ───────────────────
