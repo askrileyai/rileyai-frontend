@@ -109,7 +109,7 @@ function appendRiley(scroll, m) {
 // prose. Rather than print braces at the user, pull out the human field (or
 // flatten to readable lines). Applied only at stream END (partial JSON mid-
 // stream must not be parsed). Non-JSON text passes straight through.
-function humanizeMaybeJson(s) {
+export function humanizeMaybeJson(s) {
   const t = (s || '').trim();
   if (!(t.startsWith('{') || t.startsWith('['))) return s;
   try {
@@ -129,7 +129,7 @@ function humanizeMaybeJson(s) {
 }
 
 // Escape, then render **bold** and newlines — Riley's analysis reads cleanly.
-function richText(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>'); }
+export function richText(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>'); }
 function setBubbleText(bubble, text) { bubble.querySelector('.msg-text').innerHTML = richText(text); }
 function setBubbleTools(bubble, tools) {
   bubble.querySelector('.msg-tools').innerHTML = (tools || []).map((t) => `<span class="msg-tool">⚙ ${esc(t)}</span>`).join('');

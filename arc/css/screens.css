@@ -6,7 +6,9 @@
    allowed to shrink below its content's min width, so a wide element (the brain
    feed's long lines, a wide table) can't blow the layout past the viewport and
    get clipped on the right on desktop. */
-.bridge > *, .bridge-col > *, .bridge-grid > *, .brain-panel, .brain-main > *, .acct-cards { min-width: 0; }
+.bridge > *, .bridge-col > *, .bridge-grid > *, .brain-panel, .brain-main > *, .acct-cards,
+.desk-dock, .desk-dock > *, .mission-panel, .mn-body > *, .mn-ch > *, .mn-row,
+.dc-panel, .dc-head > * { min-width: 0; }
 .deck-readout { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
 .deck-readout .ro {
   background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
@@ -525,4 +527,121 @@
   .brain-main { grid-template-columns: 1fr; }
   .brain-stage { aspect-ratio: 4/3; }
   .brain-feed { max-height: 150px; overflow-y: auto; }
+}
+
+/* ── MISSION CONTROL — the decision console docked beside the brain ─────────
+   Arbiter / Riley / Gates as three always-visible channels. Deliberately
+   modern-futurist, NOT retro-HUD: no corner brackets, no letterspaced neon
+   captions, no per-channel colour, no glow, nothing that types or sweeps (an
+   earlier pass with all of that was rejected as "80s scifi"). The surface is
+   the BRAIN's own stage gradient so the dock reads as one instrument. */
+/* The brain keeps the full page width; decisions + Riley sit BENEATH it. The
+   console replaces the brain's own mini-feed, so that column is suppressed with
+   CSS only — brain.js's render loop is never touched, and its ResizeObserver
+   recomputes the canvas scale on the reflow by itself. A cinematic 21/9 band
+   keeps a full-width stage from eating the fold; the canvas letterboxes inside. */
+.brain-main { grid-template-columns: minmax(0, 1fr); }
+.brain-feed { display: none; }
+@media (min-width: 900px) { .brain-stage { aspect-ratio: 21/9; } }
+
+.desk-dock { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 1000px) {
+  .desk-dock { grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr); align-items: stretch; }
+}
+
+.mission-panel { height: 100%; display: flex; flex-direction: column; border-radius: var(--radius);
+  padding: 13px 14px; border: 1px solid #123039;
+  background: radial-gradient(120% 100% at 50% 44%, rgba(10,26,38,.55) 0%, rgba(8,11,16,.92) 72%), #0a141d; }
+.mn-head { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; flex: none; }
+.mn-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-hi); flex: none; }
+.mn-title { font-size: 12px; font-weight: 500; color: #eaf4f8; }
+.mn-clock { font-family: var(--font-mono); font-size: 10px; color: #4a5b68; margin-left: auto; }
+.mn-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.mn-ch { padding: 11px 0; border-top: 1px solid rgba(34,211,238,.11); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mn-ch:first-child { border-top: 0; padding-top: 0; }
+.mn-lab { font-size: 10px; color: #4a5b68; margin-bottom: 8px; flex: none; display: flex; gap: 8px; min-width: 0; }
+.mn-strip { color: #3d4c58; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mn-alarm { font-size: 10px; color: var(--down); margin-bottom: 7px; flex: none; }
+.mn-list { display: flex; flex-direction: column; gap: 9px; min-width: 0; overflow: hidden; contain: layout paint; }
+
+/* Rows are clickable — that decision becomes the subject of the next question
+   in the desk chat, which is what makes the console more than a read-only feed. */
+.mn-row { min-width: 0; contain: layout; cursor: pointer; border-radius: 6px;
+  margin: -2px -5px; padding: 2px 5px; transition: background var(--snap);
+  animation: mn-in 200ms cubic-bezier(.22,.61,.36,1) both; }
+.mn-row:hover { background: rgba(34,211,238,.055); }
+.mn-row.mn-still { animation: none; }
+@keyframes mn-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.mn-top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.mn-sym { font-family: var(--font-mono); font-size: 12px; color: #eaf4f8; flex: none; }
+.mn-act { font-size: 11px; color: #8fa3ae; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-act.bad { color: var(--down); }
+.mn-act.dimmer { color: #6d808c; }
+.mn-meta { font-family: var(--font-mono); font-size: 10px; color: #4a5b68; margin-left: auto; flex: none; }
+.mn-note { font-size: 11px; line-height: 1.45; color: #6d808c; margin-top: 3px; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mn-note.bad { color: #96707a; }
+
+/* Gate ladder — thin instrument ticks, not glowing pips. */
+.mn-rail { display: flex; gap: 1.5px; align-items: flex-end; height: 9px; margin-top: 5px; }
+.mn-rail i { width: 2px; height: 100%; transform-origin: bottom;
+  animation: mn-seg 220ms cubic-bezier(.22,.61,.36,1) both; animation-delay: calc(var(--i) * 18ms); }
+@keyframes mn-seg { from { opacity: 0; transform: scaleY(.2); } to { opacity: 1; transform: none; } }
+
+/* Conviction / lane score — a 1px hairline gauge. */
+.mn-gauge { height: 1px; background: rgba(34,211,238,.13); margin-top: 6px; position: relative; overflow: hidden; }
+.mn-gauge i { position: absolute; inset: 0 auto 0 0; transform-origin: left; transform: scaleX(0);
+  animation: mn-fill 420ms cubic-bezier(.22,.61,.36,1) forwards; }
+@keyframes mn-fill { to { transform: scaleX(var(--w)); } }
+.mn-ln { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; min-width: 0; }
+.mn-ln > span:first-child { font-family: var(--font-mono); font-size: 10px; color: #6d808c; width: 118px; flex: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-ln .mn-gauge { flex: 1; margin-top: 0; }
+.mn-lnv { font-family: var(--font-mono); font-size: 10px; color: #4a5b68; width: 26px; text-align: right; flex: none; }
+.mn-ln.more { font-size: 10px; color: #4a5b68; }
+
+@media (max-width: 999px) { .mn-ch { min-height: 190px; } }
+
+/* ── DESK CHAT — Riley, docked beside the console ───────────────────────────
+   Same surface as the console so the pair reads as one instrument. Reuses the
+   existing .msg-* bubble CSS, so tool labels and markdown render exactly as
+   they do on the full #/riley screen (which is still routable, just out of nav). */
+.dc-panel { height: 100%; display: flex; flex-direction: column; border-radius: var(--radius);
+  padding: 13px 14px; border: 1px solid #123039; min-height: 300px;
+  background: radial-gradient(120% 100% at 50% 44%, rgba(10,26,38,.55) 0%, rgba(8,11,16,.92) 72%), #0a141d; }
+.dc-head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; flex: none; }
+.dc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-hi); flex: none; }
+.dc-title { font-size: 12px; font-weight: 500; color: #eaf4f8; }
+.dc-full { margin-left: auto; font-size: 10px; color: #4a5b68; text-decoration: none; }
+.dc-full:hover { color: var(--accent-hi); }
+.dc-scroll { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px;
+  overscroll-behavior: contain; }
+.dc-scroll::-webkit-scrollbar { width: 6px; }
+.dc-scroll::-webkit-scrollbar-thumb { background: rgba(34,211,238,.15); border-radius: 3px; }
+.dc-empty { font-size: 11px; color: #4a5b68; padding: 6px 0; }
+/* The chip naming the decision this question is about. */
+.dc-ctx { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #8fa3ae; flex: none;
+  margin: 8px 0 0; padding: 4px 8px; border-radius: 6px; background: rgba(34,211,238,.07); }
+.dc-ctx-l { color: #4a5b68; }
+.dc-x { margin-left: auto; background: none; border: 0; color: #4a5b68; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
+.dc-x:hover { color: var(--down); }
+.dc-bar { display: flex; gap: 7px; align-items: center; margin-top: 9px; flex: none; }
+.dc-in { flex: 1; min-width: 0; background: #0b1119; border: 1px solid rgba(34,211,238,.15); border-radius: 8px;
+  padding: 8px 10px; color: #eaf4f8; font-size: 12px; font-family: inherit; }
+.dc-in::placeholder { color: #43535f; }
+.dc-in:focus { outline: none; border-color: rgba(34,211,238,.4); }
+.dc-send { flex: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+  background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.22); color: var(--accent-hi); font-size: 14px; }
+.dc-send:hover { background: rgba(34,211,238,.2); }
+.dc-scroll .msg-row { margin: 0; }
+.dc-scroll .msg-bubble { font-size: 12px; line-height: 1.5; }
+
+/* base.css's reduced-motion block overrides animation-duration but NOT
+   animation-delay, so the staggered ticks would still sit in dead time. And a
+   global .01ms duration would leave a scaleX(0) gauge stuck EMPTY — so the end
+   state has to be restored here, not just the animation killed. */
+@media (prefers-reduced-motion: reduce) {
+  .mn-row, .mn-rail i, .mn-gauge i { animation: none !important; animation-delay: 0s !important; opacity: 1; transform: none; }
+  .mn-gauge i { transform: scaleX(var(--w)); }
 }

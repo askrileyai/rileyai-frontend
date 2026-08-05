@@ -12,7 +12,9 @@ import { money, pnlClass, esc, tTime } from '../components/fmt.js';
 import { api, isSim } from '../api.js';
 import { simResume, simKill } from '../sim.js?v=m44';
 import { contractLabel, healthBadge } from './positions.js';
-import { mountBrain, pulseTypeFor, thinkingFor } from '../components/brain.js?v=m44';
+import { mountBrain, pulseTypeFor } from '../components/brain.js?v=m44';
+import { mountMission } from '../components/mission.js?v=m45';
+import { mountDeskChat } from '../components/deskchat.js?v=m45';
 
 let unsubs = [];
 // 💰 REAL money is the default view (owner 08-04: "make the real account the
@@ -21,6 +23,8 @@ let unsubs = [];
 let selCard = 'real';                  // 'real' | 'bookC' | 'account' — survives repaints (module scope)
 let range = '1d';                     // day series that feeds the card sparklines
 let brainCtl = null;                  // Riley's Mind controller (mounted once)
+let missionCtl = null;                // Mission Control — arbiter/Riley/gates console, docked under the brain
+let chatCtl = null;                   // Riley, docked beside the console (the return path for what you see)
 const seriesCache = {};               // range -> /equity-series payload (drives the card sparklines)
 let activity = null;                  // /activity payload for the systems strip
 let refreshT = null;
@@ -33,6 +37,11 @@ export function mount(host) {
       <div class="acct-cards" id="d-cards"></div>
 
       <div id="d-brain"></div>
+
+      <div class="desk-dock">
+        <div id="d-mission"></div>
+        <div id="d-chat"></div>
+      </div>
 
       <div class="panel" style="overflow:hidden">
         <div class="panel-head">Riley's Read <a href="#/riley" style="font-weight:500;font-size:12px">Ask Riley ›</a></div>
@@ -94,6 +103,13 @@ export function mount(host) {
 
   host.querySelector('#d-kill').appendChild(killSwitch());
   brainCtl = mountBrain(host.querySelector('#d-brain'));
+  chatCtl = mountDeskChat(host.querySelector('#d-chat'));
+  // Click a decision → it becomes the subject of the next question. This is the
+  // whole point of docking the chat here: the console stops being observe-only.
+  missionCtl = mountMission(host.querySelector('#d-mission'), {
+    onAsk: (evt, sub) => chatCtl?.ask(evt, sub),
+  });
+  missionCtl.seed(state.events);
   host.querySelector('#d-flatten-real')?.addEventListener('click', async () => {
     if (!confirm('Exit ALL real-money positions at market right now?')) return;
     try { await api.flattenReal(); } catch (e) { alert('Flatten failed: ' + (e.message || e)); }
@@ -119,7 +135,6 @@ export function mount(host) {
 
   paint();
   highlightGroups();
-  paintTicker(host.querySelector('#d-ticker'));
   loadSeries();
   loadActivity();
   refreshT = setInterval(() => { if (!document.hidden) { loadSeries(true); loadActivity(); } }, 120000);
@@ -135,7 +150,20 @@ export function unmount() {
   unsubs.forEach((u) => u());
   unsubs = [];
   clearInterval(refreshT);
+  cancelAnimationFrame(consoleRaf); consoleRaf = 0;
   brainCtl?.destroy(); brainCtl = null;
+  missionCtl?.destroy(); missionCtl = null;
+  chatCtl?.destroy(); chatCtl = null;
+}
+
+// COALESCED CONSOLE REPAINT. updateBrain() filters the whole 500-event ring
+// TWICE with a Date parse per element, so running it per event meant ~1000 date
+// parses and 3 innerHTML writes for every arrival — at the open (~40 evt/s)
+// that's 40k parses/s next to a 60fps canvas. One frame's worth instead.
+let consoleRaf = 0;
+function scheduleConsoles() {
+  if (consoleRaf || document.hidden) return;
+  consoleRaf = requestAnimationFrame(() => { consoleRaf = 0; updateBrain(); updateMission(); });
 }
 
 function onEvt(evt) {
@@ -145,13 +173,20 @@ function onEvt(evt) {
     if (evt.type === 'arbiter.read') lastRead = evt.summary;
     paint();
   }
-  // Riley's Mind: fire a colored pulse on every real event, refresh the readout.
-  if (evt.type !== 'position.mark' && evt.type !== 'heartbeat') { brainCtl?.pulse(pulseTypeFor(evt.type)); updateBrain(); }
-  const term = document.querySelector('#d-ticker');
-  if (term) appendTickerRow(term, evt);
+  // Riley's Mind + Mission Control. push() is O(1) and never touches the DOM —
+  // the console drains its own queue on a 140ms flush.
+  if (evt.type !== 'position.mark' && evt.type !== 'heartbeat' && evt.type !== 'engine.tick') {
+    brainCtl?.pulse(pulseTypeFor(evt.type));
+    missionCtl?.push(evt);
+    scheduleConsoles();
+  }
 }
 
-function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); paintToday(); paintSystems(); paintEngine(); updateBrain(); }
+function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); paintToday(); paintSystems(); paintEngine(); scheduleConsoles(); }
+
+function updateMission() {
+  missionCtl?.update({ regime: state.regime?.label || state.regime?.key || null });
+}
 
 // Feed live state into Riley's Mind — readout, activity level, and the
 // "current trade — what she's thinking" line (from the open position's health).
@@ -637,32 +672,9 @@ function toast(msg) {
   toastT = setTimeout(() => el.classList.remove('show'), 4200);
 }
 
-// ── Live ticker (unchanged) ─────────────────────────────────────────────────
-const TICK_CLASS = (t) =>
-  /^signal\.rejected|^signal\.gated/.test(t) ? 't-veto' :
-  /^signal\./.test(t) ? 't-signal' :
-  /^order\.filled|^position\.opened/.test(t) ? 't-fill' :
-  /^kill\.|^risk\.halt/.test(t) ? 't-halt' :
-  /^ai\./.test(t) ? 't-ai' :
-  /^strategy\.scan|^position\.mark|^heartbeat/.test(t) ? 't-scan' : 't-info';
-
-function paintTicker(term) {
-  if (!term) return;
-  term.innerHTML = '';
-  for (const evt of state.events.slice(-40)) appendTickerRow(term, evt);
-  term.scrollTop = term.scrollHeight;
-}
-
-function appendTickerRow(term, evt) {
-  if (evt.type === 'position.mark' || evt.type === 'heartbeat') return;
-  const row = document.createElement('div');
-  row.className = `t-row ${TICK_CLASS(evt.type)}`;
-  row.innerHTML = `<span class="t-time">${tTime(evt.ts)}</span>${esc(evt.summary)}`;
-  const atEnd = term.scrollTop + term.clientHeight >= term.scrollHeight - 30;
-  term.appendChild(row);
-  while (term.children.length > 60) term.removeChild(term.firstChild);
-  if (atEnd) term.scrollTop = term.scrollHeight;
-}
+// (The old #d-ticker terminal was removed with the v4 brain rebuild; its
+//  renderer sat here running a querySelector on every event for a host that no
+//  longer existed. Mission Control replaced it — deleted 08-04.)
 
 // ── Sim fixtures ────────────────────────────────────────────────────────────
 function simSeries() {
