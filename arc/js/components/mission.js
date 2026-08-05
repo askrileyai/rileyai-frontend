@@ -274,7 +274,11 @@ function rail(gates) {
 function gateRow(evt) {
   const d = evt.data || {};
   const gates = Array.isArray(d.gates) ? d.gates : null;
-  const sym = evt.symbol || '';
+  // A Book C trade now produces TWO gate rows — the paper twin and its real
+  // mirror — so mark which one is the live account. Without this they are
+  // indistinguishable, on the surface that exists to watch real money.
+  const isReal = /_real$/.test(evt.strategyKey || '') || (d.stage === 'mirror_real');
+  const sym = (evt.symbol || '') + (isReal ? ' 💰' : '');
   if (evt.type === 'signal.accepted') {
     if (!gates || !gates.length) return top(sym, 'cleared', '');
     return top(sym, 'cleared', `${gates.length} / ${gates.length}`) + rail(gates);
