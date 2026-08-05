@@ -1,34 +1,36 @@
 // @ts-check
-// MISSION CONTROL — the decision console docked beside Riley's Mind.
+// MISSION CONTROL — the decision feed docked beside Riley's chat.
 //
-// ARC makes three kinds of decision every tick and, until now, the dashboard
-// showed none of them: the ARBITER picks which lane wins a setup, RILEY decides
-// hold/ride/bank/cut, and the risk GATES run a 34-name ladder. This renders all
-// three as always-visible channels so the reasoning behind a trade is legible
-// while it happens (owner 08-04: "so i can see all aspects of how everything is
-// working within the ARC").
+// v2 (08-05): ONE chronological feed, not three stacked scroll boxes. The
+// three-channel layout failed on live traffic: each channel got ~150px of
+// scroll, rows clipped mid-row at every boundary, and with no timestamps there
+// was no way to tell what was new (owner: "dont know whats new entry, the
+// scrolling is confusing"). Now every row carries its time + a channel tag,
+// newest is always at the top of a single scroll area, and header chips filter
+// to one channel when you want a single stream.
 //
-// Visual direction is deliberately modern-futurist, NOT retro-HUD — an earlier
-// pass with letterspaced neon captions, per-channel colours, corner brackets, a
-// typewriter reveal and a sweep line was rejected as "80s scifi". What is left:
-// the brain's own stage gradient as the surface, quiet sentence-case labels,
-// hairline dividers, rows that settle rather than fly, and colour used ONLY for
-// meaning (cleared green / held red). No box-shadow anywhere in this panel.
+// Data contracts (verified against the backend, do not re-derive):
+// - gates: signal.accepted carries the FULL ladder in data.gates; rejects carry
+//   the PREFIX ending at the failure. value/limit are display strings.
+// - arbiter: ai.arbitration has FIVE shapes (scores/contenders/signals/folded/
+//   addCandidate). Bar widths are relative to the TOP score.
+// - riley: riley.desk -> data.decisions[] is the only structured source of her
+//   prose; position.* events carry prose in the summary TAIL and a machine enum
+//   in data.reason.
 //
-// Contract mirrors mountBrain() so bridge.js drives both the same way. It is
-// FED by bridge (not self-subscribing) to keep unmount()'s single teardown path
-// and to hold this module's imports to fmt.js, exactly like brain.js.
+// Click any row -> that decision loads into the desk chat (opts.onAsk).
 
 import { esc } from './fmt.js';
 
+// HH:MM:SS — fmt.js's tTime keeps milliseconds for the MIND terminal; here ms
+// is noise on every row.
+const rowTime = (ts) => { const d = new Date(ts); return Number.isNaN(d.getTime()) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`; };
+
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const CH = ['arb', 'riley', 'gates'];
-const LABEL = { arb: 'Arbiter', riley: 'Riley', gates: 'Gates' };
-// Row caps sized so the panel never exceeds ~150 nodes: gates rows are the
-// tallest (rail + fail line), riley the most numerous (one per decision).
-const CAP = { arb: 14, riley: 16, gates: 10 };
-const QCAP = 40;
+const CAP = 48;            // rows kept in the DOM (single list)
+const QCAP = 60;           // queued rows before oldest are dropped
+const TAG = { arb: 'Arbiter', riley: 'Riley', gates: 'Gates' };
 
 const GREEN = 'rgba(52,211,153,.5)';
 const RED = '#f87171';
@@ -39,13 +41,10 @@ const ACT = {
   hold: 'holding', ride: 'riding', bank: 'banked', exit: 'cut',
   tighten: 'tightened the stop', scale: 'scaled out', scale_out: 'scaled out',
 };
-// Gauge colour follows the ACTION, which is the thing being judged.
 const ACT_COLOR = { exit: 'rgba(248,113,113,.5)', bank: CYAN, scale: CYAN, scale_out: CYAN, tighten: CYAN };
 
-/** The prose Riley wrote lives at the tail of `summary`, after the last em-dash
- *  separator. `data.reason` is a MACHINE ENUM ('riley_bank', 'riley_exit') and
- *  must never be rendered as rationale — that is the trap this helper exists to
- *  avoid. Falls back to the whole summary when there is no separator. */
+/** Riley's prose lives at the tail of `summary` after the last em-dash.
+ *  data.reason is a MACHINE ENUM ('riley_bank') — never render it as rationale. */
 function tail(summary) {
   const s = String(summary || '');
   const i = s.lastIndexOf(' — ');
@@ -57,9 +56,6 @@ const fmtNum = (v) => (v == null || v === '' ? '' : String(v));
 /**
  * @param {HTMLElement} host
  * @param {{onAsk?: (evt:object, sub:object|null)=>void}} [opts]
- *        onAsk fires when a row is clicked — that decision becomes the subject
- *        of the next question in the desk chat. `sub` is the individual
- *        riley.desk decision when the row came from data.decisions[].
  */
 export function mountMission(host, opts) {
   host.innerHTML = `
@@ -67,29 +63,40 @@ export function mountMission(host, opts) {
       <div class="mn-head">
         <span class="mn-dot"></span>
         <span class="mn-title">Decisions</span>
+        <span class="mn-filters">
+          <button class="mn-f on" data-f="">All</button>
+          <button class="mn-f" data-f="arb">Arbiter</button>
+          <button class="mn-f" data-f="riley">Riley</button>
+          <button class="mn-f" data-f="gates">Gates</button>
+        </span>
         <span class="mn-clock" id="mn-clock">—</span>
       </div>
-      <div class="mn-body">
-        ${CH.map((k) => `
-          <div class="mn-ch ch-${k}">
-            <div class="mn-lab">${LABEL[k]}<span class="mn-strip" id="mn-strip-${k}"></span></div>
-            ${k === 'gates' ? '<div class="mn-alarm" id="mn-alarm" hidden></div>' : ''}
-            <div class="mn-list" id="mn-list-${k}"></div>
-          </div>`).join('')}
-      </div>
+      <div class="mn-note" id="mn-note" hidden></div>
+      <div class="mn-alarm" id="mn-alarm" hidden></div>
+      <div class="mn-list" id="mn-list"></div>
     </div>`;
 
-  const lists = {}; CH.forEach((k) => { lists[k] = host.querySelector(`#mn-list-${k}`); });
-  const strips = {}; CH.forEach((k) => { strips[k] = host.querySelector(`#mn-strip-${k}`); });
+  const panel = host.querySelector('.mission-panel');
+  const list = host.querySelector('#mn-list');
   const elClock = host.querySelector('#mn-clock');
+  const elNote = host.querySelector('#mn-note');
   const elAlarm = host.querySelector('#mn-alarm');
 
-  const Q = { arb: [], riley: [], gates: [] };
-  // Dedupe: store.applyEvent only dedupes when evt.id != null, but LIVE events
-  // arrive id:null+seq while REPLAYED ones carry a real id and no seq — so a
-  // reconnect re-pushes the same logical event. decisionLog stamps `ts` once and
-  // passes that same value to the INSERT, so ts is byte-identical across both
-  // copies and is a reliable key. Date.parse normalises any ISO drift.
+  // Channel filter — pure CSS show/hide via the panel's data-f attribute, so
+  // switching filters never rebuilds rows.
+  host.querySelector('.mn-filters').addEventListener('click', (e) => {
+    const b = e.target.closest('.mn-f'); if (!b) return;
+    host.querySelectorAll('.mn-f').forEach((x) => x.classList.toggle('on', x === b));
+    const f = b.getAttribute('data-f');
+    if (f) panel.setAttribute('data-f', f); else panel.removeAttribute('data-f');
+  });
+
+  const Q = [];                    // one queue: {ch, html, sub, evt}
+  const lastSummary = {};          // per channel — suppress consecutive repeats
+
+  // Dedupe across the SSE reconnect replay: live events arrive id:null+seq,
+  // replayed ones carry a real id, so the store re-pushes the same logical
+  // event. ts is stamped once server-side and survives the DB round-trip.
   const seen = new Map();
   const keyOf = (e) => `${e.type}|${Date.parse(e.ts) || 0}|${e.summary || ''}`;
   function fresh(evt) {
@@ -100,36 +107,41 @@ export function mountMission(host, opts) {
     return true;
   }
 
-  // A queue item is { html, evt, sub } — the source event rides along so a click
-  // can hand THAT decision to the desk chat.
-  const norm = (rows, evt) => (rows || []).filter(Boolean)
-    .map((r) => (typeof r === 'string' ? { html: r, sub: null, evt } : { html: r.html, sub: r.sub || null, evt }));
-
-  function enqueue(ch, rows) {
-    const q = Q[ch];
-    for (const it of rows) { q.push(it); if (q.length > QCAP) q.shift(); }
+  function buildRow(it, animate) {
+    const el = document.createElement('div');
+    el.className = animate && !REDUCED ? 'mn-row' : 'mn-row mn-still';
+    el.setAttribute('data-ch', it.ch);
+    el.innerHTML = `<div class="mn-l"><span class="mn-time">${rowTime(it.evt.ts)}</span><span class="mn-tag">${TAG[it.ch]}</span></div><div class="mn-c">${it.html}</div>`;
+    el.__evt = it.evt; el.__sub = it.sub;
+    return el;
   }
 
-  function emit(ch, rows, animate) {
-    const list = lists[ch]; if (!list || !rows.length) return;
+  function emit(items, animate) {
+    if (!items.length) return;
     const frag = document.createDocumentFragment();
-    // Queue is FIFO (oldest first) and we PREPEND, so append to the fragment in
-    // reverse — the newest ends up on top with a single insertBefore.
-    for (let i = rows.length - 1; i >= 0; i--) {
-      const it = rows[i];
-      const el = document.createElement('div');
-      el.className = animate && !REDUCED ? 'mn-row' : 'mn-row mn-still';
-      el.innerHTML = it.html;
-      el.__evt = it.evt; el.__sub = it.sub;
-      frag.appendChild(el);
-    }
+    for (let i = items.length - 1; i >= 0; i--) frag.appendChild(buildRow(items[i], animate));
     list.insertBefore(frag, list.firstChild);
-    while (list.children.length > CAP[ch]) list.removeChild(list.lastChild);
+    while (list.children.length > CAP) list.removeChild(list.lastChild);
   }
 
-  // One delegated listener for the whole panel — click a decision to ask Riley
-  // about it. Rows carry their own event, so the question is about THAT
-  // arbitration / veto / bank rather than a cold prompt.
+  function flush(all) {
+    if (document.hidden) return;
+    if (!Q.length) return;
+    const n = all || Q.length > 25 ? Q.length : Q.length > 8 ? 4 : 1;
+    emit(Q.splice(0, n), !all && Q.length <= 8);
+    if (elClock) {
+      const d = new Date();
+      elClock.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    }
+  }
+  const flushT = setInterval(flush, 140);
+
+  // Queues survive a hidden tab (sse only reconnects after 60s hidden, so a
+  // short tab-away has no replay to recover from); on return everything drains
+  // at once, unanimated.
+  const onVis = () => { if (!document.hidden) flush(true); };
+  document.addEventListener('visibilitychange', onVis);
+
   const onClick = (e) => {
     const row = e.target.closest('.mn-row');
     if (!row || !row.__evt || !opts?.onAsk) return;
@@ -137,39 +149,12 @@ export function mountMission(host, opts) {
   };
   host.addEventListener('click', onClick);
 
-  function flush(all) {
-    if (document.hidden) return;              // no DOM work behind a hidden tab
-    let touched = false;
-    for (const ch of CH) {
-      const q = Q[ch]; if (!q.length) continue;
-      // 1 row/tick reads as a considered feed; a burst drains 4; a flood dumps
-      // everything with no animation so the open can't back the queue up.
-      const n = all || q.length > 25 ? q.length : q.length > 8 ? 4 : 1;
-      emit(ch, q.splice(0, n), !all && q.length <= 8);
-      touched = true;
-    }
-    if (touched && elClock) {
-      const d = new Date();
-      elClock.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
-    }
-  }
-  const flushT = setInterval(flush, 140);
-
-  // Coming back from a hidden tab, drain EVERYTHING at once with no animation.
-  // The queues are deliberately NOT cleared on hide: sse.js only disconnects
-  // after 60s hidden, so a short tab-away produces no reconnect and therefore no
-  // replay — dropping the queue would silently lose decisions the user never saw,
-  // which is the one thing a decision log must not do. The 40/channel queue cap
-  // plus the row caps bound how much can pile up.
-  const onVis = () => { if (!document.hidden) flush(true); };
-  document.addEventListener('visibilitychange', onVis);
-
   function route(evt) {
     const t = evt.type || '';
     const d = evt.data || {};
     const stage = d.stage || '';
     if (t === 'ai.arbitration' || t === 'arbiter.update') return { ch: 'arb', rows: arbRows(evt) };
-    if (t === 'signal.rejected' && stage === 'arbiter') return { ch: 'arb', rows: [dim(`${evt.symbol || ''} lost the setup`)] };
+    if (t === 'signal.rejected' && stage === 'arbiter') return { ch: 'arb', rows: [dim(`${esc(evt.symbol || '')} lost the setup`)] };
     if (t === 'signal.rejected' && stage === 'desk_bias') return { ch: 'riley', rows: [rileyVeto(evt)] };
     if (t === 'riley.desk' || t === 'riley.desk.invalid' || t === 'riley.down') return { ch: 'riley', rows: deskRows(evt) };
     if (/^position\.(hold|ride|scale_out|trail|override|exit)$/.test(t)) return { ch: 'riley', rows: [posRow(evt)] };
@@ -179,104 +164,93 @@ export function mountMission(host, opts) {
     return null;
   }
 
-  function push(evt) {
-    if (!evt || !evt.type) return;
-    if (evt.type === 'position.mark' || evt.type === 'heartbeat' || evt.type === 'engine.tick') return;
-    if (!fresh(evt)) return;
-    // The critical engine.diag means the day caps went UNENFORCED for a tick —
-    // that is a banner, not a feed line. It is persisted, so it replays on
-    // reconnect; only surface it if it is genuinely recent.
+  const norm = (rows, evt) => (rows || []).filter(Boolean)
+    .map((r) => (typeof r === 'string' ? { html: r, sub: null, evt } : { html: r.html, sub: r.sub || null, evt }));
+
+  function accept(evt) {
+    if (!evt || !evt.type) return null;
+    if (evt.type === 'position.mark' || evt.type === 'heartbeat' || evt.type === 'engine.tick') return null;
+    if (!fresh(evt)) return null;
     if (evt.type === 'engine.diag' && evt.severity === 'critical') {
       if (Date.now() - (Date.parse(evt.ts) || 0) < 300000 && elAlarm) {
         elAlarm.textContent = 'Risk caps not enforced this tick';
         elAlarm.hidden = false;
       }
-      return;
+      return null;
     }
     if (evt.type === 'signal.accepted' && elAlarm) elAlarm.hidden = true;
-    // Riley's whole-desk note rides on the event, not the store — pin it beside
-    // her label rather than spending a row on it.
-    if (evt.type === 'riley.desk' && evt.data?.deskNote && strips.riley) {
-      strips.riley.textContent = String(evt.data.deskNote).slice(0, 90);
+    if (evt.type === 'riley.desk' && evt.data?.deskNote && elNote) {
+      elNote.textContent = `Riley — ${String(evt.data.deskNote).slice(0, 120)}`;
+      elNote.hidden = false;
     }
     const out = route(evt);
-    if (out) { const rows = norm(out.rows, evt); if (rows.length) enqueue(out.ch, rows); }
+    if (!out) return null;
+    // The desk re-emits near-identical reads every pass ("BoS retest pass: …").
+    // Two of those back to back carry no information — keep the newest only.
+    const rows = norm(out.rows, evt);
+    if (!rows.length) return null;
+    if (rows.length === 1 && lastSummary[out.ch] === rows[0].html) return null;
+    lastSummary[out.ch] = rows.length === 1 ? rows[0].html : null;
+    return { ch: out.ch, rows };
   }
 
   return {
-    push,
-    /** Mount/replay path — walk the ring backwards so the newest lands on top,
-     *  prime the dedupe map, and stop once every channel is full. No animation. */
+    push(evt) {
+      const out = accept(evt);
+      if (!out) return;
+      for (const r of out.rows) { Q.push({ ch: out.ch, ...r }); if (Q.length > QCAP) Q.shift(); }
+    },
+    /** Mount/replay path — newest first, no animation, dedupe primed. */
     seed(events) {
       const arr = events || [];
-      const full = () => CH.every((k) => lists[k].children.length >= CAP[k]);
-      for (let i = arr.length - 1; i >= 0 && !full(); i--) {
-        const evt = arr[i];
-        if (!evt || !evt.type) continue;
-        if (evt.type === 'position.mark' || evt.type === 'heartbeat' || evt.type === 'engine.tick') continue;
-        if (!fresh(evt)) continue;
-        const out = route(evt);
+      for (let i = arr.length - 1; i >= 0 && list.children.length < CAP; i--) {
+        const out = accept(arr[i]);
         if (!out) continue;
-        const rows = norm(out.rows, evt);
-        if (!rows.length) continue;
-        const list = lists[out.ch];
-        if (list.children.length >= CAP[out.ch]) continue;
-        for (const it of rows) {
-          if (list.children.length >= CAP[out.ch]) continue;
-          const el = document.createElement('div');
-          el.className = 'mn-row mn-still';
-          el.innerHTML = it.html;
-          el.__evt = it.evt; el.__sub = it.sub;
-          list.appendChild(el);            // walking backwards → append keeps newest-first
+        for (const r of out.rows) {
+          if (list.children.length >= CAP) break;
+          list.appendChild(buildRow({ ch: out.ch, ...r }, false));   // walking backwards → append keeps newest-first
         }
       }
     },
     update(d) {
       if (!d) return;
-      if (strips.arb && d.regime) strips.arb.textContent = String(d.regime);
-      if (strips.riley && d.deskNote) strips.riley.textContent = String(d.deskNote).slice(0, 90);
+      const reg = host.querySelector('#mn-clock');
+      if (reg && d.regime) reg.setAttribute('title', String(d.regime));
     },
     destroy() {
       clearInterval(flushT);
       document.removeEventListener('visibilitychange', onVis);
       host.removeEventListener('click', onClick);
-      CH.forEach((k) => { Q[k].length = 0; });
+      Q.length = 0;
       seen.clear();
     },
   };
 }
 
-// ── shared row primitives ───────────────────────────────────────────────────
+// ── row primitives ──────────────────────────────────────────────────────────
 function top(sym, act, meta, bad) {
   return `<div class="mn-top">${sym ? `<span class="mn-sym">${esc(sym)}</span>` : ''}`
     + `<span class="mn-act${bad ? ' bad' : ''}">${esc(act)}</span>`
     + `${meta ? `<span class="mn-meta">${esc(meta)}</span>` : ''}</div>`;
 }
-const note = (s, bad) => `<div class="mn-note${bad ? ' bad' : ''}">${esc(s)}</div>`;
+const note = (s, bad) => `<div class="mn-note-t${bad ? ' bad' : ''}">${esc(s)}</div>`;
 const dim = (html) => `<div class="mn-top"><span class="mn-act dimmer">${html}</span></div>`;
 const warn = (html) => `<div class="mn-top"><span class="mn-act bad">${html}</span></div>`;
 const gauge = (v, col) => `<div class="mn-gauge"><i style="--w:${Math.max(0, Math.min(1, v))};background:${col}"></i></div>`;
 
 // ── GATES ───────────────────────────────────────────────────────────────────
-// data.gates is the real ladder: {name, pass, value, limit}. On ACCEPT it is the
-// full green run; on REJECT it is the PREFIX ending at the failure, because
-// evaluate() short-circuits. value/limit are PRE-FORMATTED DISPLAY STRINGS
-// ('$1200', '< 3', 'open') — concatenate them, never run them through money().
 function rail(gates) {
   const arr = gates.slice(0, 28);
   let h = '';
-  arr.forEach((g, i) => {
-    h += `<i style="--i:${i};background:${g && g.pass === false ? RED : GREEN}"></i>`;
-  });
+  arr.forEach((g, i) => { h += `<i style="--i:${i};background:${g && g.pass === false ? RED : GREEN}"></i>`; });
   return `<div class="mn-rail">${h}</div>`;
 }
 
 function gateRow(evt) {
   const d = evt.data || {};
   const gates = Array.isArray(d.gates) ? d.gates : null;
-  // A Book C trade now produces TWO gate rows — the paper twin and its real
-  // mirror — so mark which one is the live account. Without this they are
-  // indistinguishable, on the surface that exists to watch real money.
+  // A Book C trade produces TWO gate rows — the paper twin and its real mirror.
+  // Mark the live one; on a real-money dashboard that is THE distinction.
   const isReal = /_real$/.test(evt.strategyKey || '') || (d.stage === 'mirror_real');
   const sym = (evt.symbol || '') + (isReal ? ' 💰' : '');
   if (evt.type === 'signal.accepted') {
@@ -291,16 +265,14 @@ function gateRow(evt) {
       + rail(gates)
       + (v || l ? note(l ? `${v} · limit ${l}` : v) : '');
   }
-  // Pre-ladder vetoes (sizing / regime_gate / bounce_resist / ai_gate) carry no
-  // ladder at all — keep them visible as a one-liner rather than dropping them.
+  // Pre-ladder vetoes carry no ladder. stage and gate are often the SAME word
+  // (stage 'bounce_resist', gate 'bounce_resist') — print it once, not twice.
   const stage = d.stage || '';
-  return top(sym, `${stage ? stage + ' · ' : ''}${failed}`, '', true);
+  const label = stage && stage !== failed ? `${stage} · ${failed}` : failed;
+  return top(sym, `held — ${label}`, '', true);
 }
 
 // ── ARBITER ─────────────────────────────────────────────────────────────────
-// ai.arbitration has FIVE payload shapes, not two. The ranked ladder arrives as
-// data.scores[] on the merge path and data.contenders[] on the winner path —
-// same semantics, two names.
 function lane(name, w, isTop) {
   return `<div class="mn-ln"><span>${esc(name)}</span>`
     + `<span class="mn-gauge"><i style="--w:${w};background:${isTop ? '#22d3ee' : 'rgba(34,211,238,.28)'}"></i></span>`
@@ -310,9 +282,7 @@ function lane(name, w, isTop) {
 function ladder(ranked) {
   const arr = (ranked || []).filter(Boolean).slice(0, 4);
   if (!arr.length) return '';
-  // Width is relative to the TOP score — score()'s absolute range is
-  // unspecified, so never assume 0..1.
-  const peak = Math.abs(Number(arr[0].score)) || 1;
+  const peak = Math.abs(Number(arr[0].score)) || 1;   // widths relative to the TOP score
   let h = arr.map((s, i) => lane(s.strategy || s.key || '?', Math.max(.04, Math.min(1, Math.abs(Number(s.score) || 0) / peak)), i === 0)).join('');
   const extra = (ranked || []).length - arr.length;
   if (extra > 0) h += `<div class="mn-ln more">+${extra} more</div>`;
@@ -328,7 +298,7 @@ function arbRows(evt) {
         .map(([k, v]) => ({ strategy: k, score: Number(v && v.weight) || 0 }))
         .filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
       if (!arr.length) return [dim('no enabled lanes')];
-      return [dim('weights rebalanced') + ladder(arr)];
+      return [dim('weights rebalanced') + ladder(arr.slice(0, 3))];
     }
     return [dim(esc(evt.summary || 'arbiter update'))];
   }
@@ -349,9 +319,6 @@ function arbRows(evt) {
 }
 
 // ── RILEY ───────────────────────────────────────────────────────────────────
-// riley.desk -> data.decisions[] is the ONLY structured source of her prose
-// reasoning + conviction. The per-position position.* events bury the reason in
-// `summary` and put a machine enum in data.reason.
 function decRow(dc) {
   const act = String(dc.action || '').toLowerCase();
   const verb = ACT[act] || act || 'reviewed';
@@ -368,8 +335,7 @@ function deskRows(evt) {
   if (evt.type === 'riley.desk.invalid') return [dim(esc(evt.summary || 'decision dropped'))];
   const decs = Array.isArray(d.decisions) ? d.decisions : [];
   if (!decs.length) return [dim(esc(evt.summary || 'desk pass'))];
-  // Each row carries ITS OWN decision so clicking it asks Riley about that
-  // position specifically, not the whole desk pass.
+  // Each row carries its own decision so a click asks about THAT position.
   const rows = decs.slice(0, 4).map((dc) => ({ html: decRow(dc), sub: dc }));
   if (decs.length > 4) rows.push(dim(`+${decs.length - 4} more positions reviewed`));
   return rows;
@@ -379,7 +345,7 @@ function posRow(evt) {
   const d = evt.data || {};
   const t = evt.type || '';
   const conv = Number(d.conviction);
-  let verb = t === 'position.hold' ? 'held through the stop'
+  const verb = t === 'position.hold' ? 'held through the stop'
     : t === 'position.ride' ? 'riding'
       : t === 'position.scale_out' ? 'scaled out'
         : t === 'position.trail' ? 'tightened the stop'

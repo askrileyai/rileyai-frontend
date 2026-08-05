@@ -13,7 +13,7 @@ import { api, isSim } from '../api.js';
 import { simResume, simKill } from '../sim.js?v=m44';
 import { contractLabel, healthBadge } from './positions.js';
 import { mountBrain, pulseTypeFor } from '../components/brain.js?v=m44';
-import { mountMission } from '../components/mission.js?v=m45';
+import { mountMission } from '../components/mission.js?v=m46';
 import { mountDeskChat } from '../components/deskchat.js?v=m45';
 
 let unsubs = [];
