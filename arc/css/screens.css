@@ -544,12 +544,22 @@
 .brain-feed { display: none; }
 @media (min-width: 900px) { .brain-stage { aspect-ratio: 21/9; } }
 
-.desk-dock { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+/* Both panels are FIXED-HEIGHT scroll boxes, and the row height must be
+   DEFINITE for that to work. With auto rows, .dc-panel's height:100% resolves
+   to auto, .dc-scroll's flex:1 has nothing to divide, and a long answer grows
+   the page instead of scrolling inside the box — measured 939px panel against a
+   4804px page before this. dvh over vh so mobile browser chrome doesn't clip it. */
+.desk-dock { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
+  grid-auto-rows: clamp(320px, 56vh, 520px); }
+@supports (height: 1dvh) { .desk-dock { grid-auto-rows: clamp(320px, 56dvh, 520px); } }
 @media (min-width: 1000px) {
-  .desk-dock { grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr); align-items: stretch; }
+  .desk-dock { grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr);
+    grid-template-rows: clamp(380px, 60vh, 660px); align-items: stretch; }
+  @supports (height: 1dvh) { .desk-dock { grid-template-rows: clamp(380px, 60dvh, 660px); } }
 }
+.mission-panel, .dc-panel { height: 100%; min-height: 0; }
 
-.mission-panel { height: 100%; display: flex; flex-direction: column; border-radius: var(--radius);
+.mission-panel { display: flex; flex-direction: column; border-radius: var(--radius);
   padding: 13px 14px; border: 1px solid #123039;
   background: radial-gradient(120% 100% at 50% 44%, rgba(10,26,38,.55) 0%, rgba(8,11,16,.92) 72%), #0a141d; }
 .mn-head { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; flex: none; }
@@ -558,12 +568,15 @@
 .mn-clock { font-family: var(--font-mono); font-size: 10px; color: #4a5b68; margin-left: auto; }
 .mn-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 
-.mn-ch { padding: 11px 0; border-top: 1px solid rgba(34,211,238,.11); flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mn-ch { padding: 11px 0; border-top: 1px solid rgba(34,211,238,.11); flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .mn-ch:first-child { border-top: 0; padding-top: 0; }
 .mn-lab { font-size: 10px; color: #4a5b68; margin-bottom: 8px; flex: none; display: flex; gap: 8px; min-width: 0; }
 .mn-strip { color: #3d4c58; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .mn-alarm { font-size: 10px; color: var(--down); margin-bottom: 7px; flex: none; }
-.mn-list { display: flex; flex-direction: column; gap: 9px; min-width: 0; overflow: hidden; contain: layout paint; }
+.mn-list { display: flex; flex-direction: column; gap: 9px; min-width: 0; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain; contain: layout paint; }
+.mn-list::-webkit-scrollbar { width: 6px; }
+.mn-list::-webkit-scrollbar-thumb { background: rgba(34,211,238,.15); border-radius: 3px; }
 
 /* Rows are clickable — that decision becomes the subject of the next question
    in the desk chat, which is what makes the console more than a read-only feed. */
@@ -601,14 +614,13 @@
 .mn-lnv { font-family: var(--font-mono); font-size: 10px; color: #4a5b68; width: 26px; text-align: right; flex: none; }
 .mn-ln.more { font-size: 10px; color: #4a5b68; }
 
-@media (max-width: 999px) { .mn-ch { min-height: 190px; } }
 
 /* ── DESK CHAT — Riley, docked beside the console ───────────────────────────
    Same surface as the console so the pair reads as one instrument. Reuses the
    existing .msg-* bubble CSS, so tool labels and markdown render exactly as
    they do on the full #/riley screen (which is still routable, just out of nav). */
-.dc-panel { height: 100%; display: flex; flex-direction: column; border-radius: var(--radius);
-  padding: 13px 14px; border: 1px solid #123039; min-height: 300px;
+.dc-panel { display: flex; flex-direction: column; border-radius: var(--radius);
+  padding: 13px 14px; border: 1px solid #123039;
   background: radial-gradient(120% 100% at 50% 44%, rgba(10,26,38,.55) 0%, rgba(8,11,16,.92) 72%), #0a141d; }
 .dc-head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; flex: none; }
 .dc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-hi); flex: none; }

@@ -103,10 +103,18 @@ export function mountDeskChat(host, opts) {
     row.className = `msg-row ${role === 'user' ? 'me' : 'riley'}`;
     row.innerHTML = '<div class="msg-bubble"><div class="msg-text"></div><div class="msg-tools"></div></div>';
     scroll.appendChild(row);
-    scroll.scrollTop = scroll.scrollHeight;
+    scroll.scrollTop = scroll.scrollHeight;   // a new turn always pins to the bottom
     return row.querySelector('.msg-bubble');
   }
-  const setText = (b, t) => { b.querySelector('.msg-text').innerHTML = richText(t); scroll.scrollTop = scroll.scrollHeight; };
+  // Follow the stream only if you're already at the bottom. Forcing scrollTop on
+  // every token yanks you off a paragraph you scrolled up to re-read — the exact
+  // "have to continuously scroll" complaint, from the other direction.
+  const atBottom = () => scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 48;
+  const setText = (b, t) => {
+    const follow = atBottom();
+    b.querySelector('.msg-text').innerHTML = richText(t);
+    if (follow) scroll.scrollTop = scroll.scrollHeight;
+  };
   const setTools = (b, tools) => { b.querySelector('.msg-tools').innerHTML = (tools || []).map((t) => `<span class="msg-tool">⚙ ${esc(t)}</span>`).join(''); };
 
   function showCtx() {
