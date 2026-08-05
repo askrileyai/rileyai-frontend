@@ -103,7 +103,10 @@ export function mount(host) {
 
   host.querySelector('#d-kill').appendChild(killSwitch());
   brainCtl = mountBrain(host.querySelector('#d-brain'));
-  chatCtl = mountDeskChat(host.querySelector('#d-chat'));
+  // The brain fires while she works on your question, so thinking is visible
+  // rather than a spinner (owner 08-04: "the brain should be firing off nuerons
+  // when its being asked questions").
+  chatCtl = mountDeskChat(host.querySelector('#d-chat'), { onThinking: setThinking });
   // Click a decision → it becomes the subject of the next question. This is the
   // whole point of docking the chat here: the console stops being observe-only.
   missionCtl = mountMission(host.querySelector('#d-mission'), {
@@ -154,6 +157,7 @@ export function unmount() {
   brainCtl?.destroy(); brainCtl = null;
   missionCtl?.destroy(); missionCtl = null;
   chatCtl?.destroy(); chatCtl = null;
+  clearInterval(thinkT); thinkT = null;
 }
 
 // COALESCED CONSOLE REPAINT. updateBrain() filters the whole 500-event ring
@@ -186,6 +190,23 @@ function paint() { paintMandate(); paintCards(); paintRead(); paintPositions(); 
 
 function updateMission() {
   missionCtl?.update({ regime: state.regime?.label || state.regime?.key || null });
+}
+
+// ── Riley thinking → the cortex lights up ───────────────────────────────────
+// A steady train of impulses for as long as the question is in flight. Rate is
+// well under the brain's own cap (it self-limits to 11 live impulses), and the
+// interval is cleared on unmount so a screen change can't leave it firing.
+let thinkT = null;
+function setThinking(active) {
+  clearInterval(thinkT); thinkT = null;
+  document.querySelector('.brain-panel')?.classList.toggle('thinking', !!active);
+  if (!active || !brainCtl) return;
+  brainCtl.pulse('read');
+  thinkT = setInterval(() => {
+    if (document.hidden || !brainCtl) return;
+    brainCtl.pulse('read');
+    if (Math.random() < 0.35) brainCtl.pulse('read');   // uneven, so it reads as thought not a metronome
+  }, 190);
 }
 
 // Feed live state into Riley's Mind — readout, activity level, and the

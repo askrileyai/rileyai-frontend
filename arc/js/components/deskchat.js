@@ -56,7 +56,13 @@ function contextOf(evt, sub) {
 }
 
 /** @returns {{ask(evt, sub):void, destroy():void}} */
-export function mountDeskChat(host) {
+/**
+ * @param {HTMLElement} host
+ * @param {{onThinking?: (active:boolean)=>void}} [opts]
+ *        onThinking brackets a live question — the brain fires neurons for the
+ *        duration so you can see her actually working on it.
+ */
+export function mountDeskChat(host, opts) {
   host.innerHTML = `
     <div class="dc-panel">
       <div class="dc-head">
@@ -125,8 +131,13 @@ export function mountDeskChat(host) {
     const b = bubble('riley');
     setText(b, '…');
     streaming = true;
+    host.querySelector('.dc-panel')?.classList.add('dc-busy');
+    opts?.onThinking?.(true);
     try {
       if (isSim()) {
+        // A beat, so sim behaves like a real turn — the busy state and the
+        // brain's neurons actually get a chance to show.
+        await new Promise((r) => setTimeout(r, 900));
         setText(b, ctx
           ? 'Sim mode — no live desk. With the backend connected I would explain that decision from the event you attached.'
           : 'Sim mode — connect the backend to talk to the real desk.');
@@ -135,7 +146,11 @@ export function mountDeskChat(host) {
       }
     } catch (e) {
       setText(b, `Couldn't reach the desk — ${e.message || e}`);
-    } finally { streaming = false; }
+    } finally {
+      streaming = false;
+      host.querySelector('.dc-panel')?.classList.remove('dc-busy');
+      opts?.onThinking?.(false);
+    }
   }
 
   async function stream(b, message) {
@@ -143,7 +158,9 @@ export function mountDeskChat(host) {
     const res = await fetch(`${API_BASE}/arc/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Arc-Key': getKey() },
-      body: JSON.stringify({ message, history: history.slice(-MAX_HISTORY) }),
+      // readOnly: this dock is for questions and insight, never changes. The
+      // backend refuses mutating tools outright rather than executing them.
+      body: JSON.stringify({ message, history: history.slice(-MAX_HISTORY), readOnly: true }),
       signal: abort.signal,
     });
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);

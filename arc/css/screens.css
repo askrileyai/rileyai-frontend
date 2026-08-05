@@ -634,6 +634,10 @@
 .dc-send { flex: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
   background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.22); color: var(--accent-hi); font-size: 14px; }
 .dc-send:hover { background: rgba(34,211,238,.2); }
+/* While a question is in flight: the header dot breathes and the cortex lights
+   up (bridge.js drives brainCtl.pulse for the duration). */
+.dc-busy .dc-dot { animation: bblink 1.1s ease-in-out infinite; }
+.brain-panel.thinking .brain-stage { border-color: rgba(34,211,238,.42); }
 .dc-scroll .msg-row { margin: 0; }
 .dc-scroll .msg-bubble { font-size: 12px; line-height: 1.5; }
 
